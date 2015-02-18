@@ -1,0 +1,84 @@
+{{ define "Header" }}
+
+<style type="text/css">
+.user_icon {
+	margin-right: 10px;
+}
+.user_description {
+	font-size: 1.2em;
+}
+.user_website {
+	font-size: 1.2em;
+}
+.user_location {
+	font-size: 1.2em;
+}
+.heading {
+	color: #666666;
+}
+</style>
+{{ end }}
+{{ define "Content" }}
+
+<div class="row">
+	<div class="col-md-8 col-md-offset-2">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<b>ユーザ情報</b>
+			</div>
+			<div class="panel-body">
+
+				<div class="col-md-6">
+					<div class="row">
+						<div class="user_icon pull-left">
+							<img src="{{ .UserInfo.IconURL }}" class="img-circle" />
+						</div>
+
+						<div class="user_name">
+							<h2><a href="https://twitter.com/{{ .UserInfo.Name }}">@{{ .UserInfo.Name }}</a></h2>
+						</div>
+					</div>
+
+					<div class="user_description">
+						{{ .UserInfo.Profile }}
+					</div>
+
+					<hr />
+
+					<div class="user_website">
+						<i class="mdi-action-language"></i><a href="{{ .UserInfo.Website }}">{{ .UserInfo.Website }}</a>
+					</div>
+
+					<div class="user_location">
+						<i class="mdi-communication-location-on"></i>{{ .UserInfo.Location }}
+					</div>
+
+				</div>
+
+				<div class="col-md-6">
+					<h4 class="heading"><i class="mdi-content-save"></i>最近のプログラム</h4>
+					<div class="list-group">
+						{{ range .UserPrograms }}
+							<div class="list-group-item">
+								<div class="row-picture">
+									<img src="/api/program/thumbnail/?p={{ .Id }}" class="circle" />
+								</div>
+								<div class="row-content">
+									<div class="least-content">{{ .Good }}いいね!</div>
+									<h4 class="list-group-item-heading"><a href="/program/view/?p={{ .Id }}">{{ .Title }}</a></h4>
+									<p class="list-group-item-text">{{ .Description }}</p>
+								</div>
+								<div class="list-group-separator"></div>
+							</div>
+						{{ else }}
+							プログラムがありません。
+						{{ end }}
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+{{ end }}

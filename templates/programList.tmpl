@@ -1,0 +1,12 @@
+{{ define "Header" }}{{ end }}
+{{ define "Content" }}
+
+
+{{ range .Programs }}
+	<a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a><br />
+{{ else }}
+	<h3>またプログラムが一つもありません。</h3>
+{{ end }}
+
+
+{{ end }}

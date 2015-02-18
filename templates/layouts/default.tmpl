@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ .Title }}</title>
+	{{ .LinkCSS "main.css" }}
+	{{ .LinkCSS "bootstrap.min.css" }}
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.2.2/css/material-wfont.min.css" />
+	{{ .LinkCSS "ripples.min.css" }}
+	{{  .LinkJS "jquery.min.js" }}
+	{{  .LinkJS "bootstrap.min.js" }}
+	{{  .LinkJS "material.min.js" }}
+	{{  .LinkJS "ripples.min.js" }}
+	{{  .LinkJS "jquery.animate-colors.js" }}
+
+	<style type="text/css">
+
+		header {
+			margin:  0;
+			padding: 0;
+		}
+
+		.dropdown-menu .glyphicon {
+			font-size: 1.7em;
+		}
+
+		#header_user_icon {
+			padding: 5px 5px 5px 5px;
+		}
+
+		section {
+			margin: 10px 10px 30px 10px;
+			padding: 10px;
+		}
+
+		footer {
+			padding: 10px;
+
+			font-weight: 2.0;
+
+			color: #888888;
+			background: #e7e7e7;
+		}
+
+		#footer_status {
+			float: right;
+		}
+
+	</style>
+
+	{{ template "Header" . }}
+</head>
+<body>
+	
+<header>
+	<nav class="navbar navbar-default">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/">HSP部屋</a>
+		</div>
+		<div class="navbar-collapse collapse navbar-responsive-collapse">
+			<ul class="nav navbar-nav">
+				<li id="header_top"><a href="/">トップ</a></li>
+				<li id="header_find"><a href="/program/">プログラムを探す</a></li>
+				<li id="header_post"><a href="/program/create/">プログラムを投稿する</a></li>
+				<li class="dropdown">
+					<a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">その他... <b class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li><a href="/help/"><i class="glyphicon mdi-action-help"></i> ヘルプ</a></li>
+						<li><a href="javascript:void(0)"><i class="glyphicon mdi-action-info-outline"></i> このサイトについて</a></li>
+					</ul>
+				</li>
+			</ul>
+			<form class="navbar-form navbar-left">
+				<i class="mdi-action-search"></i>
+				<input id="header_search" type="text" class="form-control col-lg-8" placeholder="プログラム名を検索...">
+			</form>
+			<ul class="nav navbar-nav navbar-right">
+				{{ if eq .User 0 }}
+					<li id="login"><a href="javascript:login();">ログイン</a></li>
+				{{ else }}
+				<li><img id="header_user_icon" class="img-circle" alt="{{ .User }}" /></li>
+				<li id="header_user" class="dropdown">
+					<a id="header_username" href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">ユーザ名 <b class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li><a href="/user/view/?u={{ .User }}"><i class="glyphicon mdi-action-account-child"></i> プロフィール</a></li>
+						<li><a href="/user/settings/?u={{ .User }}"><i class="glyphicon mdi-action-settings"></i> 設定</a></li>
+						<li class="divider"></li>
+						<li><a href="/user/logout/">ログアウト</a></li>
+					</ul>
+				</li>
+				{{ end }}
+			</ul>
+		</div>
+	</nav>
+</header>
+
+<section class="container-fluid">
+
+	{{ template "Content" . }}
+
+</section>
+
+<footer class="navbar-fixed-bottom">
+	HSP部屋 2015
+	<div id="footer_status">
+	</div>
+</footer>
+
+
+<script type="text/javascript">
+
+	function login() {
+		var authUrl = "";
+
+		$.ajax({
+			type: "GET",
+			url:  "/api/twitter/request_token/",
+			dataType: "json",
+			data: {
+				"c": location.href
+			}
+		}).success(function (data, status) {
+			authUrl = data.AuthURL;
+
+			document.location = authUrl;
+		}).error(function (xhr, data, status) {
+			// エラー処理
+			// ダイアログを出すなど
+
+		}).complete(function (data, status) {
+		});
+
+	}
+
+	function assert(level, message) {
+		var status_bar = $("footer");
+		var status_text = $("#footer_status");
+
+		var background_d = "#e7e7e7";
+		var color_d = "#888888";
+		var background = background_d;
+		var color = color_d;
+
+		switch (level) {
+			case "log":
+
+				break;
+			case "success":
+
+				background = "#00a86a";
+				color = "#ffffff";
+			
+				break;
+			case "error":
+				
+				background = "#fd4c45";
+				color = "#ffffff";
+
+				break;
+		}
+
+		status_text.text(message);
+
+		status_bar.animate({
+			"background-color": background,
+			"color": color
+		}, 500, "linear", function() {
+
+			setTimeout(function() {
+
+				status_bar.animate({
+					"background-color": background_d,
+					"color": color_d
+				}, 500, "linear", function() {
+					status_text.text(" ");
+				});
+
+			}, 2000);
+		});
+	}
+
+	$(document).ready(function() {
+		$.material.init();
+
+		$("#header_search").keypress(function(e) {
+			if (e.which == 13) { // Enter押下
+				e.preventDefault();
+				location.href = "/program/search/?q=" + $(this).val();
+			}
+		});
+
+		if (location.pathname == "/program/") {
+			$("#header_find").addClass("active");
+		}
+		if (location.pathname.indexOf("/program/create/") == 0) {
+			$("#header_post").addClass("active");
+		}
+		if (location.pathname == "/") {
+			$("#header_top").addClass("active");
+		}
+
+		if ("{{ .User }}" != "0") {
+			$.ajax({
+				type: "GET",
+				url: "/api/user/info/",
+				dataType: "json",
+				data: {
+					"u": "{{ .User }}"
+				}
+			}).success(function(data, status) {
+				$("#header_username").text(data.Name).append(' <b class="caret"></b>');
+				$("#header_user_icon").attr("src", data.IconURL);
+			}).error(function(xhr, data, status) {
+			}).complete(function (data, status) {
+			});
+		}
+	});
+
+</script>
+</body>
+</html>

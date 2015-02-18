@@ -1,0 +1,63 @@
+{{ define "Header" }}
+<style type="text/css">
+
+.detail {
+	margin-bottom: 30px;
+}
+.twitter-timeline {
+	height: 500px;
+}
+
+</style>
+{{ end }}
+
+{{ define "Content" }}
+
+<div class="row">
+	<div class="col-md-6 col-md-offset-3 detail">
+		<div class="jumbotron">
+			<h2>HSP部屋へようこそ！</h2>
+			<p>ここではユーザの投稿したHSP製プログラムを遊んだり、投稿したりする場です。</p>
+			<p>日頃のちょっとした思いつきを、HSPで簡単に公開しましょう。</p>
+			<a class="btn btn-primary btn-lg" href="/program/create/">プログラムを遊ぶ</a>
+		</div>
+	</div>
+</div>
+
+<div class="row sub_detail">
+	<div class="col-md-4">
+		<a class="twitter-timeline" href="https://twitter.com/hashtag/hsproom" data-widget-id="564634329620303872">HSP部屋のツイート</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+	</div>
+	<div class="col-md-4">
+		{{ range .RecentPrograms }}
+			<div class="program_list_item">
+				<div class="program_picture">
+					<img src="/api/program/thumbnail/?p={{ .Id }}" />
+				</div>
+				<div class="program_content">
+					<div class="program_item_heading">
+						<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+						<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+					</div>
+					<div class="program_item_accessory">
+						<span class="played_number"><i class="mdi-av-play-circle-outline"></i>12345</span> 
+						<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
+						<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+
+					</div>
+					<p class="program_item_text">{{ .Description }}</p>
+				</div>
+			</div>
+			<div class="program_separator"></div>
+		{{ else }}
+			まだプログラムはありません。
+		{{ end }}
+	</div>
+	<div class="col-md-4">
+		<div class="new_information">
+
+		</div>
+	</div>
+</div>
+
+{{ end }}

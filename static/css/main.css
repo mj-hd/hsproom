@@ -1,0 +1,51 @@
+.program_list {
+
+}
+
+.program_list_item {
+}
+
+.program_item_heading {
+	color: #999999;
+}
+.program_item_accessory {
+	background: #eeeeee;
+
+	font-size: 1.1em;
+
+	color: #999999;
+}
+.program_item_accessory i {
+	font-size: 1.2em;
+
+	color: #666666;
+}
+.program_item_accessory .date {
+	float: right;
+
+	font-size: 0.8em;
+
+	margin-top: 0.7em;
+
+	color: #999999;
+}
+
+.program_picture {
+	float: left;
+
+	margin-right: 10px;
+	padding: 10px 0 10px 10px;
+
+	background: #ffffff;
+}
+.program_picture img {
+	height: 150px;
+	width : 250px;
+}
+.program_separator {
+	width: 100%;
+
+	clear: both;
+
+	border-bottom: 1px solid #eeeeee;
+}

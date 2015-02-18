@@ -1,0 +1,463 @@
+{{ define "Header" }}
+<style type="text/css">
+
+	#title {
+		width: 100%;
+	}
+	#thumb_box, #startax_box, #attachment_box {
+		width: 100%;
+
+		padding: 5px;
+
+		background: #eeeeee;
+	}
+	#preview {
+		width:  100%;
+		height: 100%;
+
+		overflow-x: hidden;
+		overflow-y: scroll;
+	}
+	#description {
+		width: 100%;
+		height: 100%;
+
+		border-right: 5px dashed #eeeeee;
+	}
+	.progress {
+		margin-bottom: 0;
+	}
+	.box-label {
+		width: 100%;
+
+		color: #555555;
+
+		border-bottom: 1px solid #555555;
+	}
+	.upload {
+		margin-top: 15px;
+	}
+	.upload_box {
+		width: 100%;
+		height: 100%;
+
+		text-align: center;
+
+		padding: 50px;
+
+		color: #666666;
+	}
+	.upload_box i {
+		font-size: 2.5em;
+	}
+	.fileinput-button i {
+		font-size: 1.5em;
+
+		color: #666666;
+	}
+	.help_cap {
+		font-size: 0.9em;
+
+		color: #666666;
+	}
+	.preview_nomarkdown {
+		width: 100%;
+		height: 100%;
+
+		font-size: 2.5em;
+		padding: 100px;
+
+		color: #aaaaaa;
+	}
+	.fileinput_button {
+		position: relative;
+		overflow: hidden;
+	}
+	.fileinput_button input[type=file] {
+		position: absolute;
+		top: 0;
+		right: 0;
+		min-width: 100%;
+		min-height: 100%;
+		font-size: 100px;
+		text-align: right;
+		filter: alpha(opacity=0);
+		opacity: 0;
+		outline: none;
+		background: white;
+		cursor: inherit;
+		display: block;
+	}
+</style>
+{{ end }}
+
+{{ define "Content" }}
+
+<form id="create_program" role="form" class="form-horizonal" action="/api/program/create/" method="POST" enctype="multipart/form-data">
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					プログラムの情報
+				</div>
+				<div class="panel-body">
+					<fieldset>
+	
+						<div class="form-group row">
+							<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
+							<div class="col-md-6">
+								<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力しましょう。" name="title" />
+							</div>
+							<div class="help_cap col-md-3">
+								<p>
+								</p>
+							</div>
+						</div>
+	
+						<div class="form-group row">
+							<label for="thumb_box" class="col-md-3 form-label text-right">2. サムネイル</label>
+							<div class="col-md-6">
+								<div id="thumb_box" class="well dropbox">
+									<div class="progress progress-striped active">
+										<div class="upload_progress progress-bar" style="width: 0%"></div>
+									</div>
+									<div class="upload_box">
+										<div class="upload_box_nofile">
+											<i class="mdi-editor-insert-photo"></i><br />
+										</div>
+										<img class="preview" width=100% style="display: none;" />
+										<span class="status">サムネイル画像をドロップしてください。</span>
+									</div>
+									<span class="btn btn-flat btn-default fileinput_button">
+										<i class="mdi-file-file-upload"></i> 
+										<input type="file" name="thumbnail[]" ></input>
+									</span>
+								</div>
+							</div>
+							<div class="help_cap col-md-3">
+								<p>
+									png, gif, jpg, bmpに対応しています。
+								</p>
+	
+							</div>
+			
+						</div>
+			
+						<div class="form-group row">
+							<label for="startax_box" class="col-md-3 form-label text-right">3. プログラム</label>
+			
+							<div class="col-md-6">
+			
+								<div id="startax_box" class="well dropbox">
+									<div class="progress progress-striped active">
+										<div class="upload_progress progress-bar" style="width: 0%"></div>
+									</div>
+				
+									<div class="upload_box">
+										<div class="upload_box_nofile">
+											<i class="mdi-editor-insert-drive-file"></i><br />
+										</div>
+										<span class="status">startaxファイルをドロップしてください。</span>
+									</div>
+				
+									<span class="btn btn-flat btn-default fileinput_button">
+										<i class="mdi-file-file-upload"></i> 
+										<input type="file" name="startax[]" ></input>
+									</span>
+				
+								</div>
+							</div>
+							<div class="help_cap col-md-3">
+								<p>
+									HSPファイルをコンパイルするときに生成される、startax(または、~.ax)ファイルをアップロードしてください。1MBまで対応しています。
+								</p>
+							</div>
+			
+			
+						</div>
+			
+						<div class="form-group row">
+							<label for="attachment_box" class="col-md-3 form-label text-right">4. 添付するファイル</label>
+							<div class="col-md-6">
+								<h5>全体のファイルサイズ</h5>
+								<div class="progress progress-default">
+									<div class="capacity progress-bar" style="width: 0%"></div>
+								</div>
+			
+								<div id="attachment_box" class="well dropbox">
+									<div class="progress progress-striped active">
+										<div class="upload_progress progress-bar" style="width: 0%"></div>
+									</div>
+				
+									<div class="upload_box">
+										<div class="upload_box_nofile">
+											<i class="mdi-editor-attach-file"></i><br />
+										</div>
+										<ul class="list-unstyled" style="display: none;"></ul>
+										<span class="status">ファイルをドロップしてください。</span>
+									</div>
+				
+									<span class="btn btn-flat btn-default fileinput_button">
+										<i class="mdi-file-file-upload"></i> 
+										<input type="file" name="attachments[]" multiple ></input>
+									</span>
+				
+								</div>
+							</div>
+							<div class="help_cap col-md-3">
+								<p>
+									プログラム中で使用するファイル(画像, 音楽など)を選択してください。5MBまで対応しています。複数可。
+								</p>
+							</div>
+			
+						</div>
+					</fieldset>
+	
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<b>5. 説明</b>
+				</div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<textarea id="description" name="description" rows="12" class="form-control floating-label form-control" placeholder="プログラムの説明文を入力しましょう。"></textarea>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div id="preview">
+								<div class="preview_nomarkdown">
+									<span>プレビュー</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+			<div class="col-md-6">
+				<div class="form-group">
+					<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</a>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group">
+					<button class="btn btn-success btn-raised btn-block form-control" type="submit">投稿</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+</form>
+
+<script type="text/javascript">
+$(document).ready(function() {
+
+	var thumbnail = "";
+	var startax   = "";
+	var attachments = new Array(0);
+
+	function updatePreview() {
+		$.ajax({
+			type: "GET",
+			url: "/api/markdown/",
+			dataType: "json",
+			data: { text: $("#description").val() },
+			success: function (json) {
+				$("#preview").html(json["Markdown"]);
+			}
+		});
+	}
+
+	function resetThumb() {
+		thumbnail = "";
+		var box = $("#thumb_box");
+
+		box.find(".status").text("サムネイル画像をドロップしてください。");
+		box.find(".upload_box img").hide();
+		box.find(".fileinput_button").show();
+		box.find(".upload_box_nofile").show();
+	}
+
+	function resetStartax() {
+		startax = "";
+		var box = $("#startax_box");
+
+		box.find(".status").text("startaxファイルをドロップしてください。");
+		box.find(".fileinput_button").show();
+		box.find(".upload_box_nofile").show();
+		box.find(".upload_box_nofile i").removeAttr("class").addClass("mdi-editor-insert-drive-file");
+	}
+
+	function deleteAttachment(i) {
+		var box = $("#attachmet_box");
+
+		attachments.splice(i, 1);
+		$("#attachment_box ul li").get(i).remove();
+
+		if (attachments.length == 0) {
+			$("#attachment_box .upload_box .upload_box_nofile").show();
+		}
+	}
+
+	function convertArrayBufferToBase64(buffer) {
+		var result = '';
+		var bytes = new Uint8Array(buffer);
+		var len = bytes.byteLength;
+		for (var i = 0; i < len; i++) {
+			result += String.fromCharCode(bytes[i]);
+		}
+		return window.btoa(result);
+	}
+
+	function registFile(elem, file) {
+
+		var $this = elem;
+
+		var id = $this.attr("id");
+
+		if (id == "thumb_box") {
+			readerPreview = new FileReader();
+			readerPreview.onload = function(event) {
+				var preview = $this.find(".preview");
+				var box = $this.find(".upload_box");
+				var stat = $this.find(".upload_box .status");
+				var del = $('<a class="badge" href="#">X</a>');
+
+				stat.text(file.name);
+				stat.append(del);
+
+				del.on("click", function() {
+					resetThumb();
+				});
+
+				preview.attr("src", event.target.result);
+
+				box.find(".upload_box_nofile").hide();
+				$this.find(".fileinput_button").hide();
+
+				preview.show();
+
+			}
+			readerPreview.readAsDataURL(file);
+
+			$this.find(".status").text(file.name+"を読み込み中です…");
+		}
+		if (id == "startax_box") {
+			var del = $('<a class="badge" href="#">X</a>');
+			del.on("click", function() {
+				resetStartax();
+			});
+			$this.find(".upload_box_nofile i").removeAttr("class").addClass("mdi-action-done");
+			$this.find(".status").text(file.name + " " + file.size + "B ").append(del);
+		}
+		if (id == "attachment_box") {
+			var del = $('<a class="badge" href="#">X</a>');
+			var i = attachments.length;
+			del.on("click", function() {
+				deleteAttachment(i);
+			});
+			$this.find(".upload_box_nofile").hide();
+			$this.find("ul").show().append($("<li>"+file.name+" "+(file.size/1024)+"KB </li>").append(del));
+		}
+
+		readerUpload = new FileReader();
+		readerUpload.onload = function(event) {
+			switch(id) {
+				case "thumb_box":
+					thumbnail = convertArrayBufferToBase64(event.target.result);
+					break;
+				case "startax_box":
+					startax = convertArrayBufferToBase64(event.target.result);
+					break;
+				case "attachment_box":
+					attachments.push({
+						"name":  file.name,
+						"value": convertArrayBufferToBase64(event.target.result)
+					});
+					break;
+			}
+		}
+
+		readerUpload.readAsArrayBuffer(file);
+
+	}
+
+	$("#description").bind("keyup", function() {
+		updatePreview();
+	});
+
+	$("#preview").css({
+		"height": $("#description").css("height")
+	});
+
+	$("#thumb_box .progress, #startax_box .progress, #attachment_box .progress").css({
+		"visibility": "hidden"
+	});
+
+	$(".dropbox").on("drop", function(e) {
+		e.preventDefault();
+
+		var files = e.originalEvent.dataTransfer.files;
+
+		registFile($(this), files[0]);
+
+	});
+
+	$("input[type=file]").on("change", function(e) {
+
+		registFile($(this).parents("div[id$=_box]"), this.files[0]);
+
+	});
+
+	$(".dropbox").on("dragover", function(e) {
+		e.preventDefault();
+	});
+
+	$("#create_program").on("submit", function (event) {
+		event.preventDefault();
+
+		var form = $(this).serializeArray();
+		form.push({
+			"name":  "thumbnail",
+			"value": thumbnail
+		});
+		form.push({
+			"name":  "startax",
+			"value": startax
+		});
+		form.push({
+			"name":  "attachments",
+			"value": JSON.stringify(attachments)
+		});
+
+		$.ajax({
+			type: "POST",
+			url:  "/api/program/create/",
+			data: form
+		}).success(function (json) {
+			assert("success", json.responseJSON.Message);
+		}).error(function (json) {
+			assert("error", json.responseJSON.Message);
+		});
+
+	});
+
+
+});
+
+
+</script>
+
+{{ end }}

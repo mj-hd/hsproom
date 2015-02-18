@@ -1,0 +1,26 @@
+{{ define "Header" }}
+<style type="text/css">
+	p {
+		font-size: 2.0em;
+	}
+</style>
+{{ end }}
+{{ define "Content" }}
+
+<div class="panel panel-danger">
+	<div class="panel-heading">
+		<h3 class="panel-title">エラー</h3>
+	</div>
+	<div class="panel-body">
+
+	{{ range .Messages }}
+		<p>
+			{{ . }}
+		</p>
+	{{ end }}
+	</div>
+</div>
+
+<a href="{{ .Referer }}">戻る</a>
+
+{{ end }}

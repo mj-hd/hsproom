@@ -1,0 +1,162 @@
+{{ define "Header" }}
+
+<style type="text/css">
+
+.options {
+	width: 100%;
+}
+.options .btn {
+	text-align: left;
+}
+
+</style>
+
+{{ end }}
+
+{{ define "Content" }}
+
+<div class="col-md-2 col-md-offset-1">
+
+	<span class="">並び順</span>
+	<div class="btn-group-vertical options">
+		<a id="options_created" href="/program/search/?q={{ .Query }}&s=c" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
+		<a id="options_good" href="/program/search/?q={{ .Query }}&s=g" class="btn btn-default"><i class="mdi-social-mood"></i> いいねの数</a>
+		<a id="options_name" href="/program/search/?q={{ .Query }}&s=n" class="btn btn-default"><i class="mdi-action-translate"></i> 名前の順</a>
+	</div>
+
+</div>
+<div class="col-md-7">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			{{ if eq .Query "" }}
+				<b>すべてのプログラム</b>
+			{{ else }}
+				<b>"{{ .Query }}"で検索した結果</b>
+			{{ end }}
+			<span id="sort_display"></span>
+		</div>
+		<div class="panel-body">
+
+			<span>{{ .ProgramCount }} 個のプログラムが見つかりました。</span>
+
+			<div class="program_list">
+
+				{{ range .Programs }}
+					<div class="program_list_item">
+						<div class="program_picture">
+							<img src="/api/program/thumbnail/?p={{ .Id }}" />
+						</div>
+						<div class="program_content">
+							<div class="program_item_heading">
+								<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+								<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+							</div>
+							<div class="program_item_accessory">
+								<span class="played_number"><i class="mdi-av-play-circle-outline"></i>12345</span> 
+								<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
+								<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+
+							</div>
+							<p class="program_item_text">{{ .Description }}</p>
+						</div>
+					</div>
+					<div class="program_separator"></div>
+			
+				{{ else }}
+
+				<h4>プログラムが見つかりませんでした。</h4>
+			
+				{{ end }}
+
+			</div>
+
+			<ul class="pagination pagination-sm">
+				<li id="prev_button"><a href="javascript:prevPage();">«</a></li>
+				<li id="next_button"><a href="javascript:nextPage();">»</a></li>
+			</ul>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+function nextPage() {
+	if ({{ .CurPage }} == {{ .MaxPage }}) { return; }
+	location.href = "/program/search/?q={{ .Query }}&s={{ .Sort }}&p=" + ({{ .CurPage }} + 1);
+}
+
+function prevPage() {
+	if ({{ .CurPage }} == 0) { return; }
+	location.href = "/program/search/?q={{ .Query }}&s={{ .Sort }}&p=" + ({{ .CurPage }} - 1);
+}
+
+$(document).ready(function() {
+
+	switch ({{ .Sort }}) {
+		case "c":
+			$("#options_created").addClass("disabled");
+			$("#sort_display").text("作成日順");
+			break;
+		case "g":
+			$("#options_good").addClass("disabled");
+			$("#sort_display").text("いいね数順");
+			break;
+		case "n":
+			$("#options_name").addClass("disabled");
+			$("#sort_display").text("名前順");
+			break;
+		default:
+			$("#options_create").addClass("disabled");
+			$("#sort_display").text("作成日順");
+			break;
+	}
+
+	if ({{ .CurPage }} == 0) {
+		$("#prev_button").addClass("disabled");
+	}
+	if ({{ .CurPage }} == {{ .MaxPage }}) {
+		$("#next_button").addClass("disabled");
+	}
+
+	var nextButton = $("#next_button");
+	var iLimit = 0;
+
+	iLimit = {{ .CurPage }}+1 >= 5 ? 3 : 5;
+	for (var i = 1; i <= iLimit; i++) {
+		var li = $("<li />").append('<a href="/program/search/?q={{ .Query }}&s={{ .Sort }}&p=' + (i-1) + '">' +  i + "</a>");
+		if (i == {{ .CurPage }} +1) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+	}
+
+	nextButton.before('<li><a href="#" class="disabled">...</a></li>');
+
+	iLimit = ({{ .CurPage }}+1 >= 5) && ({{ .CurPage }} <= {{ .MaxPage }} -5) ? 5 : 0;
+	for (var i = 1;i <= iLimit; i++) {
+		var li = $("<li />").append('<a href="/program/search/?q={{ .Query }}&s={{ .Sort }}&p=' + ({{ .CurPage }} -3 + i)  + '">' + ({{ .CurPage }} -2 + i) + "</a>");
+		if (i == 3) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+
+	}
+	
+	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
+
+	iLimit = {{ .CurPage }} > {{ .MaxPage }} -4 ? 5 : 2;
+	for (var i = iLimit; i > 0; i--) {
+		var li = $("<li />").append('<a href="/program/search/?q={{ .Query }}&s={{ .Sort }}&p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
+		if ({{ .MaxPage }} +1 -i == {{ .CurPage }}) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+
+	}
+
+});
+
+</script>
+
+{{ end }}
