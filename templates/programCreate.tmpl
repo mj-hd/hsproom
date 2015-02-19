@@ -261,6 +261,23 @@
 	
 </form>
 
+<div id="modal" class="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 id="modal_title" class="modal-title"></h4>
+			</div>
+			<div class="modal-body">
+				<p id="modal_text">One fine body…</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
 $(document).ready(function() {
 
@@ -449,7 +466,15 @@ $(document).ready(function() {
 		}).success(function (json) {
 			assert("success", json.responseJSON.Message);
 		}).error(function (json) {
-			assert("error", json.responseJSON.Message);
+			
+			var modal = $("#modal");
+			var modal_title = $("#modal_title");
+			var modal_text = $("#modal_text");
+
+			modal_title.text("エラー");
+			modal_text.text(json.responseJSON.Message);
+			modal.modal();
+
 		});
 
 	});
