@@ -236,7 +236,7 @@
 			$("#good").text(1 + Number($("#good").text()));
 			$(".good_button").attr("href", "#");
 		}).error(function(data) {
-			assert("error", data.responseJSON.Message);
+			assertBottom("error", data.responseJSON.Message);
 		});
 	}
 

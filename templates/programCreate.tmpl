@@ -464,7 +464,7 @@ $(document).ready(function() {
 			url:  "/api/program/create/",
 			data: form
 		}).success(function (json) {
-			assert("success", json.responseJSON.Message);
+			assertBottom("success", json.responseJSON.Message);
 		}).error(function (json) {
 			
 			var modal = $("#modal");
