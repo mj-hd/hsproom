@@ -258,6 +258,8 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 				Message: "プログラムを編集する権限がありません。",
 			},
 		}, 400)
+
+		return
 	}
 
 	// 適用
@@ -278,6 +280,8 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 				Message: "保存に失敗しました。",
 			},
 		}, 500)
+
+		return
 	}
 
 	writeStruct(document, apiProgramUpdateMember{
@@ -336,6 +340,8 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 				Message: "ログインする必要があります。",
 			},
 		}, 400)
+
+		return
 	}
 
 	var userName string
@@ -399,6 +405,8 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 				Message: "保存に失敗しました。もう一度お試しください。",
 			},
 		}, 500)
+
+		return
 	}
 
 	writeStruct(document, apiProgramCreateMember{
