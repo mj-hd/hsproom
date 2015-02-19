@@ -367,34 +367,16 @@
 		printErr: function(text) {
 			text = Array.prototype.slice.call(arguments).join(' ');
 			console.error(text);
-			assert("error", "HSPエラー:"+text)
+			assertBottom("error", "HSPエラー:"+text)
 		},
 		canvas: document.getElementById('screen'),
-		setStatus: function(){}/* function(text) {
-			if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
-			if (text === Module.setStatus.text) return;
-			var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-			var now = Date.now();
-			if (m && now - Date.now() < 30) return; // if this is a progress update, skip it if too soon
-			if (m) {
-				text = m[1];
-				progressElement.value = parseInt(m[2])*100;
-				progressElement.max = parseInt(m[4])*100;
-				progressElement.hidden = false;
-				spinnerElement.hidden = false;
-			} else {
-				progressElement.value = null;
-				progressElement.max = null;
-				progressElement.hidden = true;
-				if (!text) spinnerElement.style.display = 'none';
-			}
-			statusElement.innerHTML = text;
-		}*/,
+		setStatus: function(text){
+			console.log(text);
+		},
 		totalDependencies: 0,
 		monitorRunDependencies: function(){},
 		arguments: ["startax"]
 	};
-	//Module.setStatus('Downloading...');
 	console.log('Downloading...');
 
 	var Module;
@@ -408,56 +390,96 @@
 
 	(function() {
 
-		var PACKAGE_NAME = 'data';
-		var REMOTE_PACKAGE_NAME = '/api/program/data/?pid={{ .ProgramInfo.Id }}&f=startax';
-		var PACKAGE_UUID = '51f84d03-0c74-4552-ac13-924e79e76977';
-	
-		function fetchRemotePackage(packageName, callback, errback) {
+		var fileNames = ["startax"];
+		var files = {};
+
+		function importDataList() {
+			var defer = $.Deferred();
+
+			$.ajax({
+				type: "GET",
+				url:  "/api/program/data_list/",
+				data: {
+					"p": {{ .ProgramInfo.Id }}
+				},
+				dataType: "json"
+			}).success(function(data) {
+				fileNames = fileNames.concat(data.Names);
+				console.log("Downloaded file list.");
+
+				defer.resolve();
+			}).error(function(data) {
+				console.log("Failed to download file list.")
+
+				defer.reject();
+			});
+
+			return defer.promise();
+		}
+
+		function importDataArray(name) {
+			var defer = $.Deferred();
 
 			var xhr = new XMLHttpRequest();
-			xhr.open('GET', packageName, true);
+			xhr.open('GET', '/api/program/data/?pid={{ .ProgramInfo.Id }}&f=' + name, true);
 			xhr.responseType = 'arraybuffer';
+			
+			xhr.onload = function(e) {
+				if (this.status == 200) {
+					files[name] = this.response;
 
-			xhr.onprogress = function(event) {
-				var url = packageName;
+					console.log("Downloaded " + name);
 
-				if (event.loaded) {
-
-					if (Module['setStatus']) Module['setStatus']('Downloading data... (' + event.loaded + '/' + event.total + ')');
+					defer.resolve();
+				} else {
+					defer.reject();
 				}
+
 			};
+			
+			xhr.send();
 
-			xhr.onload = function(event) {
-				var packageData = xhr.response;
-				callback(packageData);
-			};
+			return defer.promise();
+		}
 
-			xhr.send(null);
-		};
+		function importDataArrays() {
+			var defer = $.Deferred();
+			var processingNum = fileNames.length;
 
-		function handleError(error) {
-			console.error('package error:', error);
-		};
-	
-		var fetched = null, fetchedCallback = null;
-		fetchRemotePackage(REMOTE_PACKAGE_NAME, function(data) {
-			if (fetchedCallback) {
-				fetchedCallback(data);
-				fetchedCallback = null;
-			} else {
-				fetched = data;
+			for (var name of fileNames) {
+				importDataArray(name).then(function () {
+					processingNum--;
+					if (processingNum == 0) {
+						defer.resolve();
+					}
+				}, function () {
+					defer.reject();
+				});
 			}
-		}, handleError);
-	
+
+			return defer.promise();
+		}
+		
+		importDataList().then(function() {
+			importDataArrays().then(function () {
+		
+				if (Module['calledRun']) {
+					runWithFS();
+				} else {
+					if (!Module['preRun']) Module['preRun'] = [];
+					Module["preRun"].push(runWithFS); // FS is not initialized yet, wait for it
+				}
+
+			});
+		});
+
 		function runWithFS() {
 
 			function assert(check, msg) {
 				if (!check) throw msg + new Error().stack;
 			}
 
-			function DataRequest(start, end, crunched, audio) {
-				this.start = start;
-				this.end = end;
+			function DataRequest(crunched, audio) {
 				this.crunched = crunched;
 				this.audio = audio;
 			}
@@ -471,9 +493,8 @@
 				},
 				send: function() {},
 				onload: function() {
-					var byteArray = this.byteArray.subarray(this.start, this.end);
-	
-					this.finish(byteArray);
+
+					this.finish(this.byteArray);
 	
 				},
 				finish: function(byteArray) {
@@ -501,49 +522,38 @@
 				ENV.HSP_LIMIT_STEP = "5000";//ブラウザに処理を返すまでの実行ステップ数
 			});
 
-			new DataRequest(0, {{ .ProgramInfo.Size }}, 0, 0).open('GET', '/startax');
+			
+			for (var name of fileNames) {
+				new DataRequest(0, 0).open('GET', '/' + name);
+			}
 
 
-			function processPackageData(arrayBuffer) {
+			function processPackageData() {
 				console.log('Processing package data...')
 
 				Module.finishedDataFileDownloads++;
-				assert(arrayBuffer, 'Loading data file failed.');
-				var byteArray = new Uint8Array(arrayBuffer);
-				var curr;
-			
-				// copy the entire loaded file into a spot in the heap. Files will refer to slices in that. They cannot be freed though.
-				var ptr = Module['_malloc'](byteArray.length);
-				Module['HEAPU8'].set(byteArray, ptr);
-				DataRequest.prototype.byteArray = Module['HEAPU8'].subarray(ptr, ptr+byteArray.length);
 
-				DataRequest.prototype.requests["/startax"].onload();
+				for (var name of fileNames) {
+					DataRequest.prototype.requests['/' + name].byteArray = new Uint8Array(files[name]);
+					DataRequest.prototype.requests['/' + name].onload();
+				}
 
 				Module['removeRunDependency']('datafile_data');
 
 			};
 
+			
 			Module['addRunDependency']('datafile_data');
-	
+
 			if (!Module.preloadResults) Module.preloadResults = {};
 	
-			Module.preloadResults[PACKAGE_NAME] = {fromCache: false};
+			Module.preloadResults["data"] = {fromCache: false};
 
-			if (fetched) {
-				processPackageData(fetched);
-				fetched = null;
-			} else {
-				fetchedCallback = processPackageData;
-			}
+			processPackageData();
 
 		}
 
-		if (Module['calledRun']) {
-			runWithFS();
-		} else {
-			if (!Module['preRun']) Module['preRun'] = [];
-			Module["preRun"].push(runWithFS); // FS is not initialized yet, wait for it
-		}
+		
 	})();
 </script>
 

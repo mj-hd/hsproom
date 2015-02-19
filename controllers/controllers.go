@@ -36,6 +36,7 @@ func init() {
 	Router.Register("/api/program/update/", apiProgramUpdateHandler)
 	Router.Register("/api/program/create/", apiProgramCreateHandler)
 	Router.Register("/api/program/data/", apiProgramDataHandler)
+	Router.Register("/api/program/data_list/", apiProgramDataListHandler)
 	Router.Register("/api/program/thumbnail/", apiProgramThumbnailHandler)
 	Router.Register("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
 	Router.Register("/api/twitter/access_token/", apiTwitterAccessTokenHandler)

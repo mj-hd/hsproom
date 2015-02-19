@@ -418,6 +418,75 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 }
 
+type apiProgramDataListMember struct {
+	*apiMember
+	Names []string
+}
+
+func apiProgramDataListHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "GET" {
+
+		utils.PromulgateDebugStr(os.Stdout, "GET以外のDataListリクエスト")
+
+		writeStruct(document, apiProgramDataListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "GETを使用してください。",
+			},
+		}, 400)
+
+		return
+	}
+
+	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
+
+	if err != nil {
+
+		utils.PromulgateDebugStr(os.Stdout, "プログラムIDが不正")
+
+		writeStruct(document, apiProgramDataListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "プログラムIDが不正です。",
+			},
+		}, 400)
+
+		return
+	}
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+
+	if err != nil {
+
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiProgramDataListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "プログラムが存在しません。",
+			},
+		}, 400)
+
+		return
+	}
+
+	var names []string
+
+	for _, file := range program.Attachments.Files {
+		names = append(names, file.Name)
+	}
+
+	writeStruct(document, apiProgramDataListMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "添付ファイル一覧の取得に成功しました。",
+		},
+		Names: names,
+	}, 200)
+}
+
 // jsonじゃないよ
 func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) {
 
