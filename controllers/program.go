@@ -373,3 +373,207 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 }
+
+type programRankingMember struct {
+	*templates.DefaultMember
+	Programs     []models.ProgramInfo
+	CurPage      int
+	MaxPage      int
+	ProgramCount int
+	Period       string
+}
+
+func programRankingDailyHandler(document http.ResponseWriter, request *http.Request) {
+
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "programRanking.tmpl"
+
+	page, err := strconv.Atoi(request.URL.Query().Get("p"))
+
+	if err != nil {
+		page = 0
+	}
+
+	var programs []models.ProgramInfo
+
+	i, err := models.GetProgramRankingForDay(&programs, page*10, 10)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	maxPage := i / 10
+	if (i % 10) == 0 {
+		maxPage--
+	}
+
+	err = tmpl.Render(document, programRankingMember{
+		DefaultMember: &templates.DefaultMember{
+			Title: "日間ランキング - " + config.SiteTitle,
+			User:  getSessionUser(request),
+		},
+		Programs:     programs,
+		CurPage:      page,
+		MaxPage:      maxPage,
+		ProgramCount: i,
+		Period:       "daily",
+	})
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
+		return
+	}
+}
+
+func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Request) {
+
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "programRanking.tmpl"
+
+	page, err := strconv.Atoi(request.URL.Query().Get("p"))
+
+	if err != nil {
+		page = 0
+	}
+
+	var programs []models.ProgramInfo
+
+	i, err := models.GetProgramRankingForMonth(&programs, page*10, 10)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	maxPage := i / 10
+	if (i % 10) == 0 {
+		maxPage--
+	}
+
+	err = tmpl.Render(document, programRankingMember{
+		DefaultMember: &templates.DefaultMember{
+			Title: "月間ランキング - " + config.SiteTitle,
+			User:  getSessionUser(request),
+		},
+		Programs:     programs,
+		CurPage:      page,
+		MaxPage:      maxPage,
+		ProgramCount: i,
+		Period:       "monthly",
+	})
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
+		return
+	}
+
+}
+
+func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Request) {
+
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "programRanking.tmpl"
+
+	page, err := strconv.Atoi(request.URL.Query().Get("p"))
+
+	if err != nil {
+		page = 0
+	}
+
+	var programs []models.ProgramInfo
+
+	i, err := models.GetProgramRankingForWeek(&programs, page*10, 10)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	maxPage := i / 10
+	if (i % 10) == 0 {
+		maxPage--
+	}
+
+	err = tmpl.Render(document, programRankingMember{
+		DefaultMember: &templates.DefaultMember{
+			Title: "週間ランキング - " + config.SiteTitle,
+			User:  getSessionUser(request),
+		},
+		Programs:     programs,
+		CurPage:      page,
+		MaxPage:      maxPage,
+		ProgramCount: i,
+		Period:       "weekly",
+	})
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
+		return
+	}
+
+}
+
+func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Request) {
+
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "programRanking.tmpl"
+
+	page, err := strconv.Atoi(request.URL.Query().Get("p"))
+
+	if err != nil {
+		page = 0
+	}
+
+	var programs []models.ProgramInfo
+
+	i, err := models.GetProgramRankingForAllTime(&programs, page*10, 10)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	maxPage := i / 10
+	if (i % 10) == 0 {
+		maxPage--
+	}
+
+	err = tmpl.Render(document, programRankingMember{
+		DefaultMember: &templates.DefaultMember{
+			Title: "総合ランキング" + config.SiteTitle,
+			User:  getSessionUser(request),
+		},
+		Programs:     programs,
+		CurPage:      page,
+		MaxPage:      maxPage,
+		ProgramCount: i,
+		Period:       "alltime",
+	})
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
+		return
+	}
+
+}

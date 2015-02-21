@@ -42,6 +42,10 @@
 			<div class="program_list">
 
 				{{ range .Programs }}
+
+					{{ if eq .Id 0 }}
+
+					{{ else }}
 					<div class="program_list_item">
 						<div class="program_picture">
 							<img src="/api/program/thumbnail/?p={{ .Id }}" />
@@ -61,10 +65,8 @@
 						</div>
 					</div>
 					<div class="program_separator"></div>
-			
-				{{ else }}
 
-				<h4>プログラムが見つかりませんでした。</h4>
+					{{ end }}
 			
 				{{ end }}
 
@@ -123,7 +125,7 @@ $(document).ready(function() {
 	var iLimit = 0;
 
 	iLimit = {{ .CurPage }}+1 >= 5 ? 3 : 5;
-	for (var i = 1; i <= iLimit; i++) {
+	for (var i = 1; (i <= iLimit) && (i <= {{ .MaxPage }}); i++) {
 		var li = $("<li />").append('<a href="/program/search/?q={{ .Query }}&s={{ .Sort }}&p=' + (i-1) + '">' +  i + "</a>");
 		if (i == {{ .CurPage }} +1) {
 			li.addClass("active");
@@ -131,7 +133,9 @@ $(document).ready(function() {
 		nextButton.before(li);
 	}
 
-	nextButton.before('<li><a href="#" class="disabled">...</a></li>');
+	if ({{ .MaxPage }} > 10) {
+		nextButton.before('<li><a href="#" class="disabled">...</a></li>');
+	}
 
 	iLimit = ({{ .CurPage }}+1 >= 5) && ({{ .CurPage }} <= {{ .MaxPage }} -5) ? 5 : 0;
 	for (var i = 1;i <= iLimit; i++) {
@@ -146,7 +150,7 @@ $(document).ready(function() {
 	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
 
 	iLimit = {{ .CurPage }} > {{ .MaxPage }} -4 ? 5 : 2;
-	for (var i = iLimit; i > 0; i--) {
+	for (var i = iLimit; (i > 0) && ({{ .MaxPage }} + 2 - i) > 0; i--) {
 		var li = $("<li />").append('<a href="/program/search/?q={{ .Query }}&s={{ .Sort }}&p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
 		if ({{ .MaxPage }} +1 -i == {{ .CurPage }}) {
 			li.addClass("active");

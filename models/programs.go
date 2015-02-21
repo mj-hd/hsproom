@@ -480,6 +480,78 @@ func (this *ProgramColumn) String() string {
 	return ""
 }
 
+func GetProgramRankingForDay(out *[]ProgramInfo, from int, number int) (int, error) {
+
+	now := time.Now()
+	todayBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	return getProgramRankingSince(todayBegin, out, from, number)
+}
+
+func GetProgramRankingForWeek(out *[]ProgramInfo, from int, number int) (int, error) {
+
+	now := time.Now()
+	thisWeekBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -7)
+
+	return getProgramRankingSince(thisWeekBegin, out, from, number)
+}
+
+func GetProgramRankingForMonth(out *[]ProgramInfo, from int, number int) (int, error) {
+
+	now := time.Now()
+	thisMonthBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, -1, 0)
+
+	return getProgramRankingSince(thisMonthBegin, out, from, number)
+}
+
+func getProgramRankingSince(since time.Time, out *[]ProgramInfo, from int, number int) (int, error) {
+
+	// キャパシティチェック
+	if cap(*out) < number {
+		*out = make([]ProgramInfo, number)
+	}
+
+	var rowCount int
+	err := DB.QueryRow("SELECT count(id) FROM programs WHERE created >= ? ORDER BY good DESC", since.Format("2006-1-2")).Scan(&rowCount)
+
+	if err != nil {
+		return 0, err
+	}
+
+	rows, err := DB.Query("SELECT id FROM programs WHERE created >= ? ORDER BY good DESC LIMIT ?, ?", since.Format("2006-1-2"), from, number)
+
+	if err != nil {
+		return rowCount, err
+	}
+	defer rows.Close()
+
+	i := 0
+	for rows.Next() {
+		var id int
+		err := rows.Scan(&id)
+
+		if err != nil {
+			return rowCount, err
+		}
+
+		err = (*out)[i].Load(id)
+
+		if err != nil {
+			return rowCount, err
+		}
+
+		i++
+	}
+
+	return rowCount, nil
+
+}
+
+func GetProgramRankingForAllTime(out *[]ProgramInfo, from int, number int) (int, error) {
+
+	return GetProgramListBy(ProgramColGood, out, true, from, number)
+}
+
 func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, from int, number int) (int, error) {
 
 	// キャパシティチェック
