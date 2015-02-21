@@ -552,7 +552,7 @@ func GetProgramRankingForAllTime(out *[]ProgramInfo, from int, number int) (int,
 	return GetProgramListBy(ProgramColGood, out, true, from, number)
 }
 
-func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, from int, number int) (int, error) {
+func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isAsc bool, from int, number int) (int, error) {
 
 	// キャパシティチェック
 	if cap(*out) < number {
@@ -562,10 +562,10 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, 
 	// 並び順
 	var order string
 
-	if isDesc {
-		order = "DESC"
-	} else {
+	if isAsc {
 		order = "ASC"
+	} else {
+		order = "DESC"
 	}
 
 	// クエリを発行
@@ -597,7 +597,7 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, 
 	return i, nil
 }
 
-func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramColumn, isDesc bool, number int, offset int) (int, error) {
+func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramColumn, isAsc bool, number int, offset int) (int, error) {
 
 	if cap(*out) < number {
 		*out = make([]ProgramInfo, number)
@@ -606,10 +606,10 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 	// 並び順
 	var order string
 
-	if isDesc {
-		order = "DESC"
-	} else {
+	if isAsc {
 		order = "ASC"
+	} else {
+		order = "DESC"
 	}
 
 	queryMod := "%" + query + "%"
@@ -652,7 +652,7 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 
 }
 
-func GetProgramListByUser(out *[]ProgramInfo, name string, number int, offset int) (int, error) {
+func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name string, isAsc bool, from int, number int) (int, error) {
 
 	if cap(*out) < number {
 		*out = make([]ProgramInfo, number)
@@ -661,16 +661,14 @@ func GetProgramListByUser(out *[]ProgramInfo, name string, number int, offset in
 	// 並び順
 	var order string
 
-	//if isDesc {
-	order = "DESC"
-	//} else {
-	//	order = "ASC"
-	//}
-
-	keyColumn := "created"
+	if isAsc {
+		order = "ASC"
+	} else {
+		order = "DESC"
+	}
 
 	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY ? "+order+" LIMIT ?, ?", name, keyColumn, offset, number)
+	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY ? "+order+" LIMIT ?, ?", name, keyColumn.String(), from, number)
 	if err != nil {
 		return 0, err
 	}

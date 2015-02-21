@@ -46,7 +46,7 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	var programs []models.ProgramInfo
 
-	_, err = models.GetProgramListByUser(&programs, user.Name, 4, 0)
+	_, err = models.GetProgramListByUser(models.ProgramColCreated, &programs, user.Name, true, 0, 4)
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
@@ -94,4 +94,87 @@ func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 
 func userEditHandler(document http.ResponseWriter, request *http.Request) {
 
+}
+
+type userProgramsMember struct {
+	*templates.DefaultMember
+	Programs     []models.ProgramInfo
+	ProgramCount int
+	CurPage      int
+	MaxPage      int
+	Sort         string
+	UserName     string
+	UserId       int
+}
+
+func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
+
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "userPrograms.tmpl"
+
+	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
+
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	sort := request.URL.Query().Get("s")
+
+	var sortKey models.ProgramColumn
+	switch sort {
+	case "c":
+		sortKey = models.ProgramColCreated
+	case "g":
+		sortKey = models.ProgramColGood
+	case "n":
+		sortKey = models.ProgramColTitle
+	default:
+		sortKey = models.ProgramColCreated
+	}
+
+	page, err := strconv.Atoi(request.URL.Query().Get("p"))
+	if err != nil {
+		page = 0
+	}
+
+	userName, err := models.GetUserName(userId)
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	var programs []models.ProgramInfo
+	i, err := models.GetProgramListByUser(sortKey, &programs, userName, true, page*10, 10)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	maxPage := i / 10
+	if i%10 == 0 {
+		maxPage--
+	}
+
+	err = tmpl.Render(document, userProgramsMember{
+		DefaultMember: &templates.DefaultMember{
+			Title: userName + " - " + config.SiteTitle,
+			User:  getSessionUser(request),
+		},
+		Programs:     programs,
+		ProgramCount: i,
+		CurPage:      page,
+		MaxPage:      maxPage,
+		Sort:         sort,
+		UserName:     userName,
+		UserId:       userId,
+	})
 }

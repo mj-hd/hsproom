@@ -33,6 +33,7 @@ func init() {
 	Router.Register("/user/view/", userViewHandler)
 	Router.Register("/user/edit/", userEditHandler)
 	Router.Register("/user/list/", userListHandler)
+	Router.Register("/user/programs/", userProgramsHandler)
 	Router.Register("/api/", apiHandler)
 	Router.Register("/api/markdown/", apiMarkdownHandler)
 	Router.Register("/api/twitter/search/", apiTwitterSearchHandler)
