@@ -1,0 +1,189 @@
+{{ define "Header" }}
+
+<style type="text/css">
+
+.program_number {
+	height: 170px;
+
+	float: left;
+
+	line-height: 170px;
+
+	background: #ffffff;
+}
+
+.program_number_1 {
+	font-size: 1.4em;
+
+	color: #D9A441;
+}
+
+.program_number_2 {
+	font-size: 1.3em;
+
+	color: #CCC2C2;
+}
+
+.program_number_3 {
+	font-size: 1.2em;
+
+	color: #965A38;
+}
+
+</style>
+
+{{ end }}
+{{ define "Content" }}
+
+<div class="col-md-8 col-md-offset-2">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<b class="h3">
+			{{ if eq .Period "daily" }}
+				日間
+			{{ end }}
+			{{ if eq .Period "weekly" }}
+				週間
+			{{ end }}
+			{{ if eq .Period "monthly" }}
+				月間
+			{{ end }}
+			{{ if eq .Period "alltime" }}
+				総合
+			{{ end }}
+			ランキング</b>
+			<span id="sort_display"></span>
+		</div>
+		<div class="panel-body">
+
+			<div class="program_list">
+
+				{{ if eq .ProgramCount 0 }}
+					<h3>この期間プログラムが投稿されていません。</h3>
+				{{ end }}
+
+				{{ range .Programs }}
+
+					{{ if eq .Title "" }}
+
+					{{ else }}
+					<div class="program_list_item">
+						<div class="program_number"></div>
+						<div>
+							<div class="program_picture">
+								<img src="/api/program/thumbnail/?p={{ .Id }}" />
+							</div>
+							<div class="program_content">
+								<div class="program_item_heading">
+									<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+									<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+								</div>
+								<div class="program_item_accessory">
+									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>12345</span> 
+									<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
+									<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+
+								</div>
+								<p class="program_item_text">{{ .Description }}</p>
+							</div>
+						</div>
+					</div>
+					<div class="program_separator"></div>
+
+					{{ end }}
+
+				{{ end }}
+
+			</div>
+
+			<ul class="pagination pagination-sm">
+				<li id="prev_button"><a href="javascript:prevPage();">«</a></li>
+				<li id="next_button"><a href="javascript:nextPage();">»</a></li>
+			</ul>
+
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+function nextPage() {
+	if ({{ .CurPage }} == {{ .MaxPage }}) { return; }
+	location.href = location.path+"?p=" + ({{ .CurPage }} + 1);
+}
+
+function prevPage() {
+	if ({{ .CurPage }} == 0) { return; }
+	location.href = location.path+"?p=" + ({{ .CurPage }} - 1);
+}
+
+$(document).ready(function() {
+
+	if ({{ .CurPage }} == 0) {
+		$("#prev_button").addClass("disabled");
+	}
+	if ({{ .CurPage }} == {{ .MaxPage }}) {
+		$("#next_button").addClass("disabled");
+	}
+
+	var nextButton = $("#next_button");
+	var iLimit = 0;
+
+	iLimit = {{ .CurPage }}+1 >= 5 ? 3 : 5;
+	for (var i = 1; (i <= iLimit) && (i <= {{ .MaxPage }}); i++) {
+		var li = $("<li />").append('<a href="'+location.path+'?p=' + (i-1) + '">' +  i + "</a>");
+		if (i == {{ .CurPage }} +1) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+	}
+
+	if ({{ .MaxPage }} > 10) {
+		nextButton.before('<li><a href="#" class="disabled">...</a></li>');
+	}
+
+	iLimit = ({{ .CurPage }}+1 >= 5) && ({{ .CurPage }} <= {{ .MaxPage }} -5) ? 5 : 0;
+	for (var i = 1;i <= iLimit; i++) {
+		var li = $("<li />").append('<a href="'+location.path+'?p=' + ({{ .CurPage }} -3 + i)  + '">' + ({{ .CurPage }} -2 + i) + "</a>");
+		if (i == 3) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+
+	}
+	
+	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
+
+	iLimit = {{ .CurPage }} > {{ .MaxPage }} -4 ? 5 : 2;
+	for (var i = iLimit; (i > 0) && ({{ .MaxPage }} + 2 -i) > 0; i--) {
+		var li = $("<li />").append('<a href="'+location.path+'?p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
+		if ({{ .MaxPage }} +1 -i == {{ .CurPage }}) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+
+	}
+
+	var i = {{ .CurPage }} *10;
+	$(".program_number").each(function () {
+		i++;
+
+		$(this).text(String(i) + "位");
+
+		if (i == 1) {
+			$(this).addClass("program_number_1");
+			$(this).prepend('<i class="mdi-action-grade" aria-hidden="true"></i>');
+		} else if (i == 2) {
+			$(this).addClass("program_number_2");
+			$(this).prepend('<i class="mdi-action-grade" aria-hidden="true"></i>');
+		} else if (i == 3) {
+			$(this).addClass("program_number_3");
+			$(this).prepend('<i class="mdi-action-grade" aria-hidden="true"></i>');
+		}
+	});
+
+});
+
+</script>
+
+{{ end }}
