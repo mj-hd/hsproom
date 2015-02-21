@@ -356,7 +356,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, programSearchMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "プログラムの検索" + config.SiteTitle,
+			Title: "プログラムの検索 - " + config.SiteTitle,
 			User:  getSessionUser(request),
 		},
 		Query:        queryWord,
