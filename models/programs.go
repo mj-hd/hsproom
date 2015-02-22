@@ -667,10 +667,17 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 		order = "DESC"
 	}
 
+	var rowCount int
+	err := DB.QueryRow("SELECT count(id) FROM programs WHERE user = ?", name).Scan(&rowCount)
+
+	if err != nil {
+		return 0, err
+	}
+
 	// クエリを発行
 	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY ? "+order+" LIMIT ?, ?", name, keyColumn.String(), from, number)
 	if err != nil {
-		return 0, err
+		return rowCount, err
 	}
 	defer rows.Close()
 
@@ -681,17 +688,17 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 		err := rows.Scan(&id)
 
 		if err != nil {
-			return i, err
+			return rowCount, err
 		}
 
 		err = (*out)[i].Load(id)
 
 		if err != nil {
-			return i, err
+			return rowCount, err
 		}
 
 		i++
 	}
 
-	return i, nil
+	return rowCount, nil
 }
