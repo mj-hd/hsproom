@@ -552,7 +552,7 @@ func GetProgramRankingForAllTime(out *[]ProgramInfo, from int, number int) (int,
 	return GetProgramListBy(ProgramColGood, out, true, from, number)
 }
 
-func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isAsc bool, from int, number int) (int, error) {
+func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, from int, number int) (int, error) {
 
 	// キャパシティチェック
 	if cap(*out) < number {
@@ -562,14 +562,14 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isAsc bool, f
 	// 並び順
 	var order string
 
-	if isAsc {
-		order = "ASC"
-	} else {
+	if isDesc {
 		order = "DESC"
+	} else {
+		order = "ASC"
 	}
 
 	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs ORDER BY ? "+order+" LIMIT ?, ?", keyColumn.String(), from, number)
+	rows, err := DB.Query("SELECT id FROM programs ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", from, number)
 	if err != nil {
 		return 0, err
 	}
@@ -597,7 +597,7 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isAsc bool, f
 	return i, nil
 }
 
-func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramColumn, isAsc bool, number int, offset int) (int, error) {
+func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramColumn, isDesc bool, number int, offset int) (int, error) {
 
 	if cap(*out) < number {
 		*out = make([]ProgramInfo, number)
@@ -606,10 +606,10 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 	// 並び順
 	var order string
 
-	if isAsc {
-		order = "ASC"
-	} else {
+	if isDesc {
 		order = "DESC"
+	} else {
+		order = "ASC"
 	}
 
 	queryMod := "%" + query + "%"
@@ -623,7 +623,7 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 	}
 
 	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE ? ORDER BY ? "+order+" LIMIT ?, ?", queryMod, keyColumn.String(), offset, number)
+	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE ? ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", queryMod, offset, number)
 	if err != nil {
 		return rowCount, err
 	}
@@ -652,7 +652,7 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 
 }
 
-func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name string, isAsc bool, from int, number int) (int, error) {
+func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name string, isDesc bool, from int, number int) (int, error) {
 
 	if cap(*out) < number {
 		*out = make([]ProgramInfo, number)
@@ -661,10 +661,10 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 	// 並び順
 	var order string
 
-	if isAsc {
-		order = "ASC"
-	} else {
+	if isDesc {
 		order = "DESC"
+	} else {
+		order = "ASC"
 	}
 
 	var rowCount int
@@ -675,7 +675,7 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 	}
 
 	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY ? "+order+" LIMIT ?, ?", name, keyColumn.String(), from, number)
+	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", name, from, number)
 	if err != nil {
 		return rowCount, err
 	}
