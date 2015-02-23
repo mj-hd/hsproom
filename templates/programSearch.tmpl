@@ -15,7 +15,11 @@
 
 {{ define "Content" }}
 
-<div class="col-md-2 col-md-offset-1">
+<div class="col-md-2">
+
+	<div class="btn-group-vertical options">
+		<a href="/program/" class="btn btn-default"><i class="mdi-social-poll"></i> ダッシュボード</a>
+	</div>
 
 	<span class="">並び順</span>
 	<div class="btn-group-vertical options">
@@ -24,8 +28,16 @@
 		<a id="options_name" href="/program/search/?q={{ .Query }}&s=n" class="btn btn-default"><i class="mdi-action-translate"></i> 名前の順</a>
 	</div>
 
+	<span>人気ランキング</span>
+	<div class="btn-group-vertical options">
+		<a href="/program/ranking/daily/" class="btn btn-default"><i class="mdi-action-thumb-up"></i> 日間</a>
+		<a href="/program/ranking/weekly/" class="btn btn-default"><i class="mdi-action-star-rate"></i> 週間</a>
+		<a href="/program/ranking/monthly/" class="btn btn-default"><i class="mdi-action-grade"></i> 月間</a>
+		<a href="/program/ranking/alltime/" class="btn btn-default"><i class="mdi-action-stars"></i> 総合</a>
+	</div>
+
 </div>
-<div class="col-md-7">
+<div class="col-md-10">
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			{{ if eq .Query "" }}
