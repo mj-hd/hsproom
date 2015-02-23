@@ -60,6 +60,24 @@
 
 </div>
 
+<div class="modal" id="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title">Modal title</h4>
+			</div>
+			<div class="modal-body">
+				<p>One fine body…</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">キャンセル</button>
+				<button id="delete_button" type="button" class="btn btn-warning">削除</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
 
 function userProgramListItem(programInfo) {
@@ -70,7 +88,9 @@ function userProgramListItem(programInfo) {
 	).append(
 		$('<div class="row-content" />').append(
 			$('<div class="least-content" />').append(
-				$('<a href="/program/edit/?p='+programInfo.Id+'" class="btn btn-primary btn-xs"><i class="mdi-editor-mode-edit"></i>編集する</a>')
+				$('<a href="/program/edit/?p='+programInfo.Id+'" class="text-primary"><i class="mdi-editor-mode-edit"></i>編集</a> ')
+			).append(
+				$('<a href="javascript:removeProgram('+programInfo.Id+');" class="text-warning"> <i class="mdi-navigation-close"></i>削除</a>')
 			)
 		).append(
 			$('<h4 class="list-group-item-heading" />').append(
@@ -86,6 +106,31 @@ function userProgramListItem(programInfo) {
 	).append(
 		$('<div class="list-group-separator"></div>')
 	);
+}
+
+function userGoodListItem(programInfo) {
+	return $('<div class="list-group-item" />').append(
+		$('<div class="row-picture" />').append(
+			$('<img src="/api/program/thumbnail/?p='+programInfo.Id+'" class="circle" />')
+		)
+	).append(
+		$('<div class="row-content" />').append(
+			$('<div class="least-content" />').append(
+				$('<a href="javascript:removeGood('+programInfo.Id+');" class="text-warning"><i class="mdi-navigation-close"></i>取り消し</a>')
+			)
+		).append(
+			$('<h4 class="list-group-item-heading" />').append(
+				$('<a href="/program/view/?p='+programInfo.Id+'" />').text(programInfo.Title)
+			)
+		).append(
+			$('<p class="list-group-item-text" />').append(
+				$('<div class="" />').text(programInfo.Description)
+			)
+		)
+	).append(
+		$('<div class="list-group-separator"></div>')
+	);
+
 }
 
 function top() {
@@ -235,7 +280,7 @@ function updateGoodPrograms(page) {
 	}).success(function (data) {
 		$("#good .list-group").html("");
 		$.each(data.Programs, function () {
-			$("#good .list-group").append(userProgramListItem(this));
+			$("#good .list-group").append(userGoodListItem(this));
 		});
 
 		defer.resolve(data.ProgramCount);
@@ -247,6 +292,45 @@ function updateGoodPrograms(page) {
 	});
 
 	return defer.promise();
+}
+
+function removeProgram(programId) {
+	$("#modal .modal-title").text("確認");
+	$("#modal .modal-body p").text("本当にプログラムを削除しますか？");
+
+	$("#modal").modal();
+
+	$("#delete_button").bind("click", function() {
+		$.ajax({
+			type: "POST",
+			dataType: "json",
+			url: "/api/program/remove/",
+			data: {
+				"p": programId
+			}
+		}).success(function(data) {
+			// TODO: update programs
+		}).error(function(data) {
+			assertBottom("error", "プログラムの削除に失敗しました。");
+		});
+	});
+}
+
+function removeGood(programId) {
+
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "/api/good/remove/",
+		data: {
+			"p": programId
+		}
+	}).success(function(data) {
+		// TODO: update goods
+	}).error(function(data) {
+		assertBottom("error", "いいね!の取り消しに失敗しました。");
+	});
+
 }
 
 $(document).ready(function() {
