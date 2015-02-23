@@ -122,6 +122,13 @@ func (this *Program) Create() (int, error) {
 	return int(id), nil
 }
 
+func (this *Program) Remove() error {
+
+	_, err := DB.Exec("DELETE FROM programs WHERE id = ?", this.Id)
+
+	return err
+}
+
 func (this *ProgramInfo) Load(id int) error {
 
 	row := DB.QueryRow("SELECT id, created, modified, title, user, good, thumbnail, description, size FROM programs WHERE id = ?", id)
@@ -149,6 +156,13 @@ func (this *ProgramInfo) Update() error {
 	}
 
 	return nil
+}
+
+func (this *ProgramInfo) Remove() error {
+
+	_, err := DB.Exec("DELETE FROM programs WHERE id = ?", this.Id)
+
+	return err
 }
 
 type RawProgram struct {

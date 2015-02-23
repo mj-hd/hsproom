@@ -42,6 +42,7 @@ func init() {
 	Router.Register("/api/program/good/count/", apiProgramGoodCountHandler)
 	Router.Register("/api/program/update/", apiProgramUpdateHandler)
 	Router.Register("/api/program/create/", apiProgramCreateHandler)
+	Router.Register("/api/program/remove/", apiProgramRemoveHandler)
 	Router.Register("/api/program/data/", apiProgramDataHandler)
 	Router.Register("/api/program/data_list/", apiProgramDataListHandler)
 	Router.Register("/api/program/thumbnail/", apiProgramThumbnailHandler)
@@ -50,6 +51,7 @@ func init() {
 	Router.Register("/api/user/info/", apiUserInfoHandler)
 	Router.Register("/api/user/programs/", apiUserProgramsHandler)
 	Router.Register("/api/user/goods/", apiUserGoodsHandler)
+	Router.Register("/api/good/remove/", apiGoodRemoveHandler)
 
 }
 func Del() {

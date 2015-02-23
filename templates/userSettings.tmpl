@@ -78,13 +78,16 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">キャンセル</button>
-				<button id="delete_button" type="button" class="btn btn-warning">削除</button>
+				<button id="delete_button" type="button" class="btn btn-warning" data-dismiss="modal">削除</button>
 			</div>
 		</div>
 	</div>
 </div>
 
 <script type="text/javascript">
+
+var currentProgramPage = 0;
+var currentGoodPage = 0;
 
 function userProgramListItem(programInfo) {
 	return $('<div class="list-group-item" />').append(
@@ -174,11 +177,13 @@ function hideAll() {
 
 function changeUserProgramsPage(page) {
 	updateUserPrograms(page).then(function(rowCount) {
-		var maxPage = rowCount / 5;
+		var maxPage = Math.floor(rowCount / 5);
 		if (rowCount % 5 == 0) {
 			maxPage--;
 		}
 		updatePagination($("#edit"), "changeUserProgramsPage", page, maxPage);
+
+		currentProgramPage = page;
 	});
 }
 
@@ -247,7 +252,9 @@ function updateUserPrograms(page) {
 	}).success(function (data) {
 		$("#edit .list-group").html("");
 		$.each(data.Programs, function () {
-			$("#edit .list-group").append(userProgramListItem(this));
+			if (this.Title != "") {
+				$("#edit .list-group").append(userProgramListItem(this));
+			}
 		});
 
 		defer.resolve(data.ProgramCount);
@@ -263,11 +270,13 @@ function updateUserPrograms(page) {
 
 function changeGoodProgramsPage(page) {
 	updateGoodPrograms(page).then(function(rowCount) {
-		var maxPage = rowCount / 5;
+		var maxPage = Math.floow(rowCount / 5);
 		if (rowCount % 5 == 0) {
 			maxPage--;
 		}
 		updatePagination($("#good"), "changeGoodProgramsPage", page, maxPage);
+
+		currentGoodPage = page;
 	});
 }
 
@@ -286,7 +295,9 @@ function updateGoodPrograms(page) {
 	}).success(function (data) {
 		$("#good .list-group").html("");
 		$.each(data.Programs, function () {
-			$("#good .list-group").append(userGoodListItem(this));
+			if (this.Title != "") {
+				$("#good .list-group").append(userGoodListItem(this));
+			}
 		});
 
 		defer.resolve(data.ProgramCount);
@@ -315,7 +326,9 @@ function removeProgram(programId) {
 				"p": programId
 			}
 		}).success(function(data) {
-			// TODO: update programs
+			changeUserProgramsPage(currentProgramPage);
+
+			assertBottom("success", "プログラムの削除に成功しました。");
 		}).error(function(data) {
 			assertBottom("error", "プログラムの削除に失敗しました。");
 		});
@@ -332,7 +345,9 @@ function removeGood(programId) {
 			"p": programId
 		}
 	}).success(function(data) {
-		// TODO: update goods
+		changeGoodProgramsPage(currentGoodPage);
+
+		assertBottom("success", "いいね!の取り消しに成功しました。");
 	}).error(function(data) {
 		assertBottom("error", "いいね!の取り消しに失敗しました。");
 	});

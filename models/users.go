@@ -61,6 +61,13 @@ func (this *User) Create() (int, error) {
 	return int(id), nil
 }
 
+func (this *User) Remove() error {
+
+	_, err := DB.Exec("DELETE FROM users WHERE id = ?", this.Id)
+
+	return err
+}
+
 func ExistsUserName(name string) bool {
 
 	var rowCount int

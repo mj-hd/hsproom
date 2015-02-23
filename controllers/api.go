@@ -1177,3 +1177,180 @@ func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Requ
 	}, 200)
 
 }
+
+type apiProgramRemoveMember struct {
+	*apiMember
+}
+
+func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "POST" {
+		utils.PromulgateDebugStr(os.Stdout, "POST以外のProgramRemoveリクエスト")
+
+		writeStruct(document, apiProgramRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "POSTを使用してください。",
+			},
+		}, 403)
+		return
+	}
+
+	programId, err := strconv.Atoi(request.FormValue("p"))
+
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiProgramRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "不正なプログラムIDです。",
+			},
+		}, 403)
+		return
+	}
+
+	userId := getSessionUser(request)
+	if userId == 0 {
+		utils.PromulgateDebugStr(os.Stdout, "匿名のProgramRemoveリクエスト")
+
+		writeStruct(document, apiProgramRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "削除する権限がありません。",
+			},
+		}, 403)
+		return
+	}
+
+	var program models.ProgramInfo
+	err = program.Load(programId)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiProgramRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	if program.UserId != userId {
+		utils.PromulgateDebugStr(os.Stdout, "権限のないProgramRemoveリクエスト")
+
+		writeStruct(document, apiProgramRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "削除する権限がありません。",
+			},
+		}, 403)
+		return
+	}
+
+	err = program.Remove()
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiProgramRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	writeStruct(document, apiProgramRemoveMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "削除に成功しました。",
+		},
+	}, 200)
+}
+
+type apiGoodRemoveMember struct {
+	*apiMember
+}
+
+func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "POST" {
+		utils.PromulgateDebugStr(os.Stdout, "POST以外のGoodRemoveリクエスト")
+
+		writeStruct(document, apiGoodRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "POSTを使用してください。",
+			},
+		}, 403)
+		return
+	}
+
+	programId, err := strconv.Atoi(request.FormValue("p"))
+
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiGoodRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "不正なプログラムIDです。",
+			},
+		}, 403)
+		return
+	}
+
+	userId := getSessionUser(request)
+	if userId == 0 {
+		utils.PromulgateDebugStr(os.Stdout, "匿名のGoodRemoveリクエスト")
+
+		writeStruct(document, apiGoodRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "削除する権限がありません。",
+			},
+		}, 403)
+		return
+	}
+
+	var good models.Good
+	err = good.LoadByUserAndProgram(userId, programId)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiGoodRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	err = good.Remove()
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiGoodRemoveMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	writeStruct(document, apiGoodRemoveMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "削除に成功しました。",
+		},
+	}, 200)
+
+}

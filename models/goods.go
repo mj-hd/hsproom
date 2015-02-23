@@ -18,6 +18,14 @@ func (this *Good) Load(id int) error {
 	return nil
 }
 
+func (this *Good) LoadByUserAndProgram(userId int, programId int) error {
+
+	row := DB.QueryRow("SELECT id, user, program FROM goods WHERE user = ? AND program = ?", userId, programId)
+	err := row.Scan(&this.Id, &this.User, &this.Program)
+
+	return err
+}
+
 func (this *Good) Create() (int, error) {
 
 	result, err := DB.Exec("INSERT INTO goods ( user, program ) VALUES ( ?, ? )", this.User, this.Program)
