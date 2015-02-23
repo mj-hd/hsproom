@@ -109,7 +109,7 @@ func (this *Program) Create() (int, error) {
 		return 0, err
 	}
 
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, good, thumbnail, description, startax, size, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Good, this.Thumbnail, this.Description, this.Startax, this.Size, buffer.Bytes())
+	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, size, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, this.Size, buffer.Bytes())
 	if err != nil {
 		return -1, err
 	}
@@ -141,21 +141,8 @@ func (this *ProgramInfo) Load(id int) error {
 
 func (this *ProgramInfo) Update() error {
 
-	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, good = ?, thumbnail = ?, description = ? WHERE id = ?",
-		time.Now(), this.Title, this.Good, this.Thumbnail, this.Description, this.Id)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (this *ProgramInfo) GiveGood() error {
-
-	this.Good++
-
-	_, err := DB.Exec("UPDATE programs SET good = ? WHERE id = ?", this.Good, this.Id)
+	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ? WHERE id = ?",
+		time.Now(), this.Title, this.Thumbnail, this.Description, this.Id)
 
 	if err != nil {
 		return err
@@ -171,7 +158,6 @@ type RawProgram struct {
 	Title       string
 	User        string
 	UserId      string
-	Good        string
 	Thumbnail   string
 	Description string
 	Startax     string
@@ -186,7 +172,6 @@ const (
 	ProgramTitle
 	ProgramUser
 	ProgramUserId
-	ProgramGood
 	ProgramThumbnail
 	ProgramDescription
 	ProgramStartax
@@ -240,19 +225,6 @@ func (this *RawProgram) Validate(flag uint) error {
 	if (flag & ProgramUserId) != 0 {
 
 		// TODO: implement
-
-	}
-
-	if (flag & ProgramGood) != 0 {
-
-		good, err := strconv.Atoi(this.Good)
-		if err != nil {
-			return errors.New("いいねの数が不正です。")
-		}
-
-		if good < 0 {
-			return errors.New("言い値の数が不正です。")
-		}
 
 	}
 
@@ -394,17 +366,6 @@ func (this *RawProgram) ToProgramInfo(flag uint) (ProgramInfo, error) {
 
 	}
 
-	if (flag & ProgramGood) != 0 {
-
-		good, err := strconv.Atoi(this.Good)
-		if err != nil {
-			return program, err
-		}
-
-		program.Good = good
-
-	}
-
 	if (flag & ProgramThumbnail) != 0 {
 
 		data, err := base64.StdEncoding.DecodeString(this.Thumbnail)
@@ -512,7 +473,7 @@ func getProgramRankingSince(since time.Time, out *[]ProgramInfo, from int, numbe
 	}
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM programs WHERE created >= ? ORDER BY good DESC", since.Format("2006-1-2")).Scan(&rowCount)
+	err := DB.QueryRow("SELECT count(id) FROM programs WHERE created >= ?", since.Format("2006-1-2")).Scan(&rowCount)
 
 	if err != nil {
 		return 0, err
@@ -701,4 +662,20 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 	}
 
 	return rowCount, nil
+}
+
+func ExistsProgram(id int) bool {
+
+	var rowCount int
+	err := DB.QueryRow("SELECT count(id) FROM programs WHERE id = ?", id).Scan(&rowCount)
+
+	if err != nil {
+		return false
+	}
+
+	if rowCount < 1 {
+		return false
+	}
+
+	return true
 }

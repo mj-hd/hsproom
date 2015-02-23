@@ -114,10 +114,7 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	var program models.ProgramInfo
-	err = program.Load(programId)
-
-	if err != nil {
+	if !models.ExistsProgram(programId) {
 
 		utils.PromulgateFatalStr(os.Stdout, "プログラム["+string(programId)+"]の読み込みに失敗")
 		utils.PromulgateFatal(os.Stdout, err)
@@ -147,7 +144,11 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	err = program.GiveGood()
+	var good models.Good
+	good.User = user
+	good.Program = programId
+
+	_, err = good.Create()
 	if err != nil {
 
 		utils.PromulgateFatal(os.Stdout, err)
@@ -916,5 +917,263 @@ func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) {
 	}
 
 	writeStruct(document, user, 200)
+
+}
+
+type apiUserProgramListMember struct {
+	*apiMember
+	Programs     []models.ProgramInfo
+	ProgramCount int
+}
+
+func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "GET" {
+		utils.PromulgateDebugStr(os.Stdout, "GET以外のUserProgramListリクエスト")
+
+		writeStruct(document, apiUserProgramListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "GETを使用してください。",
+			},
+		}, 403)
+		return
+	}
+
+	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiUserProgramListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "ユーザIDが不正です。",
+			},
+		}, 403)
+		return
+	}
+
+	userName, err := models.GetUserName(userId)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiUserProgramListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	offset, err := strconv.Atoi(request.URL.Query().Get("o"))
+	if err != nil {
+		offset = 0
+	}
+
+	number, err := strconv.Atoi(request.URL.Query().Get("n"))
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiUserProgramListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "取得数の指定が不正です。",
+			},
+		}, 403)
+	}
+
+	var programs []models.ProgramInfo
+	i, err := models.GetProgramListByUser(models.ProgramColCreated, &programs, userName, true, offset, number)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiUserProgramListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	writeStruct(document, apiUserProgramListMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "一覧の取得に成功しました。",
+		},
+		Programs:     programs,
+		ProgramCount: i,
+	}, 200)
+}
+
+type apiUserGoodsMember struct {
+	*apiMember
+	Programs     []models.ProgramInfo
+	ProgramCount int
+}
+
+func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "GET" {
+		utils.PromulgateDebugStr(os.Stdout, "GET以外のUserGoodリクエスト")
+
+		writeStruct(document, apiUserGoodsMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "GETを使用してください。",
+			},
+		}, 403)
+		return
+	}
+
+	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
+
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiUserGoodsMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "不正なユーザIDです。",
+			},
+		}, 403)
+		return
+	}
+
+	if !models.ExistsUser(userId) {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiUserGoodsMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "存在しないユーザIDです。",
+			},
+		}, 403)
+		return
+	}
+
+	offset, err := strconv.Atoi(request.URL.Query().Get("o"))
+
+	if err != nil {
+		utils.PromulgateDebugStr(os.Stdout, "不正なオフセット。")
+
+		writeStruct(document, apiUserGoodsMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "オフセット値が不正です。",
+			},
+		}, 403)
+	}
+
+	number, err := strconv.Atoi(request.URL.Query().Get("n"))
+
+	if err != nil {
+		utils.PromulgateDebugStr(os.Stdout, "不正な制限数。")
+
+		writeStruct(document, apiUserGoodsMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "取得数が不正です。",
+			},
+		}, 403)
+		return
+	}
+
+	var goods []models.Good
+
+	programCount, err := models.GetGoodListByUser(&goods, userId, offset, number)
+
+	if err != nil {
+
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiUserGoodsMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	programs := make([]models.ProgramInfo, number)
+
+	for i, good := range goods {
+
+		if good.Program > 0 {
+			err = programs[i].Load(good.Program)
+
+			if err != nil {
+			}
+		}
+	}
+
+	writeStruct(document, apiUserGoodsMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "取得に成功しました。",
+		},
+		Programs:     programs,
+		ProgramCount: programCount,
+	}, 200)
+}
+
+type apiProgramGoodCountMember struct {
+	*apiMember
+	GoodCount int
+}
+
+func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "GET" {
+		utils.PromulgateDebugStr(os.Stdout, "GET以外のProgramGoodCountリクエスト")
+
+		writeStruct(document, apiProgramGoodCountMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "GETを使用してください。",
+			},
+		}, 403)
+		return
+	}
+
+	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
+
+	if err != nil {
+		utils.PromulgateDebug(os.Stdout, err)
+
+		writeStruct(document, apiProgramGoodCountMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "不正なプログラムIDです。",
+			},
+		}, 403)
+		return
+	}
+
+	if !models.ExistsProgram(programId) {
+		utils.PromulgateDebugStr(os.Stdout, "存在しないプログラムID。")
+
+		writeStruct(document, apiProgramGoodCountMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "存在しないプログラムIDです。",
+			},
+		}, 403)
+		return
+	}
+
+	goodCount := models.GetGoodCountByProgram(programId)
+
+	writeStruct(document, apiProgramGoodCountMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "いいね数の取得に成功しました。",
+		},
+		GoodCount: goodCount,
+	}, 200)
 
 }

@@ -178,3 +178,43 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 		UserId:       userId,
 	})
 }
+
+type userSettingsMember struct {
+	*templates.DefaultMember
+	UserInfo models.User
+}
+
+func userSettingsHandler(document http.ResponseWriter, request *http.Request) {
+
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "userSettings.tmpl"
+
+	userId := getSessionUser(request)
+
+	if userId == 0 {
+		utils.PromulgateDebugStr(os.Stdout, "匿名の管理画面へのアクセス")
+
+		showError(document, request, "ログインが必要です。")
+		// TODO: ログインさせる。
+		return
+	}
+
+	var user models.User
+	err := user.Load(userId)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	err = tmpl.Render(document, userSettingsMember{
+		DefaultMember: &templates.DefaultMember{
+			Title: "管理画面 - " + config.SiteTitle,
+			User:  userId,
+		},
+		UserInfo: user,
+	})
+}

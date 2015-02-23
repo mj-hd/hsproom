@@ -5,6 +5,33 @@ SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
 SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
+DROP TABLE IF EXISTS `goods`;
+CREATE TABLE `goods` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` int(11) NOT NULL,
+  `program` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user` (`user`),
+  KEY `program` (`program`),
+  CONSTRAINT `goods_ibfk_5` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `goods_ibfk_6` FOREIGN KEY (`program`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+DELIMITER ;;
+
+CREATE TRIGGER `good_count_increment` AFTER INSERT ON `goods` FOR EACH ROW
+BEGIN
+  UPDATE programs SET programs.good = programs.good + 1 WHERE programs.id = NEW.program;
+ END;;
+
+CREATE TRIGGER `good_count_decrement` AFTER DELETE ON `goods` FOR EACH ROW
+BEGIN
+  UPDATE programs SET programs.good = programs.good - 1 WHERE programs.id = OLD.program;
+ END;;
+
+DELIMITER ;
+
 DROP TABLE IF EXISTS `programs`;
 CREATE TABLE `programs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -36,4 +63,4 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
--- 2015-02-18 16:37:12
+-- 2015-02-23 13:43:06

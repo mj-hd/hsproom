@@ -26,7 +26,7 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 	var goodPrograms []models.ProgramInfo
 	var recentPrograms []models.ProgramInfo
 
-	i, err := models.GetProgramListBy(models.ProgramColGood, &goodPrograms, true, 0, 4)
+	i, err := models.GetProgramRankingForAllTime(&goodPrograms, 0, 4)
 
 	if err != nil {
 		utils.PromulgateFatalStr(os.Stdout, "Error At :"+strconv.Itoa(i))

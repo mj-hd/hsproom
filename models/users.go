@@ -61,11 +61,32 @@ func (this *User) Create() (int, error) {
 	return int(id), nil
 }
 
-// TODO: うまく動いてない？
-func ExistsUser(name string) bool {
+func ExistsUserName(name string) bool {
 
-	_, err := DB.Exec("SELECT id FROM users WHERE name = ?", name)
+	var rowCount int
+	err := DB.QueryRow("SELECT count(id) FROM users WHERE name = ?", name).Scan(&rowCount)
+
 	if err != nil {
+		return false
+	}
+
+	if rowCount < 1 {
+		return false
+	}
+
+	return true
+}
+
+func ExistsUser(id int) bool {
+
+	var rowCount int
+	err := DB.QueryRow("SELECT count(id) FROM users WHERE id = ?", id).Scan(&rowCount)
+
+	if err != nil {
+		return false
+	}
+
+	if rowCount < 1 {
 		return false
 	}
 

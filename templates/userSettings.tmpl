@@ -1,0 +1,259 @@
+{{ define "Header" }}
+
+{{ end }}
+
+{{ define "Content" }}
+
+<div class="row">
+	<div class="col-md-2 col-md-offset-2">
+		<div id="menu" class="btn-group-vertical">
+			<a id="top_button" href="javascript:top();" class="btn btn-default">トップ <i class="mdi-image-navigate-next"></i></a>
+			<a id="edit_button" href="javascript:edit();" class="btn btn-default">プログラムの編集 <i class="mdi-image-navigate-next"></i></a>
+			<a id="good_button" href="javascript:good();" class="btn btn-default">いいね!一覧 <i class="mdi-image-navigate-next"></i></a>
+		</div>
+	</div>
+	
+	<div class="col-md-6">
+	
+		<div id="top" class="panel panel-default">
+			<div class="panel-heading">
+				管理画面へようこそ！
+			</div>
+			<div class="panel-body">
+				左のメニューから項目を選択してください。
+			</div>
+		</div>
+	
+		<div id="edit" class="panel panel-default">
+			<div class="panel-heading">
+				投稿したプログラム一覧
+			</div>
+			<div class="panel-body">
+				<div class="list-group">
+
+				</div>
+				<ul class="pagination pagination-sm">
+					<li class="prev_button" data-type="primary"><a href="javascript:prevUserProgramsPage();">«</a></li>
+					<li class="next_button" data-type="primary"><a href="javascript:nextUserProgramsPage();">»</a></li>
+				</ul>
+
+			</div>
+		</div>
+	
+		<div id="good" class="panel panel-default">
+			<div class="panel-heading">
+				いいね!したプログラム一覧
+			</div>
+			<div class="panel-body">
+				<div class="list-group">
+
+				</div>
+				<ul class="pagination pagination-sm">
+					<li class="prev_button" data-type="primary"><a href="javascript:prevGoodProgramsPage();">«</a></li>
+					<li class="next_button" data-type="primary"><a href="javascript:nextGoodProgramsPage();">»</a></li>
+				</ul>
+
+			</div>
+		</div>
+	
+	</div>
+
+</div>
+
+<script type="text/javascript">
+
+function userProgramListItem(programInfo) {
+	return $('<div class="list-group-item" />').append(
+		$('<div class="row-picture" />').append(
+			$('<img src="/api/program/thumbnail/?p='+programInfo.Id+'" class="circle" />')
+		)
+	).append(
+		$('<div class="row-content" />').append(
+			$('<div class="least-content" />').append(
+				$('<a href="/program/edit/?p='+programInfo.Id+'" class="btn btn-primary btn-xs"><i class="mdi-editor-mode-edit"></i>編集する</a>')
+			)
+		).append(
+			$('<h4 class="list-group-item-heading" />').append(
+				$('<a href="/program/view/?p='+programInfo.Id+'" />').text(programInfo.Title)
+			)
+		).append(
+			$('<p class="list-group-item-text" />').append(
+				$('<div class="" />').text("最終更新:"+programInfo.Modified)
+			).append(
+				$('<div class="" />').text("作成日:  "+programInfo.Created)
+			)
+		)
+	).append(
+		$('<div class="list-group-separator"></div>')
+	);
+}
+
+function top() {
+	hideAll();
+
+	$("#top_button").addClass("disabled");
+	$("#top").show();
+}
+
+function edit() {
+	hideAll();
+
+	$("#edit_button").addClass("disabled");
+	$("#edit").show();
+
+	changeUserProgramsPage(0);
+}
+
+function good() {
+	hideAll();
+
+	$("#good_button").addClass("disabled");
+	$("#good").show();
+
+	changeGoodProgramsPage(0);
+}
+
+function hideAll() {
+	$(".panel").each(function () {
+		$(this).hide();
+	});
+
+	$("#menu .disabled").removeClass("disabled");
+}
+
+function changeUserProgramsPage(page) {
+	updateUserPrograms(page).then(function(rowCount) {
+		var maxPage = rowCount / 5;
+		if (rowCount % 5 == 0) {
+			maxPage--;
+		}
+		updatePagination($("#edit"), "changeUserProgramsPage", page, maxPage);
+	});
+}
+
+function updatePagination(baseElem, changeFunc, curPage, maxPage) {
+
+	if (curPage == 0) {
+		baseElem.find(".prev_button").addClass("disabled");
+	}
+	if (curPage == maxPage) {
+		baseElem.find(".next_button").addClass("disabled");
+	}
+
+	var nextButton = baseElem.find(".next_button");
+	var iLimit = 0;
+
+	baseElem.find(".pagination li[data-type!='primary']").remove();
+
+	iLimit = curPage+1 >= 5 ? 3 : 5;
+	for (var i = 1; (i <= iLimit) && (i <= maxPage); i++) {
+		var li = $("<li />").append('<a href="javascript:'+changeFunc+'('+(i-1)+');">' +  i + "</a>");
+		if (i == curPage +1) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+	}
+
+	if (maxPage > 10) {
+		nextButton.before('<li><a href="#" class="disabled">...</a></li>');
+	}
+
+	iLimit = (curPage+1 >= 5) && (curPage <= maxPage -5) ? 5 : 0;
+	for (var i = 1;i <= iLimit; i++) {
+		var li = $("<li />").append('<a href="javascript:'+changeFunc+'(' + (curPage -3 + i)  + ');">' + (curPage -2 + i) + "</a>");
+		if (i == 3) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+
+	}
+	
+	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
+
+	iLimit = curPage > maxPage -4 ? 5 : 2;
+	for (var i = iLimit; (i > 0) && (maxPage + 2 -i) > 0; i--) {
+		var li = $("<li />").append('<a href="javascript:'+changeFunc+'(' + (maxPage - i +1) + ');">' + (maxPage +2 - i) + "</a>");
+		if (maxPage +1 -i == curPage) {
+			li.addClass("active");
+		}
+		nextButton.before(li);
+	}
+
+}
+
+function updateUserPrograms(page) {
+	var defer = $.Deferred();
+
+	$.ajax({
+		type: "GET",
+		url: "/api/user/programs/",
+		dataType: "json",
+		data: {
+			"u": {{ .UserInfo.Id }},
+			"n": 5,
+			"o": page*5
+		}
+	}).success(function (data) {
+		$("#edit .list-group").html("");
+		$.each(data.Programs, function () {
+			$("#edit .list-group").append(userProgramListItem(this));
+		});
+
+		defer.resolve(data.ProgramCount);
+
+	}).error(function (data) {
+		assertBottom("error", "データの取得に失敗しました。");
+
+		defer.reject();
+	});
+
+	return defer.promise();
+}
+
+function changeGoodProgramsPage(page) {
+	updateGoodPrograms(page).then(function(rowCount) {
+		var maxPage = rowCount / 5;
+		if (rowCount % 5 == 0) {
+			maxPage--;
+		}
+		updatePagination($("#good"), "changeGoodProgramsPage", page, maxPage);
+	});
+}
+
+function updateGoodPrograms(page) {
+	var defer = $.Deferred();
+
+	$.ajax({
+		type: "GET",
+		url: "/api/user/goods/",
+		dataType: "json",
+		data: {
+			"u": {{ .UserInfo.Id }},
+			"n": 5,
+			"o": page*5
+		}
+	}).success(function (data) {
+		$("#good .list-group").html("");
+		$.each(data.Programs, function () {
+			$("#good .list-group").append(userProgramListItem(this));
+		});
+
+		defer.resolve(data.ProgramCount);
+
+	}).error(function (data) {
+		assertBottom("error", "データの取得に失敗しました。");
+
+		defer.reject();
+	});
+
+	return defer.promise();
+}
+
+$(document).ready(function() {
+	top();
+
+});
+
+</script>
+
+{{ end }}

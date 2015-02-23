@@ -34,10 +34,12 @@ func init() {
 	Router.Register("/user/edit/", userEditHandler)
 	Router.Register("/user/list/", userListHandler)
 	Router.Register("/user/programs/", userProgramsHandler)
+	Router.Register("/user/settings/", userSettingsHandler)
 	Router.Register("/api/", apiHandler)
 	Router.Register("/api/markdown/", apiMarkdownHandler)
 	Router.Register("/api/twitter/search/", apiTwitterSearchHandler)
 	Router.Register("/api/program/good/", apiProgramGoodHandler)
+	Router.Register("/api/program/good/count/", apiProgramGoodCountHandler)
 	Router.Register("/api/program/update/", apiProgramUpdateHandler)
 	Router.Register("/api/program/create/", apiProgramCreateHandler)
 	Router.Register("/api/program/data/", apiProgramDataHandler)
@@ -46,6 +48,8 @@ func init() {
 	Router.Register("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
 	Router.Register("/api/twitter/access_token/", apiTwitterAccessTokenHandler)
 	Router.Register("/api/user/info/", apiUserInfoHandler)
+	Router.Register("/api/user/programs/", apiUserProgramsHandler)
+	Router.Register("/api/user/goods/", apiUserGoodsHandler)
 
 }
 func Del() {

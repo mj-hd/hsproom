@@ -145,7 +145,7 @@
 						<span class="played_number"><i class="mdi-av-play-circle-outline"></i>12345</span> 
 						<span class="good_number">
 							<a href="javascript:good();" class="good_button" ><i class="mdi-social-mood"></i></a>
-							<span id="good">{{ .ProgramInfo.Good }}</span>
+							<span id="good"></span>
 						</span>
 					</div>
 				</div>
@@ -233,8 +233,8 @@
 				"pid": "{{ .ProgramInfo.Id }}"
 			}
 		}).success(function(data) {
-			$("#good").text(1 + Number($("#good").text()));
 			$(".good_button").attr("href", "#");
+			updateGoodCount();
 		}).error(function(data) {
 			assertBottom("error", data.responseJSON.Message);
 		});
@@ -336,6 +336,22 @@
 
 	}
 
+	function updateGoodCount() {
+	
+		$.ajax({
+			type: "GET",
+			dataType: "json",
+			url: "/api/program/good/count/",
+			data: {
+				"p": {{ .ProgramInfo.Id }}
+			}
+		}).success(function (data) {
+			$("#good").text(data.GoodCount);
+		}).error(function (data) {
+			assertBottom("いいね数の取得に失敗しました。");
+		});
+	}
+
 	$(document).ready(function() {
 		reloadComments();
 		setProfile();
@@ -348,6 +364,8 @@
 			cellAlign: "left",
 			contain: true
 		});
+
+		updateGoodCount();
 	});
 
 </script>
