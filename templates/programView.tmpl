@@ -229,12 +229,14 @@
 		$.ajax({
 			type: "POST",
 			url:  "/api/program/good/",
+			dataType: "json",
 			data: {
 				"pid": "{{ .ProgramInfo.Id }}"
 			}
 		}).success(function(data) {
 			$(".good_button").attr("href", "#");
 			updateGoodCount();
+			assertBottom("success", "いいね!しました。");
 		}).error(function(data) {
 			assertBottom("error", data.responseJSON.Message);
 		});

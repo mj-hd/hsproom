@@ -144,6 +144,19 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 		return
 	}
 
+	if !models.CanGoodProgram(user, programId) {
+		utils.PromulgateDebugStr(os.Stdout, "無効なGoodリクエスト")
+
+		writeStruct(document, apiProgramGoodMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "無効なGoodリクエストです。",
+			},
+		}, 400)
+
+		return
+	}
+
 	var good models.Good
 	good.User = user
 	good.Program = programId
