@@ -19,6 +19,8 @@ func init() {
 	Router.Register("/", indexHandler)
 	Router.Register("/error/", flashHandler)
 	Router.Register("/success/", flashHandler)
+	Router.Register("/help/", helpHandler)
+	Router.Register("/about/", aboutHandler)
 	Router.Register("/program/", programHandler)
 	Router.Register("/program/list/", programListHandler)
 	Router.Register("/program/view/", programViewHandler)
