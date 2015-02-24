@@ -7,20 +7,47 @@
 {{ end }}
 {{ define "Content" }}
 
-<div class="panel panel-danger">
-	<div class="panel-heading">
-		<h3 class="panel-title">エラー</h3>
-	</div>
-	<div class="panel-body">
-
-	{{ range .Messages }}
-		<p>
-			{{ . }}
-		</p>
-	{{ end }}
+<div id="modal" class="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">エラー</h4>
+			</div>
+			<div class="modal-body">
+				{{ range .Messages }}
+					<div class="alert alert-dismissable alert-danger">
+						{{ . }}
+					</div>
+				{{ end }}
+				<hr />
+				<p><strong>エラーが発生しました。前のページに戻ります。</strong></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary">戻る</button>
+			</div>
+		</div>
 	</div>
 </div>
 
-<a href="{{ .Referer }}">戻る</a>
+<script type="text/javascript">
+
+$(document).ready(function () {
+
+	var modal = $("#modal");
+
+	modal.find(".modal-footer button").on("click", function () {
+		if ((location.href == "{{ .Referer }}") || ("{{ .Referer }}" == "")) {
+			location.pathname = "/";
+			return;
+		}
+
+		location.href = "{{ .Referer }}";
+	});
+
+	modal.show();
+
+});
+
+</script>
 
 {{ end }}
