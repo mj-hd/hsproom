@@ -24,7 +24,7 @@ func indexHandler(document http.ResponseWriter, request *http.Request) {
 
 	var programs []models.ProgramInfo
 
-	_, err := models.GetProgramListBy(models.ProgramColCreated, &programs, true, 10, 0)
+	_, err := models.GetProgramListBy(models.ProgramColCreated, &programs, true, 0, 4)
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
