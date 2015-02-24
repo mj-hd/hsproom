@@ -1,7 +1,7 @@
 {{ define "Header" }}
-{{ .LinkJS "twitter-entities.js" }}
-{{ .LinkJS "flickity.pkgd.js" }}
-{{ .LinkCSS "flickity.css" }}
+{{ linkJS "twitter-entities.js" }}
+{{ linkJS "flickity.pkgd.js" }}
+{{ linkCSS "flickity.css" }}
 
 <style type="text/css">
 
@@ -177,7 +177,7 @@
 			</div>
 			<div class="panel-body">
 				<div class="description pull-left">
-					{{ .ProgramInfo.Description }}
+					{{ markdown .ProgramInfo.Description }}
 				</div>
 				<div class="user_box pull-right">
 					<span class="user_title"><i class="mdi-action-face-unlock"></i>作成者</span>
