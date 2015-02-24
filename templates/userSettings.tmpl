@@ -130,7 +130,8 @@ function userGoodListItem(programInfo) {
 		).append(
 			$('<h4 class="list-group-item-heading" />').append(
 				$('<a href="/program/view/?pid='+programInfo.Id+'" />').text(programInfo.Title)
-			)
+			).append('<span class="small"> by <a href="/user/view/?u='+programInfo.UserId+'">'+programInfo.User+"</a></span>")
+
 		).append(
 			$('<p class="list-group-item-text" />').append(
 				$('<div class="" />').text(programInfo.Description)
