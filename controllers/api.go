@@ -277,7 +277,6 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 適用
 	prevProgInfo.Title = program.Title
-	prevProgInfo.Thumbnail = program.Thumbnail
 	prevProgInfo.Description = program.Description
 	prevProgInfo.Size = len(program.Startax)
 
@@ -601,9 +600,9 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	var programInfo models.ProgramInfo
+	program := models.NewProgram()
 
-	err = programInfo.Load(programId)
+	err = program.Load(programId)
 
 	if err != nil {
 
@@ -614,7 +613,7 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	document.Write(programInfo.Thumbnail)
+	document.Write(program.Thumbnail)
 }
 
 type apiMarkdownMember struct {

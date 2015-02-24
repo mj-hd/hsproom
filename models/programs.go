@@ -16,6 +16,7 @@ type Program struct {
 	*ProgramInfo
 	Startax     []byte
 	Attachments *Attachments
+	Thumbnail   []byte
 }
 
 type ProgramInfo struct {
@@ -26,7 +27,6 @@ type ProgramInfo struct {
 	User        string
 	UserId      int
 	Good        int
-	Thumbnail   []byte
 	Description string
 	Size        int
 }
@@ -81,34 +81,10 @@ func (this *Program) Load(id int) error {
 
 func (this *Program) Update() error {
 
-	oldProgram := NewProgram()
-	err := oldProgram.Load(this.Id)
-
-	if err != nil {
-		return err
-	}
-
-	for _, file := range this.Attachments.Files {
-		if bytes.Equal(file.Data, []byte("DELETE")) {
-			var j int
-			var file_j File
-			for j, file_j = range oldProgram.Attachments.Files {
-				if file_j.Name == file.Name {
-					break
-				}
-			}
-
-			oldProgram.Attachments.Files = append(oldProgram.Attachments.Files[:(j-1)], oldProgram.Attachments.Files[(j+1):]...)
-		} else if bytes.Equal(file.Data, []byte("PASS")) {
-		} else {
-			oldProgram.Attachments.Files = append(oldProgram.Attachments.Files, file)
-		}
-	}
-
 	buffer := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buffer)
 
-	err = encoder.Encode(oldProgram.Attachments)
+	err := encoder.Encode(this.Attachments)
 	if err != nil {
 		return err
 	}
@@ -155,8 +131,8 @@ func (this *Program) Remove() error {
 
 func (this *ProgramInfo) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, thumbnail, description, size FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Thumbnail, &this.Description, &this.Size)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, description, size FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Description, &this.Size)
 
 	if err != nil {
 		return err
@@ -172,8 +148,8 @@ func (this *ProgramInfo) Load(id int) error {
 
 func (this *ProgramInfo) Update() error {
 
-	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ? WHERE id = ?",
-		time.Now(), this.Title, this.Thumbnail, this.Description, this.Id)
+	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, description = ? WHERE id = ?",
+		time.Now(), this.Title, this.Description, this.Id)
 
 	if err != nil {
 		return err
@@ -304,6 +280,14 @@ func (this *RawProgram) Validate(flag uint) error {
 func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	program := NewProgram()
+	oldProgram := NewProgram()
+
+	programInfo, err := this.ToProgramInfo(flag)
+	if err != nil {
+		return program, err
+	}
+
+	program.ProgramInfo = &programInfo
 
 	if (flag & ProgramStartax) != 0 {
 
@@ -311,6 +295,23 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		if err != nil {
 			return program, err
 		}
+
+		if len(data) == 0 {
+			if program.Id == 0 {
+				return program, errors.New("Startaxファイルの内容が空です。")
+			}
+
+			if oldProgram.Id == 0 {
+				err = oldProgram.Load(program.Id)
+
+				if err != nil {
+					return program, errors.New("内部エラーが発生しました。")
+				}
+			}
+
+			data = oldProgram.Startax
+		}
+
 		program.Startax = data
 
 	}
@@ -332,8 +333,27 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 			var data []byte
 
-			if pair.Value == "PASS" || pair.Value == "DELETE" {
-				data = []byte(pair.Value)
+			if pair.Value == "" {
+
+				if oldProgram.Id == 0 {
+					err = oldProgram.Load(program.Id)
+
+					if err != nil {
+						return program, errors.New("内部エラーが発生しました。")
+					}
+				}
+
+				var file File
+
+				for _, file = range oldProgram.Attachments.Files {
+					if pair.Name == file.Name {
+						break
+					}
+				}
+
+				program.Attachments.Files = append(program.Attachments.Files, file)
+
+			} else if pair.Value == "DELETE" {
 			} else {
 
 				data, err = base64.StdEncoding.DecodeString(pair.Value)
@@ -351,12 +371,31 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	}
 
-	programInfo, err := this.ToProgramInfo(flag)
-	if err != nil {
-		return program, err
-	}
+	if (flag & ProgramThumbnail) != 0 {
 
-	program.ProgramInfo = &programInfo
+		data, err := base64.StdEncoding.DecodeString(this.Thumbnail)
+		if err != nil {
+			return program, err
+		}
+
+		if len(data) == 0 {
+			if program.Id == 0 {
+				return program, errors.New("サムネイルの内容が空です。")
+			}
+
+			if oldProgram.Id == 0 {
+				err = oldProgram.Load(program.Id)
+
+				if err != nil {
+					return program, errors.New("内部エラーが発生しました。")
+				}
+			}
+
+			data = oldProgram.Thumbnail
+		}
+
+		program.Thumbnail = data
+	}
 
 	return program, nil
 }
@@ -409,16 +448,6 @@ func (this *RawProgram) ToProgramInfo(flag uint) (ProgramInfo, error) {
 		}
 
 		program.UserId = id
-
-	}
-
-	if (flag & ProgramThumbnail) != 0 {
-
-		data, err := base64.StdEncoding.DecodeString(this.Thumbnail)
-		if err != nil {
-			return program, err
-		}
-		program.Thumbnail = data
 
 	}
 

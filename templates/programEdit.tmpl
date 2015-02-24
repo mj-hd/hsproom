@@ -99,7 +99,7 @@
 	</div>
 </div>
 
-<form id="create_program" role="form" class="form-horizonal" action="/api/program/create/" method="POST" enctype="multipart/form-data">
+<form id="update_program" role="form" class="form-horizonal" action="/api/program/update/" method="POST" enctype="multipart/form-data">
 	<div class="row">
 		<div class="col-md-8 col-md-offset-2">
 			<div class="panel panel-default">
@@ -114,7 +114,7 @@
 						<div class="form-group row">
 							<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
 							<div class="col-md-6">
-								<input type="text" id="title" class="form-control floating-label" placeholder="{{ .Program.Title }}" name="title" />
+								<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力してください..." name="title" value="{{ .Program.Title }}" />
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
@@ -449,7 +449,7 @@ $(document).ready(function() {
 		e.preventDefault();
 	});
 
-	$("#create_program").on("submit", function (event) {
+	$("#update_program").on("submit", function (event) {
 		event.preventDefault();
 
 		var form = $(this).serializeArray();
@@ -471,7 +471,7 @@ $(document).ready(function() {
 			url:  "/api/program/update/",
 			data: form
 		}).success(function (json) {
-			assertBottom("success", json.responseJSON.Message);
+			assertBottom("success", json.Message);
 		}).error(function (json) {
 			
 			var modal = $("#modal");
@@ -490,7 +490,7 @@ $(document).ready(function() {
 	{{ range $i, $file := .Program.Attachments.Files }}
 	attachments.push({
 		"name":  "{{ $file.Name }}",
-		"value": "PASS",
+		"value": "",
 	});
 
 	var del = $('<a class="badge" href="#">X</a>');
@@ -500,6 +500,8 @@ $(document).ready(function() {
 	});
 	$("#attachment_box ul").show().append($("<li>{{ $file.Name }} </li>").append(del));
 	{{ end }}
+
+	updatePreview();
 
 
 });
