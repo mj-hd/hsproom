@@ -167,6 +167,12 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		program.Modified.Time = program.Modified.Time.Local()
 	}
 
+	err = models.PlayProgram(program.Id)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+	}
+
 	err = tmpl.Render(document, programViewMember{
 		DefaultMember: &templates.DefaultMember{
 			Title: program.Title + " - " + config.SiteTitle,

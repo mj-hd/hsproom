@@ -27,6 +27,7 @@ type ProgramInfo struct {
 	User        string
 	UserId      int
 	Good        int
+	Play        int
 	Description string
 	Size        int
 }
@@ -54,8 +55,8 @@ func (this *Program) Load(id int) error {
 
 	var rawAttachments []byte
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, thumbnail, description, startax, size, attachments FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Thumbnail, &this.Description, &this.Startax, &this.Size, &rawAttachments)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, size, attachments FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &this.Size, &rawAttachments)
 
 	if err != nil {
 		return err
@@ -131,8 +132,8 @@ func (this *Program) Remove() error {
 
 func (this *ProgramInfo) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, description, size FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Description, &this.Size)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, description, size FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Description, &this.Size)
 
 	if err != nil {
 		return err
@@ -483,6 +484,7 @@ const (
 	ProgramColCreated
 	ProgramColModified
 	ProgramColGood
+	ProgramColPlay
 	ProgramColThumbnail
 	ProgramColSize
 )
@@ -507,6 +509,8 @@ func (this *ProgramColumn) String() string {
 		return "modified"
 	case ProgramColGood:
 		return "good"
+	case ProgramColPlay:
+		return "play"
 	case ProgramColThumbnail:
 		return "thumbnail"
 	case ProgramColSize:
@@ -753,4 +757,11 @@ func ExistsProgram(id int) bool {
 	}
 
 	return true
+}
+
+func PlayProgram(id int) error {
+
+	_, err := DB.Exec("UPDATE programs SET play = play + 1 WHERE id = ?", id)
+
+	return err
 }
