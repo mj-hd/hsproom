@@ -93,6 +93,12 @@
 
 {{ define "Content" }}
 
+<div class="row">
+	<div class="col-md-8 col-md-offset-2">
+		<h1>プログラムの編集</h1>
+	</div>
+</div>
+
 <form id="create_program" role="form" class="form-horizonal" action="/api/program/create/" method="POST" enctype="multipart/form-data">
 	<div class="row">
 		<div class="col-md-8 col-md-offset-2">
@@ -103,10 +109,12 @@
 				<div class="panel-body">
 					<fieldset>
 	
+						<input type="hidden" name="id" value="{{ .Program.Id }}" />
+						
 						<div class="form-group row">
 							<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
 							<div class="col-md-6">
-								<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力しましょう。" name="title" />
+								<input type="text" id="title" class="form-control floating-label" placeholder="{{ .Program.Title }}" name="title" />
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
@@ -123,10 +131,9 @@
 									</div>
 									<div class="upload_box">
 										<div class="upload_box_nofile">
-											<i class="mdi-editor-insert-photo"></i><br />
 										</div>
-										<img class="preview" width=100% style="display: none;" />
-										<span class="status">サムネイル画像をドロップしてください。</span>
+										<img class="preview" width=100% src="/api/program/thumbnail/?p={{ .Program.Id }}" />
+										<span class="status"></span>
 									</div>
 									<span class="btn btn-flat btn-default fileinput_button">
 										<i class="mdi-file-file-upload"></i> 
@@ -157,7 +164,7 @@
 										<div class="upload_box_nofile">
 											<i class="mdi-editor-insert-drive-file"></i><br />
 										</div>
-										<span class="status">startaxファイルをドロップしてください。</span>
+										<span class="status">startax {{ .Program.Size }} B</span>
 									</div>
 				
 									<span class="btn btn-flat btn-default fileinput_button">
@@ -228,7 +235,7 @@
 					<div class="row">
 						<div class="col-md-6">
 							<div class="form-group">
-								<textarea id="description" name="description" rows="12" class="form-control floating-label form-control" placeholder="プログラムの説明文を入力しましょう。"></textarea>
+								<textarea id="description" name="description" rows="12" class="form-control floating-label form-control" placeholder="プログラムの説明文を入力しましょう。">{{ .Program.Description }}</textarea>
 							</div>
 						</div>
 						<div class="col-md-6">
@@ -461,7 +468,7 @@ $(document).ready(function() {
 
 		$.ajax({
 			type: "POST",
-			url:  "/api/program/create/",
+			url:  "/api/program/update/",
 			data: form
 		}).success(function (json) {
 			assertBottom("success", json.responseJSON.Message);
@@ -478,6 +485,21 @@ $(document).ready(function() {
 		});
 
 	});
+
+	$("#attachment_box .upload_box_nofile").hide();
+	{{ range $i, $file := .Program.Attachments.Files }}
+	attachments.push({
+		"name":  "{{ $file.Name }}",
+		"value": "PASS",
+	});
+
+	var del = $('<a class="badge" href="#">X</a>');
+	del.on("click", function() {
+		attachments[{{ $i }}].value = "DELETE";
+		$("#attachment_box ul li").get({{ $i }}).remove();
+	});
+	$("#attachment_box ul").show().append($("<li>{{ $file.Name }} </li>").append(del));
+	{{ end }}
 
 
 });

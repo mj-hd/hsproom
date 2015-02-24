@@ -81,10 +81,34 @@ func (this *Program) Load(id int) error {
 
 func (this *Program) Update() error {
 
+	oldProgram := NewProgram()
+	err := oldProgram.Load(this.Id)
+
+	if err != nil {
+		return err
+	}
+
+	for _, file := range this.Attachments.Files {
+		if bytes.Equal(file.Data, []byte("DELETE")) {
+			var j int
+			var file_j File
+			for j, file_j = range oldProgram.Attachments.Files {
+				if file_j.Name == file.Name {
+					break
+				}
+			}
+
+			oldProgram.Attachments.Files = append(oldProgram.Attachments.Files[:(j-1)], oldProgram.Attachments.Files[(j+1):]...)
+		} else if bytes.Equal(file.Data, []byte("PASS")) {
+		} else {
+			oldProgram.Attachments.Files = append(oldProgram.Attachments.Files, file)
+		}
+	}
+
 	buffer := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buffer)
 
-	err := encoder.Encode(this.Attachments)
+	err = encoder.Encode(oldProgram.Attachments)
 	if err != nil {
 		return err
 	}
@@ -305,10 +329,18 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		for _, pair := range pairs {
-			data, err := base64.StdEncoding.DecodeString(pair.Value)
 
-			if err != nil {
-				return program, err
+			var data []byte
+
+			if pair.Value == "PASS" || pair.Value == "DELETE" {
+				data = []byte(pair.Value)
+			} else {
+
+				data, err = base64.StdEncoding.DecodeString(pair.Value)
+
+				if err != nil {
+					return program, err
+				}
 			}
 
 			program.Attachments.Files = append(program.Attachments.Files, File{

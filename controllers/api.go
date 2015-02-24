@@ -206,14 +206,13 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramSize | models.ProgramAttachments
+	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments
 
 	rawProgram.Id = request.FormValue("id")
 	rawProgram.Title = request.FormValue("title")
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
 	rawProgram.Description = request.FormValue("description")
 	rawProgram.Startax = request.FormValue("startax")
-	rawProgram.Size = request.FormValue("size")
 	rawProgram.Attachments = request.FormValue("attachments")
 
 	err := rawProgram.Validate(targetFlags)
@@ -280,6 +279,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	prevProgInfo.Title = program.Title
 	prevProgInfo.Thumbnail = program.Thumbnail
 	prevProgInfo.Description = program.Description
+	prevProgInfo.Size = len(program.Startax)
 
 	// 以前のプログラムと合成する
 	program.ProgramInfo = &prevProgInfo

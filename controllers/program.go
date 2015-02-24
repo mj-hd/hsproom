@@ -213,13 +213,13 @@ func programPostHandler(document http.ResponseWriter, request *http.Request) {
 
 type programEditMember struct {
 	*templates.DefaultMember
-	ProgramInfo models.ProgramInfo
+	Program *models.Program
 }
 
 func programEditHandler(document http.ResponseWriter, request *http.Request) {
 
 	// プログラムIdの取得
-	rawProgramId := request.URL.Query().Get("pid")
+	rawProgramId := request.URL.Query().Get("p")
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
@@ -244,7 +244,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 	}
 
 	// プログラムの読み込み
-	var program models.ProgramInfo
+	program := models.NewProgram()
 	err = program.Load(programId)
 
 	if err != nil {
@@ -262,7 +262,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 			Title: program.Title + " - " + config.SiteTitle,
 			User:  user,
 		},
-		ProgramInfo: program,
+		Program: program,
 	})
 
 	if err != nil {
