@@ -278,7 +278,6 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	// 適用
 	prevProgInfo.Title = program.Title
 	prevProgInfo.Description = program.Description
-	prevProgInfo.Size = len(program.Startax)
 
 	// 以前のプログラムと合成する
 	program.ProgramInfo = &prevProgInfo
@@ -405,8 +404,6 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	program.UserId = userId
-
-	program.Size = len(program.Startax)
 
 	_, err = program.Create()
 	if err != nil {

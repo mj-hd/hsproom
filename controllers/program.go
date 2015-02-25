@@ -123,7 +123,6 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 type programViewMember struct {
 	*templates.DefaultMember
 	ProgramInfo models.ProgramInfo
-	Size        int
 }
 
 func programViewHandler(document http.ResponseWriter, request *http.Request) {

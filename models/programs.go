@@ -29,7 +29,6 @@ type ProgramInfo struct {
 	Good        int
 	Play        int
 	Description string
-	Size        int
 }
 
 type Attachments struct {
@@ -55,8 +54,8 @@ func (this *Program) Load(id int) error {
 
 	var rawAttachments []byte
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, size, attachments FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &this.Size, &rawAttachments)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, attachments FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &rawAttachments)
 
 	if err != nil {
 		return err
@@ -90,8 +89,8 @@ func (this *Program) Update() error {
 		return err
 	}
 
-	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, size = ?, attachments = ? WHERE id = ?",
-		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, this.Size, buffer.Bytes(), this.Id)
+	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, attachments = ? WHERE id = ?",
+		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Id)
 
 	if err != nil {
 		return err
@@ -110,7 +109,7 @@ func (this *Program) Create() (int, error) {
 		return 0, err
 	}
 
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, size, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, this.Size, buffer.Bytes())
+	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes())
 	if err != nil {
 		return -1, err
 	}
@@ -132,8 +131,8 @@ func (this *Program) Remove() error {
 
 func (this *ProgramInfo) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, description, size FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Description, &this.Size)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, description FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Description)
 
 	if err != nil {
 		return err
@@ -176,7 +175,6 @@ type RawProgram struct {
 	Thumbnail   string
 	Description string
 	Startax     string
-	Size        string
 	Attachments string
 }
 
@@ -190,7 +188,6 @@ const (
 	ProgramThumbnail
 	ProgramDescription
 	ProgramStartax
-	ProgramSize
 	ProgramAttachments
 )
 
@@ -258,12 +255,6 @@ func (this *RawProgram) Validate(flag uint) error {
 	}
 
 	if (flag & ProgramStartax) != 0 {
-
-		// TODO: implement
-
-	}
-
-	if (flag & ProgramSize) != 0 {
 
 		// TODO: implement
 
@@ -459,17 +450,6 @@ func (this *RawProgram) ToProgramInfo(flag uint) (ProgramInfo, error) {
 
 	}
 
-	if (flag & ProgramSize) != 0 {
-
-		size, err := strconv.Atoi(this.Size)
-		if err != nil {
-			return program, err
-		}
-
-		program.Size = size
-
-	}
-
 	return program, nil
 }
 
@@ -487,7 +467,6 @@ const (
 	ProgramColGood
 	ProgramColPlay
 	ProgramColThumbnail
-	ProgramColSize
 )
 
 func (this *ProgramColumn) String() string {
@@ -514,8 +493,6 @@ func (this *ProgramColumn) String() string {
 		return "play"
 	case ProgramColThumbnail:
 		return "thumbnail"
-	case ProgramColSize:
-		return "size"
 	}
 
 	return ""

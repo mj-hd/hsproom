@@ -40,10 +40,10 @@ CREATE TABLE `programs` (
   `title` varchar(100) NOT NULL,
   `user` varchar(50) NOT NULL,
   `good` int(11) NOT NULL DEFAULT '0',
+  `play` int(11) NOT NULL DEFAULT '0',
   `thumbnail` mediumblob,
   `description` text,
   `startax` longblob NOT NULL,
-  `size` int(11) NOT NULL,
   `attachments` longblob,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -63,4 +63,4 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
--- 2015-02-23 13:43:06
+-- 2015-02-25 16:01:33
