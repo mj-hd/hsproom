@@ -374,6 +374,7 @@
 
 <script type="text/javascript">
 
+	// emscripten Module
 	var Module = {
 		
 		preRun: [],
@@ -387,7 +388,7 @@
 		printErr: function(text) {
 			text = Array.prototype.slice.call(arguments).join(' ');
 			console.error(text);
-			assertBottom("error", "HSPエラー:"+text)
+			//assertBottom("error", "HSPエラー:"+text)
 		},
 		canvas: document.getElementById('screen'),
 		setStatus: function(text){
@@ -395,10 +396,10 @@
 		},
 		totalDependencies: 0,
 		monitorRunDependencies: function(){},
-		arguments: ["startax"]
+		arguments: ["/startax"]
 	};
-	console.log('Downloading...');
-
+	console.log('ダウンロード中...');
+	
 	var Module;
 	if (typeof Module === 'undefined') Module = eval('(function() { try { return Module || {} } catch(e) { return {} } })()');
 	if (!Module.expectedDataFileDownloads) {
@@ -406,177 +407,198 @@
 		Module.finishedDataFileDownloads = 0;
 	}
 	Module.expectedDataFileDownloads++;
-	
 
-	(function() {
 
-		var fileNames = ["startax"];
-		var files = {};
+	// データの登録
+	function DataRequest(audio) {
+		this.audio = audio;
+	}
 
-		function importDataList() {
-			var defer = $.Deferred();
+	DataRequest.prototype = {
+		//TOTAL_MEMORY: 104857600,
+		requests: {},
+		//heapPtr: 0,
+		//heapSize: 0,
+		//heapSeek: 0,
+		register: function(name, arrayBuffer) {
+			this.name = name;
 
-			$.ajax({
-				type: "GET",
-				url:  "/api/program/data_list/",
-				data: {
-					"p": {{ .ProgramInfo.Id }}
-				},
-				dataType: "json"
-			}).success(function(data) {
-				fileNames = fileNames.concat(data.Names);
-				console.log("Downloaded file list.");
+			this.arrayBuffer = arrayBuffer;
 
-				defer.resolve();
-			}).error(function(data) {
-				console.log("Failed to download file list.")
+			//DataRequest.prototype.heapSize += arrayBuffer.byteLength;
 
-				defer.reject();
-			});
+			DataRequest.prototype.requests[name] = this;
 
-			return defer.promise();
-		}
+			console.log("Registered "+this.name+" heapSize:"+DataRequest.prototype.heapSize);
 
-		function importDataArray(name) {
-			var defer = $.Deferred();
+			Module['addRunDependency']('fp ' + this.name);
+		},
+		process: function() {
+			//if (!DataRequest.prototype.isAllocated) {
 
-			var xhr = new XMLHttpRequest();
-			xhr.open('GET', '/api/program/data/?pid={{ .ProgramInfo.Id }}&f=' + name, true);
-			xhr.responseType = 'arraybuffer';
-			
-			xhr.onload = function(e) {
-				if (this.status == 200) {
-					files[name] = this.response;
+			//	DataRequest.prototype.heapPtr = Module['_malloc'](DataRequest.prototype.heapSize);
 
-					console.log("Downloaded " + name);
+			//	DataRequest.prototype.isAllocated = true;
+			//}
+			//console.log("Processing "+this.name+" heapSeek:"+DataRequest.prototype.heapSeek+" length:"+this.arrayBuffer.byteLength);
 
-					defer.resolve();
+			//Module['HEAPU8'].set(new Uint8Array(this.arrayBuffer), DataRequest.prototype.heapPtr+DataRequest.prototype.heapSeek);
+			//var byteArray = Module['HEAPU8'].subarray(DataRequest.prototype.heapPtr+DataRequest.prototype.heapSeek, DataRequest.prototype.heapPtr+DataRequest.prototype.heapSeek+this.arrayBuffer.byteLength)
+
+			var sourceBytes = new Uint8Array(this.arrayBuffer);
+
+			var heapPtr = Module['_malloc'](sourceBytes.length);
+			Module['HEAPU8'].set(sourceBytes, heapPtr);
+
+			var byteArray = Module['HEAPU8'].subarray(heapPtr, heapPtr + this.arrayBuffer.byteLength);
+
+			//DataRequest.prototype.heapSeek += this.arrayBuffer.byteLength;
+
+			var that = this;
+			Module['FS_createPreloadedFile'](this.name, null, byteArray, true, true, function() {
+				Module['removeRunDependency']('fp ' + that.name);
+			}, function() {
+				if (that.audio) {
+					Module['removeRunDependency']('fp ' + that.name); // workaround for chromium bug 124926 (still no audio with this, but at least we don't hang)
 				} else {
-					defer.reject();
+					Module.printErr('Preloading file ' + that.name + ' failed');
 				}
+			}, false, true); // canOwn this data in the filesystem, it is a slide into the heap that will never change
+		},
+	};
 
-			};
-			
-			xhr.send();
+	
+	// ダウンロードするリスト
+	var fileNames = ["startax"];
+	
+	function importDataList() {
+		var defer = $.Deferred();
+	
+		$.ajax({
+			type: "GET",
+			url:  "/api/program/data_list/",
+			data: {
+				"p": {{ .ProgramInfo.Id }}
+			},
+			dataType: "json"
+		}).success(function(data) {
 
-			return defer.promise();
-		}
-
-		function importDataArrays() {
-			var defer = $.Deferred();
-			var processingNum = fileNames.length;
-
-			for (var name of fileNames) {
-				importDataArray(name).then(function () {
-					processingNum--;
-					if (processingNum == 0) {
-						defer.resolve();
-					}
-				}, function () {
-					defer.reject();
-				});
+			if (data.Names != null) {
+				fileNames = fileNames.concat(data.Names);
 			}
 
-			return defer.promise();
-		}
+			console.log("Downloaded file list.");
+	
+			defer.resolve();
+		}).error(function(data) {
+			console.log("Failed to download file list.")
+	
+			defer.reject();
+		});
+	
+		return defer.promise();
+	}
+	
+	function importDataArray(name) {
+		var defer = $.Deferred();
+	
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', '/api/program/data/?pid={{ .ProgramInfo.Id }}&f=' + name, true);
+		xhr.responseType = 'arraybuffer';
 		
+		xhr.onload = function(e) {
+			if (this.status == 200) {
+				new DataRequest(0).register("/" + name, this.response);
+	
+				console.log("Downloaded " + name);
+	
+				defer.resolve();
+			} else {
+				defer.reject();
+			}
+	
+		};
+		
+		xhr.send();
+	
+		return defer.promise();
+	}
+	
+	function importDataArrays() {
+		var defer = $.Deferred();
+		var processingNum = fileNames.length;
+	
+		for (var name of fileNames) {
+			importDataArray(name).then(function () {
+				processingNum--;
+				if (processingNum == 0) {
+					defer.resolve();
+				}
+			}, function () {
+				defer.reject();
+			});
+		}
+	
+		return defer.promise();
+	}
+
+	// この時点で初期化されていれば、runWithFS
+	// されていなければpreRunに追加
+	if (Module['calledRun']) {
+		runWithFS();
+	} else {
+		if (!Module['preRun']) Module['preRun'] = [];
+		Module["preRun"].push(runWithFS);
+	}
+	
+	
+	// 初期化後の読み込み
+	function runWithFS() {
+
+		// HSPの設定
+		Module.preRun.push(function() {
+			ENV.HSP_WX = "640";//スクリプトの動作解像度
+			ENV.HSP_WY = "480";
+			ENV.HSP_SX = "640";//表示解像度
+			ENV.HSP_SY = "480";
+			ENV.HSP_AUTOSCALE = "0";//スケーリングモード
+			ENV.HSP_FPS = "0";//フレームレート
+			ENV.HSP_LIMIT_STEP = "5000";//ブラウザに処理を返すまでの実行ステップ数
+		});
+		
+		function processPackageData() {
+			console.log('Processing package data...')
+	
+			Module.finishedDataFileDownloads++;
+	
+			for (var name of fileNames) {
+				DataRequest.prototype.requests["/" + name].process();
+				DataRequest.prototype.requests["/" + name] = null;
+			}
+	
+			Module['removeRunDependency']('datafile_data');
+	
+		};
+	
+		
+		Module['addRunDependency']('datafile_data');
+	
+		if (!Module.preloadResults) Module.preloadResults = {};
+	
+		Module.preloadResults["data"] = {fromCache: false};
+	
 		importDataList().then(function() {
 			importDataArrays().then(function () {
-		
-				if (Module['calledRun']) {
-					runWithFS();
-				} else {
-					if (!Module['preRun']) Module['preRun'] = [];
-					Module["preRun"].push(runWithFS); // FS is not initialized yet, wait for it
-				}
+
+				processPackageData();
 
 			});
 		});
-
-		function runWithFS() {
-
-			function assert(check, msg) {
-				if (!check) throw msg + new Error().stack;
-			}
-
-			function DataRequest(crunched, audio) {
-				this.crunched = crunched;
-				this.audio = audio;
-			}
-
-			DataRequest.prototype = {
-				requests: {},
-				open: function(mode, name) {
-					this.name = name;
-					this.requests[name] = this;
-					Module['addRunDependency']('fp ' + this.name);
-				},
-				send: function() {},
-				onload: function() {
-
-					this.finish(this.byteArray);
 	
-				},
-				finish: function(byteArray) {
-					var that = this;
-					Module['FS_createPreloadedFile'](this.name, null, byteArray, true, true, function() {
-						Module['removeRunDependency']('fp ' + that.name);
-					}, function() {
-						if (that.audio) {
-							Module['removeRunDependency']('fp ' + that.name); // workaround for chromium bug 124926 (still no audio with this, but at least we don't hang)
-						} else {
-							Module.printErr('Preloading file ' + that.name + ' failed');
-						}
-					}, false, true); // canOwn this data in the filesystem, it is a slide into the heap that will never change
-					this.requests[this.name] = null;
-				},
-			};
+	}
 	
-			Module.preRun.push(function() {
-				ENV.HSP_WX = "640";//スクリプトの動作解像度
-				ENV.HSP_WY = "480";
-				ENV.HSP_SX = "640";//表示解像度
-				ENV.HSP_SY = "480";
-				ENV.HSP_AUTOSCALE = "0";//スケーリングモード
-				ENV.HSP_FPS = "0";//フレームレート
-				ENV.HSP_LIMIT_STEP = "5000";//ブラウザに処理を返すまでの実行ステップ数
-			});
-
-			
-			for (var name of fileNames) {
-				new DataRequest(0, 0).open('GET', '/' + name);
-			}
-
-
-			function processPackageData() {
-				console.log('Processing package data...')
-
-				Module.finishedDataFileDownloads++;
-
-				for (var name of fileNames) {
-					DataRequest.prototype.requests['/' + name].byteArray = new Uint8Array(files[name]);
-					DataRequest.prototype.requests['/' + name].onload();
-				}
-
-				Module['removeRunDependency']('datafile_data');
-
-			};
-
-			
-			Module['addRunDependency']('datafile_data');
-
-			if (!Module.preloadResults) Module.preloadResults = {};
-	
-			Module.preloadResults["data"] = {fromCache: false};
-
-			processPackageData();
-
-		}
-
-		
-	})();
 </script>
 
-{{ .LinkJS "hsp3dish.js" }}
+{{ linkJS "hsp3dish.js" }}
 
 {{ end }}

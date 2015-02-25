@@ -110,7 +110,7 @@ func (this *Program) Create() (int, error) {
 		return 0, err
 	}
 
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, size, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, this.Size, buffer.Bytes())
+	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, size, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, this.Size, buffer.Bytes())
 	if err != nil {
 		return -1, err
 	}
@@ -334,7 +334,7 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 			var data []byte
 
-			if pair.Value == "" {
+			if pair.Value == "PASS" {
 
 				if oldProgram.Id == 0 {
 					err = oldProgram.Load(program.Id)

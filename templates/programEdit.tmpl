@@ -490,7 +490,7 @@ $(document).ready(function() {
 	{{ range $i, $file := .Program.Attachments.Files }}
 	attachments.push({
 		"name":  "{{ $file.Name }}",
-		"value": "",
+		"value": "PASS",
 	});
 
 	var del = $('<a class="badge" href="#">X</a>');
