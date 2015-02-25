@@ -362,12 +362,13 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 				if err != nil {
 					return program, err
 				}
-			}
 
-			program.Attachments.Files = append(program.Attachments.Files, File{
-				Name: pair.Name,
-				Data: data,
-			})
+				program.Attachments.Files = append(program.Attachments.Files, File{
+					Name: pair.Name,
+					Data: data,
+				})
+
+			}
 		}
 
 	}
