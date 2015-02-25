@@ -69,6 +69,12 @@
 
 		color: #aaaaaa;
 	}
+	.small_preview {
+		width:  1em;
+		height: 1em;
+
+		overflow: hidden;
+	}
 	.fileinput_button {
 		position: relative;
 		overflow: hidden;
@@ -142,7 +148,7 @@
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
-									png, gif, jpg, bmpに対応しています。
+									png, gif, jpg, bmpに対応しています。<strong>3MBまで</strong>のファイルが使用できます。
 								</p>
 	
 							</div>
@@ -175,7 +181,7 @@
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
-									HSPファイルをコンパイルするときに生成される、startax(または、~.ax)ファイルをアップロードしてください。1MBまで対応しています。
+									スクリプトエディタの「start.axファイルを作成」を押したときに生成される、start.axファイルをアップロードしてください。<strong>1MBまで</strong>対応しています。
 								</p>
 							</div>
 			
@@ -212,7 +218,7 @@
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
-									プログラム中で使用するファイル(画像, 音楽など)を選択してください。5MBまで対応しています。複数可。
+									プログラム中で使用するファイル(画像, 音楽, テキストなど)を選択してください。<strong>5MBまで</strong>対応しています。複数可。
 								</p>
 							</div>
 			
@@ -228,7 +234,7 @@
 		<div class="col-md-8 col-md-offset-2">
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<b>5. 説明</b>
+					<b>5. 説明 </b><span class="small text-muted" id="description_count">    0 / 500 文字</span>
 				</div>
 				<div class="panel-body">
 					<div class="row">
@@ -290,6 +296,7 @@ $(document).ready(function() {
 	var thumbnail = "";
 	var startax   = "";
 	var attachments = new Array(0);
+	var attachmentsSize = 0;
 
 	function updatePreview() {
 		$.ajax({
@@ -323,15 +330,19 @@ $(document).ready(function() {
 		box.find(".upload_box_nofile i").removeAttr("class").addClass("mdi-editor-insert-drive-file");
 	}
 
-	function deleteAttachment(i) {
-		var box = $("#attachmet_box");
+	function deleteAttachment(fname) {
+		for(var i = 0; i< attachments.length; i++){
 
-		attachments.splice(i, 1);
-		$("#attachment_box ul li").get(i).remove();
+			if(attachments[i] == fname){
+				attachments.splice(i, 1);
+			}
+		}
 
 		if (attachments.length == 0) {
 			$("#attachment_box .upload_box .upload_box_nofile").show();
 		}
+
+		$('#attachment_box ul li[data-fname="'+fname+'"]').remove();
 	}
 
 	function convertArrayBufferToBase64(buffer) {
@@ -344,6 +355,12 @@ $(document).ready(function() {
 		return window.btoa(result);
 	}
 
+	function updateProgress(total, current, elem) {
+		elem.css({
+			width: String((current / total) * 100) + "%",
+		});
+	}
+
 	function registFile(elem, file) {
 
 		var $this = elem;
@@ -351,12 +368,18 @@ $(document).ready(function() {
 		var id = $this.attr("id");
 
 		if (id == "thumb_box") {
+
+			if (file.size > 1024*1024*3) {
+				assertBottom("error", "ファイルサイズが大きすぎます。");
+				return;
+			}
+
 			readerPreview = new FileReader();
 			readerPreview.onload = function(event) {
 				var preview = $this.find(".preview");
 				var box = $this.find(".upload_box");
 				var stat = $this.find(".upload_box .status");
-				var del = $('<a class="badge" href="#">X</a>');
+				var del = $('<a class="badge" href="javascript:void();">X</a>');
 
 				stat.text(file.name);
 				stat.append(del);
@@ -378,24 +401,74 @@ $(document).ready(function() {
 			$this.find(".status").text(file.name+"を読み込み中です…");
 		}
 		if (id == "startax_box") {
-			var del = $('<a class="badge" href="#">X</a>');
+
+			if (file.size > 1024*1024*1) {
+				assertBottom("error", "ファイルサイズが大きすぎます。");
+				return;
+			}
+
+			var del = $('<a class="badge" href="javascript:void();">X</a>');
+
 			del.on("click", function() {
 				resetStartax();
 			});
+
 			$this.find(".upload_box_nofile i").removeAttr("class").addClass("mdi-action-done");
-			$this.find(".status").text(file.name + " " + file.size + "B ").append(del);
+			$this.find(".status").text(file.name + ' <span class="text-muted">"' + file.size + ' B</span> ').append(del);
+
 		}
 		if (id == "attachment_box") {
-			var del = $('<a class="badge" href="#">X</a>');
-			var i = attachments.length;
+
+			var maxAttachmentsSize = 1024*1024*5;
+
+			if ($this.find('ul li[data-fname="'+file.name+'"]').length != 0) {
+				assertBottom("error", "同じ名前のファイルは登録できません。");
+				return;
+			}
+
+			if (attachmentsSize + file.size > maxAttachmentsSize) {
+				assertBottom("error", "ファイルサイズが大きすぎます。");
+				return;
+			}
+
+			attachmentsSize += file.size;
+			updateProgress(maxAttachmentsSize, attachmentsSize, $(".capacity"));
+
+			var del = $('<a class="badge" href="javascript:void();">X</a>');
+
 			del.on("click", function() {
-				deleteAttachment(i);
+				deleteAttachment(file.name);
+				attachmentsSize -= file.size;
+				updateProgress(maxAttachmentsSize, attachmentsSize, $(".capacity"));
 			});
+
+			var previewSmall = '<img class="circle small_preview" />';
+			if (file.type.indexOf("image/") != 0) {
+				previewSmall = "";
+			}
+
 			$this.find(".upload_box_nofile").hide();
-			$this.find("ul").show().append($("<li>"+file.name+" "+(file.size/1024)+"KB </li>").append(del));
+			$this.find("ul").show().append($('<li data-fname="'+ file.name +'">'+previewSmall+file.name+' <span class="text-muted">'+Math.floor(file.size/1024)+'KB </span></li>').append(del));
 		}
 
+		var progress = $this.find(".progress");
+		var bar = progress.find(".upload_progress");
+
 		readerUpload = new FileReader();
+		readerUpload.onloadstart = function(event) {
+			progress.show();
+			bar.css({
+				width: "0%"
+			});
+		};
+		readerUpload.onprogress = function(event) {
+			bar.css({
+				width: String((event.loaded / event.total) *100) + "%"
+			});
+		};
+		readerUpload.loadend = function(event) {
+			progress.hide();
+		};
 		readerUpload.onload = function(event) {
 			switch(id) {
 				case "thumb_box":
@@ -405,10 +478,17 @@ $(document).ready(function() {
 					startax = convertArrayBufferToBase64(event.target.result);
 					break;
 				case "attachment_box":
+					var data = convertArrayBufferToBase64(event.target.result);
 					attachments.push({
 						"name":  file.name,
-						"value": convertArrayBufferToBase64(event.target.result)
+						"value": data
 					});
+
+					if (file.type.indexOf("image/") == 0) {
+						$('#attachment_box ul li[data-fname="'+file.name+'"] img').attr({
+							"src": "data:"+file.type+";base64, "+data
+						});
+					}
 					break;
 			}
 		}
@@ -417,8 +497,11 @@ $(document).ready(function() {
 
 	}
 
-	$("#description").bind("keyup", function() {
+	$("#description").bind('input propertychange', function() {
 		updatePreview();
+
+		$("#description_count").text(String($(this).val().length) + " / 500 文字");
+
 	});
 
 	$("#preview").css({
@@ -434,13 +517,21 @@ $(document).ready(function() {
 
 		var files = e.originalEvent.dataTransfer.files;
 
-		registFile($(this), files[0]);
+		var $this = this;
+
+		$.each(files, function () {
+			registFile($($this), this);
+		});
 
 	});
 
 	$("input[type=file]").on("change", function(e) {
 
-		registFile($(this).parents("div[id$=_box]"), this.files[0]);
+		var $this = this;
+
+		$.each(this.files, function() {
+			registFile($($this).parents("div[id$=_box]"), this);
+		});
 
 	});
 
@@ -468,9 +559,10 @@ $(document).ready(function() {
 		$.ajax({
 			type: "POST",
 			url:  "/api/program/create/",
+			dataType: "json",
 			data: form
 		}).success(function (json) {
-			assertBottom("success", json.responseJSON.Message);
+			assertBottom("success", json.Message);
 		}).error(function (json) {
 			
 			var modal = $("#modal");
@@ -478,7 +570,7 @@ $(document).ready(function() {
 			var modal_text = $("#modal_text");
 
 			modal_title.text("エラー");
-			modal_text.text(json.responseJSON.Message);
+			modal_text.text(json.Message);
 			modal.modal();
 
 		});
