@@ -102,10 +102,21 @@
 	left: 0;
 	right: 0;
 
-	padding: 0 5px 0 5px;
-	margin-bottom: -20px !important;
+	margin-bottom: -30px !important;
 
 	background: #ffffff;
+}
+.share_box a {
+	margin: 0;
+
+	border-bottom: 3px solid #dddddd;
+
+	background: #ffffff;
+
+	cursor: text;
+}
+.share_box a:hover {
+	border-bottom: 3px solid #00a194;
 }
 .gallery_box {
 	height: 200px;
@@ -160,10 +171,8 @@
 					<div id="tweets" class="list-group">
 
 					</div>
-					<div class="share_box shadow-z-1">
-						<div class="form-group">
-							<input class="form-control floating-label" id="comment_input" type="text" placeholder="Twitterを使ってコメントする...">
-						</div>
+					<div class="share_box">
+						<a class="btn btn-default btn-block" href="javascript:openTwitter();">Twitterを使ってコメントする…</a>
 					</div>
 				</div>
 			</div>
@@ -326,15 +335,13 @@
 		});
 	}
 
-	function openTwitter(that) {
+	function openTwitter() {
 
 		var title = encodeURIComponent("{{ .ProgramInfo.Title }}");
 		var hashtags = encodeURIComponent("hsproom #{{ .ProgramInfo.Title }}");
 		var url = encodeURIComponent(location.href);
 
 		open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags=" + hashtags, "プログラムにコメントする", "width=600,height=331");
-
-		$(that).blur();
 
 	}
 
@@ -359,8 +366,6 @@
 		setProfile();
 
 		setInterval(reloadComments, 15000);
-
-		$("#comment_input").focus(openTwitter($("#comment_input")));
 
 		$("#gallery").flickity({
 			cellAlign: "left",
