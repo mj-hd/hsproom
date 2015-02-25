@@ -559,7 +559,7 @@ func getProgramRankingSince(since time.Time, out *[]ProgramInfo, from int, numbe
 		return 0, err
 	}
 
-	rows, err := DB.Query("SELECT id FROM programs WHERE created >= ? ORDER BY good DESC LIMIT ?, ?", since.Format("2006-1-2"), from, number)
+	rows, err := DB.Query("SELECT id FROM programs WHERE created >= ? ORDER BY good DESC, play DESC LIMIT ?, ?", since.Format("2006-1-2"), from, number)
 
 	if err != nil {
 		return rowCount, err
