@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/lestrrat/go-ngram"
 )
 
 type Program struct {
@@ -719,6 +720,66 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 	}
 
 	return rowCount, nil
+}
+
+func GetProgramListRelatedTo(out *[]ProgramInfo, title string, number int) error {
+
+	if cap(*out) < number {
+		*out = make([]ProgramInfo, number)
+	}
+
+	token := ngram.NewTokenize(3, title)
+
+	var maxCount int
+	var maxQuery string
+	var err error
+	for _, t := range token.Tokens() {
+		var result int
+		err = DB.QueryRow("SELECT count(id) FROM programs WHERE title LIKE '%"+t.String()+"%' AND title <> ?", title).Scan(&result)
+
+		if err != nil {
+			continue
+		}
+
+		if result > maxCount {
+			maxCount = result
+			maxQuery = t.String()
+		}
+	}
+
+	if maxCount == 0 {
+		return errors.New("関連プログラムが見つかりませんでした。")
+	}
+
+	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE '%"+maxQuery+"%' AND title <> ? LIMIT ?", title, number)
+
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	i := 0
+	for rows.Next() {
+
+		var id int
+		err = rows.Scan(&id)
+
+		if err != nil {
+			return err
+		}
+
+		err = (*out)[i].Load(id)
+
+		if err != nil {
+			return err
+		}
+
+		if (*out)[i].Title == title {
+			(*out)[i] = ProgramInfo{}
+		}
+	}
+
+	return nil
 }
 
 func ExistsProgram(id int) bool {

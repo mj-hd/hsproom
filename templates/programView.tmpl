@@ -19,19 +19,19 @@
 	text-align: right;
 }
 
-.played_number, .good_number {
+.share_played_number, .share_good_number {
 	font-size: 1.5em;
 }
 
-.played_number i, .good_number i {
+.share_played_number i, .share_good_number i {
 	font-size: 1.6em;
 }
 
-.good_number a {
+.share_good_number a {
 	display: inline-block;
 	text-shadow: 0 0 5px #aaaaaa;
 }
-.good_number a:hover {
+.share_good_number a:hover {
 	text-decoration: none;
 }
 .good_button_animate {
@@ -57,7 +57,6 @@
 	margin-left: 5px;
 
 	font-size: 1.2em;
-
 }
 
 .description {
@@ -119,14 +118,16 @@
 	border-bottom: 3px solid #00a194;
 }
 .gallery_box {
-	height: 200px;
+	width: 100%;
+	padding-bottom: 35px;
 }
 .gallery {
-	height: 150px;
+	width: 100%;
 }
-.gallery_cell {
-	width: 200px;
-	height: 150px;
+.gallery-cell {
+	width:  50%;
+	height: 250px;
+
 	margin-left: 10px;
 }
 .user_detail_link {
@@ -150,11 +151,11 @@
 				<div class="title_heading row">
 					<div class="title col-md-6">
 						<h1>{{ .ProgramInfo.Title }}</h1>
-						<span class="cap"> by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.User }}</a>, at {{ .ProgramInfo.Created.Format "Jan _2 3:04:05 PM (Mon)" }}</span>
+						<span class="cap"> by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.User }}</a>, at {{ .ProgramInfo.Created.Format "2006年1月_2日 15:04:05" }}</span>
 					</div>
 					<div class="share_buttons col-md-6">
-						<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .ProgramInfo.Play }}</span> 
-						<span class="good_number">
+						<span class="share_played_number"><i class="mdi-av-play-circle-outline"></i>{{ .ProgramInfo.Play }}</span> 
+						<span class="share_good_number">
 							<a href="javascript:good();" class="good_button" ><i class="mdi-social-mood"></i></a>
 							<span id="good"></span>
 						</span>
@@ -199,7 +200,7 @@
 								<div class="row-content">
 									<h4 class="list-group-item-heading"><a href="https://twitter.com/{{ .ProgramInfo.User }}">@{{ .ProgramInfo.User }}</a></h4>
 									<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
-									<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.User }}">詳しく...</a>
+									<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.UserId }}">詳しく...</a>
 								</div>
 							</div>
 						</div>
@@ -218,9 +219,34 @@
 			</div>
 			<div class="gallery_box panel-body">
 				<div class="gallery" id="gallery">
-					<div class="gallery-cell" style="background: #353;">
-						<span>プログラム</span>
-					</div>
+					{{ range .RelatedPrograms }}
+						{{ if eq .Title "" }}
+						{{ else }}
+						<div class="gallery-cell program_list_item">
+							<div class="program_picture thumbnail">
+								<img src="/api/program/thumbnail/?p={{ .Id }}" />
+							</div>
+							<div class="program_content">
+								<div class="program_item_heading">
+									<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+									<span class="small"><a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+								</div>
+								<div class="program_item_accessory">
+									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span>
+									<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
+									<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+								</div>
+							</div>
+						</div>
+						{{ end }}
+						<div class="gallery-cell"></div>
+					{{ else }}
+						<div class="gallery-cell">
+							<span class="text-muted h2">プログラムが見つかりませんでした。</span>
+						</div>
+						<div class="gallery-cell">
+						</div>
+					{{ end }}
 				</div>
 			</div>
 		</div>
@@ -368,8 +394,9 @@
 		setInterval(reloadComments, 15000);
 
 		$("#gallery").flickity({
-			cellAlign: "left",
-			contain: true
+			cellAlign: "center",
+			wrapAround: true,
+			setSize: false
 		});
 
 		updateGoodCount();
@@ -422,15 +449,10 @@
 	DataRequest.prototype = {
 		//TOTAL_MEMORY: 104857600,
 		requests: {},
-		//heapPtr: 0,
-		//heapSize: 0,
-		//heapSeek: 0,
 		register: function(name, arrayBuffer) {
 			this.name = name;
 
 			this.arrayBuffer = arrayBuffer;
-
-			//DataRequest.prototype.heapSize += arrayBuffer.byteLength;
 
 			DataRequest.prototype.requests[name] = this;
 
@@ -439,25 +461,12 @@
 			Module['addRunDependency']('fp ' + this.name);
 		},
 		process: function() {
-			//if (!DataRequest.prototype.isAllocated) {
-
-			//	DataRequest.prototype.heapPtr = Module['_malloc'](DataRequest.prototype.heapSize);
-
-			//	DataRequest.prototype.isAllocated = true;
-			//}
-			//console.log("Processing "+this.name+" heapSeek:"+DataRequest.prototype.heapSeek+" length:"+this.arrayBuffer.byteLength);
-
-			//Module['HEAPU8'].set(new Uint8Array(this.arrayBuffer), DataRequest.prototype.heapPtr+DataRequest.prototype.heapSeek);
-			//var byteArray = Module['HEAPU8'].subarray(DataRequest.prototype.heapPtr+DataRequest.prototype.heapSeek, DataRequest.prototype.heapPtr+DataRequest.prototype.heapSeek+this.arrayBuffer.byteLength)
-
 			var sourceBytes = new Uint8Array(this.arrayBuffer);
 
 			var heapPtr = Module['_malloc'](sourceBytes.length);
 			Module['HEAPU8'].set(sourceBytes, heapPtr);
 
 			var byteArray = Module['HEAPU8'].subarray(heapPtr, heapPtr + this.arrayBuffer.byteLength);
-
-			//DataRequest.prototype.heapSeek += this.arrayBuffer.byteLength;
 
 			var that = this;
 			Module['FS_createPreloadedFile'](this.name, null, byteArray, true, true, function() {

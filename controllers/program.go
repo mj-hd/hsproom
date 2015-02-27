@@ -122,7 +122,8 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 
 type programViewMember struct {
 	*templates.DefaultMember
-	ProgramInfo models.ProgramInfo
+	ProgramInfo     models.ProgramInfo
+	RelatedPrograms []models.ProgramInfo
 }
 
 func programViewHandler(document http.ResponseWriter, request *http.Request) {
@@ -170,6 +171,16 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
+	}
+
+	var related []models.ProgramInfo
+	err = models.GetProgramListRelatedTo(&related, program.Title, 10)
+
+	if err != nil {
+		related = make([]models.ProgramInfo, 0)
 	}
 
 	err = tmpl.Render(document, programViewMember{
@@ -177,7 +188,8 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 			Title: program.Title + " - " + config.SiteTitle,
 			User:  getSessionUser(request),
 		},
-		ProgramInfo: program,
+		ProgramInfo:     program,
+		RelatedPrograms: related,
 	})
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
