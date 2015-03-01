@@ -151,7 +151,7 @@
 				<div class="title_heading row">
 					<div class="title col-md-6">
 						<h1>{{ .ProgramInfo.Title }}</h1>
-						<span class="cap"> by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.User }}</a>, at {{ .ProgramInfo.Created.Format "2006年1月_2日 15:04:05" }}</span>
+						<span class="cap"> by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a>, at {{ .ProgramInfo.Created.Format "2006年1月_2日 15:04:05" }}</span>
 					</div>
 					<div class="share_buttons col-md-6">
 						<span class="share_played_number"><i class="mdi-av-play-circle-outline"></i>{{ .ProgramInfo.Play }}</span> 
@@ -198,9 +198,9 @@
 									<img id="profile_icon" class="circle" alt="icon">
 								</div>
 								<div class="row-content">
-									<h4 class="list-group-item-heading"><a href="https://twitter.com/{{ .ProgramInfo.User }}">@{{ .ProgramInfo.User }}</a></h4>
+									<h4 class="list-group-item-heading"><a href="https://twitter.com/{{ .ProgramInfo.GetScreenName }}">{{ .ProgramInfo.UserName }}</a></h4>
 									<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
-									<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.UserId }}">詳しく...</a>
+									<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.User }}">詳しく...</a>
 								</div>
 							</div>
 						</div>
@@ -229,7 +229,7 @@
 							<div class="program_content">
 								<div class="program_item_heading">
 									<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
-									<span class="small"><a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+									<span class="small"><a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
 								</div>
 								<div class="program_item_accessory">
 									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span>
@@ -352,7 +352,7 @@
 			dataType: "json",
 			cache: false,
 			data: {
-				"u": "{{ .ProgramInfo.UserId }}"
+				"u": "{{ .ProgramInfo.User }}"
 			},
 		}).success(function (data, status) {
 			$("#profile").text(data.Profile.substring(0, 50) + "...");

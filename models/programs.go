@@ -25,8 +25,8 @@ type ProgramInfo struct {
 	Created     time.Time
 	Modified    mysql.NullTime
 	Title       string
-	User        string
-	UserId      int
+	User        int
+	UserName  string
 	Good        int
 	Play        int
 	Description string
@@ -75,7 +75,7 @@ func (this *Program) Load(id int) error {
 		return err
 	}
 
-	this.UserId, err = GetUserIdFromName(this.User)
+	this.UserName, err = GetUserName(this.User)
 
 	return err
 }
@@ -110,6 +110,8 @@ func (this *Program) Create() (int, error) {
 		return 0, err
 	}
 
+	this.Created = this.Created.Local()
+
 	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes())
 	if err != nil {
 		return -1, err
@@ -139,7 +141,7 @@ func (this *ProgramInfo) Load(id int) error {
 		return err
 	}
 
-	this.UserId, err = GetUserIdFromName(this.User)
+	this.UserName, err = GetUserName(this.User)
 	if err != nil {
 		return err
 	}
@@ -148,6 +150,11 @@ func (this *ProgramInfo) Load(id int) error {
 }
 
 func (this *ProgramInfo) Update() error {
+
+	this.Created = this.Created.Local()
+	if this.Modified.Valid {
+		this.Modified.Time = this.Modified.Time.Local()
+	}
 
 	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, description = ? WHERE id = ?",
 		time.Now(), this.Title, this.Description, this.Id)
@@ -164,6 +171,13 @@ func (this *ProgramInfo) Remove() error {
 	_, err := DB.Exec("DELETE FROM programs WHERE id = ?", this.Id)
 
 	return err
+}
+
+func (this *ProgramInfo) GetScreenName() (string) {
+
+	name, _ := GetUserScreenName(this.Id)
+
+	return name
 }
 
 type RawProgram struct {
@@ -185,7 +199,6 @@ const (
 	ProgramModified
 	ProgramTitle
 	ProgramUser
-	ProgramUserId
 	ProgramThumbnail
 	ProgramDescription
 	ProgramStartax
@@ -229,15 +242,7 @@ func (this *RawProgram) Validate(flag uint) error {
 
 	if (flag & ProgramUser) != 0 {
 
-		if len(this.User) <= 0 || len(this.User) >= 50 {
-			return errors.New("ユーザ名の文字数が範囲外です。")
-		}
-
-	}
-
-	if (flag & ProgramUserId) != 0 {
-
-		// TODO: implement
+		// TOO: implement
 
 	}
 
@@ -429,19 +434,11 @@ func (this *RawProgram) ToProgramInfo(flag uint) (ProgramInfo, error) {
 
 	if (flag & ProgramUser) != 0 {
 
-		program.User = this.User
-
-	}
-
-	if (flag & ProgramUserId) != 0 {
-
-		id, err := strconv.Atoi(this.UserId)
-
+		userId, err := strconv.Atoi(this.User)
 		if err != nil {
 			return program, err
 		}
-
-		program.UserId = id
+		program.User = userId
 
 	}
 
@@ -671,7 +668,7 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 
 }
 
-func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name string, isDesc bool, from int, number int) (int, error) {
+func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, user int, isDesc bool, from int, number int) (int, error) {
 
 	if cap(*out) < number {
 		*out = make([]ProgramInfo, number)
@@ -687,14 +684,14 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, name stri
 	}
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM programs WHERE user = ?", name).Scan(&rowCount)
+	err := DB.QueryRow("SELECT count(id) FROM programs WHERE user = ?", user).Scan(&rowCount)
 
 	if err != nil {
 		return 0, err
 	}
 
 	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", name, from, number)
+	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", user, from, number)
 	if err != nil {
 		return rowCount, err
 	}

@@ -46,7 +46,7 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	var programs []models.ProgramInfo
 
-	_, err = models.GetProgramListByUser(models.ProgramColCreated, &programs, user.Name, true, 0, 4)
+	_, err = models.GetProgramListByUser(models.ProgramColCreated, &programs, user.Id, true, 0, 4)
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
@@ -141,16 +141,15 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 		page = 0
 	}
 
-	userName, err := models.GetUserName(userId)
-	if err != nil {
+	if !models.ExistsUser(userId) {
 		utils.PromulgateDebug(os.Stdout, err)
 
-		showError(document, request, "エラーが発生しました。")
+		showError(document, request, "ユーザが存在しません。")
 		return
 	}
 
 	var programs []models.ProgramInfo
-	i, err := models.GetProgramListByUser(sortKey, &programs, userName, true, page*10, 10)
+	i, err := models.GetProgramListByUser(sortKey, &programs, userId, true, page*10, 10)
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
@@ -162,6 +161,15 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	maxPage := i / 10
 	if i%10 == 0 {
 		maxPage--
+	}
+
+	userName, err := models.GetUserName(userId)
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		showError(document, request, "エラーが発生しました。")
+		return
 	}
 
 	err = tmpl.Render(document, userProgramsMember{

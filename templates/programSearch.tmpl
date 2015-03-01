@@ -17,23 +17,29 @@
 
 <div class="col-md-2">
 
+	<button type="button" class="btn btn-default btn-block" data-toggle="collapse" data-target=".options_collapse">
+		<i class="mdi-navigation-expand-more"></i>オプション...
+	</button>
+
 	<div class="btn-group-vertical options">
 		<a href="/program/" class="btn btn-default"><i class="mdi-social-poll"></i> ダッシュボード</a>
 	</div>
 
-	<span class="">並び順</span>
-	<div class="btn-group-vertical options">
-		<a id="options_created" href="/program/search/?q={{ .Query }}&s=c" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
-		<a id="options_good" href="/program/search/?q={{ .Query }}&s=g" class="btn btn-default"><i class="mdi-social-mood"></i> いいねの数</a>
-		<a id="options_name" href="/program/search/?q={{ .Query }}&s=n" class="btn btn-default"><i class="mdi-action-translate"></i> 名前の順</a>
-	</div>
+	<div class="options_collapse collapse">
+		<span class="">並び順</span>
+		<div class="btn-group-vertical options">
+			<a id="options_created" href="/program/search/?q={{ .Query }}&s=c" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
+			<a id="options_good" href="/program/search/?q={{ .Query }}&s=g" class="btn btn-default"><i class="mdi-social-mood"></i> いいねの数</a>
+			<a id="options_name" href="/program/search/?q={{ .Query }}&s=n" class="btn btn-default"><i class="mdi-action-translate"></i> 名前の順</a>
+		</div>
 
-	<span>人気ランキング</span>
-	<div class="btn-group-vertical options">
-		<a href="/program/ranking/daily/" class="btn btn-default"><i class="mdi-action-thumb-up"></i> 日間</a>
-		<a href="/program/ranking/weekly/" class="btn btn-default"><i class="mdi-action-star-rate"></i> 週間</a>
-		<a href="/program/ranking/monthly/" class="btn btn-default"><i class="mdi-action-grade"></i> 月間</a>
-		<a href="/program/ranking/alltime/" class="btn btn-default"><i class="mdi-action-stars"></i> 総合</a>
+		<span>人気ランキング</span>
+		<div class="btn-group-vertical options">
+			<a href="/program/ranking/daily/" class="btn btn-default"><i class="mdi-action-thumb-up"></i> 日間</a>
+			<a href="/program/ranking/weekly/" class="btn btn-default"><i class="mdi-action-star-rate"></i> 週間</a>
+			<a href="/program/ranking/monthly/" class="btn btn-default"><i class="mdi-action-grade"></i> 月間</a>
+			<a href="/program/ranking/alltime/" class="btn btn-default"><i class="mdi-action-stars"></i> 総合</a>
+		</div>
 	</div>
 
 </div>
@@ -65,7 +71,7 @@
 						<div class="program_content">
 							<div class="program_item_heading">
 								<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
-								<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+								<span class="small">by <a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
 							</div>
 							<div class="program_item_accessory">
 								<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
@@ -73,7 +79,7 @@
 								<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 
 							</div>
-							<p class="program_item_text">{{ markdown (subString .Description 0 50) }}</p>
+							<p class="program_item_text">{{ markdown (subString .Description 0 300) }}</p>
 						</div>
 					</div>
 					<div class="program_separator"></div>

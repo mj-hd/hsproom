@@ -160,13 +160,6 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// 日本標準時へ変換
-	// TODO: 今後はDBレベルで統一するかも
-	program.Created = program.Created.Local()
-	if program.Modified.Valid {
-		program.Modified.Time = program.Modified.Time.Local()
-	}
-
 	err = models.PlayProgram(program.Id)
 
 	if err != nil {

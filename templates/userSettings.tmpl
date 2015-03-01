@@ -11,17 +11,18 @@
 </div>
 
 <div class="row">
-	<div class="col-md-2 col-md-offset-2">
+	<div class="col-md-2 col-md-offset-2 col-xs-12 col-sm-12">
+		
 		<div id="menu" class="btn-group-vertical">
-			<a id="top_button" href="javascript:top();" class="btn btn-default">トップ <i class="mdi-image-navigate-next"></i></a>
+			<a id="home_button" href="javascript:top();" class="btn btn-default">トップ <i class="mdi-image-navigate-next"></i></a>
 			<a id="edit_button" href="javascript:edit();" class="btn btn-default">プログラムの編集 <i class="mdi-image-navigate-next"></i></a>
 			<a id="good_button" href="javascript:good();" class="btn btn-default">いいね!一覧 <i class="mdi-image-navigate-next"></i></a>
 		</div>
 	</div>
 	
-	<div class="col-md-6">
+	<div class="col-md-6 col-xs-12 col-sm-12">
 	
-		<div id="top" class="panel panel-default">
+		<div id="home" class="panel panel-default">
 			<div class="panel-heading">
 				管理画面へようこそ！
 			</div>
@@ -107,7 +108,7 @@ function userProgramListItem(programInfo) {
 			)
 		).append(
 			$('<p class="list-group-item-text" />').append(
-				$('<div class="" />').text("最終更新:"+programInfo.Modified)
+				$('<div class="" />').text("最終更新:"+(programInfo.Modified.Valid ? programInfo.Modified.Time : "-"))
 			).append(
 				$('<div class="" />').text("作成日:  "+programInfo.Created)
 			)
@@ -130,11 +131,11 @@ function userGoodListItem(programInfo) {
 		).append(
 			$('<h4 class="list-group-item-heading" />').append(
 				$('<a href="/program/view/?pid='+programInfo.Id+'" />').text(programInfo.Title)
-			).append('<span class="small"> by <a href="/user/view/?u='+programInfo.UserId+'">'+programInfo.User+"</a></span>")
+			).append('<span class="small"> by <a href="/user/view/?u='+programInfo.User+'">'+programInfo.UserName+"</a></span>")
 
 		).append(
 			$('<p class="list-group-item-text" />').append(
-				$('<div class="" />').text(programInfo.Description) // TODO: markdownに対応。Ajax
+				$('<div class="" />').html(programInfo.Description) // TODO: markdownに対応。Ajax
 			)
 		)
 	).append(
@@ -143,11 +144,11 @@ function userGoodListItem(programInfo) {
 
 }
 
-function top() {
+function home() {
 	hideAll();
 
-	$("#top_button").addClass("disabled");
-	$("#top").show();
+	$("#home_button").addClass("disabled");
+	$("#home").show();
 }
 
 function edit() {
@@ -297,7 +298,21 @@ function updateGoodPrograms(page) {
 		$("#good .list-group").html("");
 		$.each(data.Programs, function () {
 			if (this.Title != "") {
-				$("#good .list-group").append(userGoodListItem(this));
+
+				var $this = this;
+
+				$.ajax({
+					type: "GET",
+					url : "/api/markdown/",
+					dataType: "json",
+					data: {
+						"text": $this.Description.substr(0, 150)
+					}
+				}).success(function (data) {
+					$this.Description = data.Markdown;
+					$("#good .list-group").append(userGoodListItem($this));
+				}).error(function (data) {
+				});
 			}
 		});
 
@@ -356,7 +371,7 @@ function removeGood(programId) {
 }
 
 $(document).ready(function() {
-	top();
+	home();
 
 });
 

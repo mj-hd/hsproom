@@ -17,14 +17,17 @@
 
 {{ define "Content" }}
 
-<div class="row">
+<div class="col-md-2 col-xs-12">
 
-	<div class="col-md-2">
+	<button type="button" class="btn btn-default btn-block" data-toggle="collapse" data-target=".options_collapse">
+		<i class="mdi-navigation-expand-more"></i>オプション...
+	</button>
 
-		<div class="btn-group-vertical options">
-			<a href="/program/" class="btn btn-default disabled"><i class="mdi-social-poll"></i> ダッシュボード</a>
-		</div>
+	<div class="btn-group-vertical options">
+		<a href="/program/" class="btn btn-default disabled"><i class="mdi-social-poll"></i> ダッシュボード</a>
+	</div>
 
+	<div class="options_collapse collapse">
 		<span class="">プログラムを探す</span>
 		<div class="btn-group-vertical options">
 			<a href="/program/search/?q=&s=c" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
@@ -44,88 +47,89 @@
 
 	</div>
 
-	<div class="col-md-5">
-		<!-- GOOD LIST -->
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3><i class="mdi-social-mood"></i> 人気プログラム</h3>
-			</div>
-			<div class="panel-body">
-				<div class="program_list">
-					{{ range .GoodPrograms }}
+</div>
 
-						{{ if eq .Title "" }}
+<div class="col-md-5 col-xs-12">
+	<!-- GOOD LIST -->
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3><i class="mdi-social-mood"></i> 人気プログラム</h3>
+		</div>
+		<div class="panel-body">
+			<div class="program_list">
+				{{ range .GoodPrograms }}
 
-						{{ else }}
-						<div class="program_list_item">
-							<div class="program_picture thumbnail">
-								<img src="/api/program/thumbnail/?p={{ .Id }}" />
-							</div>
-							<div class="program_content">
-								<div class="program_item_heading">
-									<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
-									<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
-								</div>
-								<div class="program_item_accessory">
-									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
-									<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
-									<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+					{{ if eq .Title "" }}
 
-								</div>
-								<p class="program_item_text">{{ markdown (subString .Description 0 150) }}...</p>
-							</div>
+					{{ else }}
+					<div class="program_list_item">
+						<div class="program_picture thumbnail">
+							<img src="/api/program/thumbnail/?p={{ .Id }}" />
 						</div>
-						<div class="program_separator"></div>
+						<div class="program_content">
+							<div class="program_item_heading">
+								<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+								<span class="small">by <a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
+							</div>
+							<div class="program_item_accessory">
+								<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
+								<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
+								<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 
-						{{ end }}
+							</div>
+							<p class="program_item_text">{{ markdown (subString .Description 0 150) }}...</p>
+						</div>
+					</div>
+					<div class="program_separator"></div>
 
 					{{ end }}
-					<div class="programlist-more">
-						<a href="/program/search/?q=&s=g&p=0" class="btn btn-default btn-raised btn-block">もっと見る...</a>
-					</div>
+
+				{{ end }}
+				<div class="programlist-more">
+					<a href="/program/search/?q=&s=g&p=0" class="btn btn-default btn-raised btn-block">もっと見る...</a>
 				</div>
 			</div>
 		</div>
 	</div>
-		
-	<div class="col-md-5">
-		<!-- RECENT LIST -->
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3><i class="mdi-action-query-builder"></i> 新着プログラム</h3>
-			</div>
-			<div class="panel-body">
-				<div class="list-group">
-					{{ range .RecentPrograms }}
+</div>
+	
+<div class="col-md-5 col-xs-12">
+	<!-- RECENT LIST -->
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3><i class="mdi-action-query-builder"></i> 新着プログラム</h3>
+		</div>
+		<div class="panel-body">
+			<div class="list-group">
+				{{ range .RecentPrograms }}
 
-						{{ if eq .Title "" }}
-						{{ else }}
-						<div class="program_list_item">
-							<div class="program_picture thumbnail">
-								<img src="/api/program/thumbnail/?p={{ .Id }}" />
-							</div>
-							<div class="program_content">
-								<div class="program_item_heading">
-									<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
-									<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
-								</div>
-								<div class="program_item_accessory">
-									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
-									<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
-									<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
-
-								</div>
-								<p class="program_item_text">{{ markdown (subString .Description 0 150) }}...</p>
-							</div>
+					{{ if eq .Title "" }}
+					{{ else }}
+					<div class="program_list_item">
+						<div class="program_picture thumbnail">
+							<img src="/api/program/thumbnail/?p={{ .Id }}" />
 						</div>
-						<div class="program_separator"></div>
+						<div class="program_content">
+							<div class="program_item_heading">
+								<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+								<span class="small">by <a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
+							</div>
+							<div class="program_item_accessory">
+								<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
+								<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
+								<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 
-						{{ end }}
+							</div>
+							<p class="program_item_text">{{ markdown (subString .Description 0 150) }}...</p>
+						</div>
+					</div>
+					<div class="program_separator"></div>
 
 					{{ end }}
-					<div class="programlist-more">
-						<a href="/program/search/?q=&s=c&p=0" class="btn btn-default btn-raised btn-block">もっと見る...</a>
-					</div>
+
+				{{ end }}
+				<div class="programlist-more">
+					<a href="/program/search/?q=&s=c&p=0" class="btn btn-default btn-raised btn-block">もっと見る...</a>
 				</div>
 			</div>
 		</div>

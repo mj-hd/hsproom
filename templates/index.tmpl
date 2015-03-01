@@ -46,6 +46,8 @@
 			</div>
 			<div class="panel-body programs">
 			{{ range .RecentPrograms }}
+				{{ if eq .Title "" }}
+				{{ else }}
 				<div class="program_list_item">
 					<div class="program_picture thumbnail">
 						<img src="/api/program/thumbnail/?p={{ .Id }}" />
@@ -53,7 +55,7 @@
 					<div class="program_content">
 						<div class="program_item_heading">
 							<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
-							<span class="small">by <a href="/user/view/?u={{ .UserId }}">{{ .User }}</a></span>
+							<span class="small">by <a href="/user/view/?u={{ .User }}">{{ .User }}</a></span>
 						</div>
 						<div class="program_item_accessory">
 							<span class="played_number"><i class="mdi-av-play-circle-outline"></i>12345</span> 
@@ -65,6 +67,7 @@
 					</div>
 				</div>
 				<div class="program_separator"></div>
+				{{ end }}
 			{{ else }}
 				まだプログラムはありません。
 			{{ end }}

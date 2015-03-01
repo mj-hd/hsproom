@@ -262,7 +262,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	// ユーザのチェック
-	if getSessionUser(request) != prevProgInfo.UserId {
+	if getSessionUser(request) != prevProgInfo.User {
 		utils.PromulgateDebugStr(os.Stdout, "プログラムの権限のない変更")
 
 		writeStruct(document, apiProgramUpdateMember{
@@ -403,7 +403,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	program.UserId = userId
+	program.User = userId
 
 	_, err = program.Create()
 	if err != nil {
@@ -815,6 +815,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	}
 
 	var dbUser models.User
+	dbUser.ScreenName = user.ScreenName
 	dbUser.Name = user.Name
 	dbUser.Token = accessToken.Token
 	dbUser.Secret = accessToken.Secret
@@ -826,7 +827,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	var id int
 
 	var oldUser models.User
-	err = oldUser.LoadFromName(user.Name)
+	err = oldUser.LoadFromScreenName(user.ScreenName)
 
 	if err != nil {
 		id, err = dbUser.Create()
@@ -962,17 +963,15 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	userName, err := models.GetUserName(userId)
-
-	if err != nil {
+	if !models.ExistsUser(userId) {
 		utils.PromulgateFatal(os.Stdout, err)
 
 		writeStruct(document, apiUserProgramListMember{
 			apiMember: &apiMember{
 				Status:  "error",
-				Message: "内部エラーが発生しました。",
+				Message: "ユーザが存在しません。",
 			},
-		}, 500)
+		}, 403)
 		return
 	}
 
@@ -994,7 +993,7 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 	}
 
 	var programs []models.ProgramInfo
-	i, err := models.GetProgramListByUser(models.ProgramColCreated, &programs, userName, true, offset, number)
+	i, err := models.GetProgramListByUser(models.ProgramColCreated, &programs, userId, true, offset, number)
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
@@ -1247,7 +1246,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	if program.UserId != userId {
+	if program.User != userId {
 		utils.PromulgateDebugStr(os.Stdout, "権限のないProgramRemoveリクエスト")
 
 		writeStruct(document, apiProgramRemoveMember{

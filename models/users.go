@@ -3,6 +3,7 @@ package models
 type User struct {
 	Id       int
 	Name     string
+	ScreenName string
 	Token    string
 	Secret   string
 	Profile  string
@@ -13,8 +14,8 @@ type User struct {
 
 func (this *User) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, name, profile, icon_url, token, secret, website, location FROM users WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Name, &this.Profile, &this.IconURL, &this.Token, &this.Secret, &this.Website, &this.Location)
+	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, token, secret, website, location FROM users WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Token, &this.Secret, &this.Website, &this.Location)
 
 	if err != nil {
 		return err
@@ -23,9 +24,9 @@ func (this *User) Load(id int) error {
 	return nil
 }
 
-func (this *User) LoadFromName(name string) error {
-	row := DB.QueryRow("SELECT id, name, profile, icon_url, token, secret, website, location FROM users WHERE name = ?", name)
-	err := row.Scan(&this.Id, &this.Name, &this.Profile, &this.IconURL, &this.Token, &this.Secret, &this.Website, &this.Location)
+func (this *User) LoadFromScreenName(screenname string) error {
+	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, token, secret, website, location FROM users WHERE screenname = ?", screenname)
+	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Token, &this.Secret, &this.Website, &this.Location)
 
 	if err != nil {
 		return err
@@ -36,8 +37,8 @@ func (this *User) LoadFromName(name string) error {
 
 func (this *User) Update() error {
 
-	_, err := DB.Exec("UPDATE users SET name = ?, profile = ?, icon_url = ?, token = ?, secret = ?, website = ?, location = ? WHERE id = ?",
-		this.Name, this.Profile, this.IconURL, this.Token, this.Secret, this.Website, this.Location, this.Id)
+	_, err := DB.Exec("UPDATE users SET name = ?, screenname = ?, profile = ?, icon_url = ?, token = ?, secret = ?, website = ?, location = ? WHERE id = ?",
+		this.Name, this.ScreenName, this.Profile, this.IconURL, this.Token, this.Secret, this.Website, this.Location, this.Id)
 
 	if err != nil {
 		return err
@@ -48,7 +49,7 @@ func (this *User) Update() error {
 
 func (this *User) Create() (int, error) {
 
-	result, err := DB.Exec("INSERT INTO users ( name, profile, icon_url, token, secret, website, location) VALUES ( ?, ?, ?, ?, ?, ?, ? )", this.Name, this.Profile, this.IconURL, this.Token, this.Secret, this.Website, this.Location)
+	result, err := DB.Exec("INSERT INTO users ( name, screenname, profile, icon_url, token, secret, website, location) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", this.Name, this.ScreenName, this.Profile, this.IconURL, this.Token, this.Secret, this.Website, this.Location)
 	if err != nil {
 		return -1, err
 	}
@@ -68,10 +69,10 @@ func (this *User) Remove() error {
 	return err
 }
 
-func ExistsUserName(name string) bool {
+func ExistsUserScreenName(screenname string) bool {
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM users WHERE name = ?", name).Scan(&rowCount)
+	err := DB.QueryRow("SELECT count(id) FROM users WHERE screenname = ?", screenname).Scan(&rowCount)
 
 	if err != nil {
 		return false
@@ -114,11 +115,25 @@ func GetUserName(id int) (string, error) {
 	return name, nil
 }
 
-func GetUserIdFromName(name string) (int, error) {
+func GetUserScreenName(id int) (string, error) {
+
+	var name string
+
+	row := DB.QueryRow("SELECT screenname FROM users WHERE id = ?", id)
+	err := row.Scan(&name)
+
+	if err != nil {
+		return "", err
+	}
+
+	return name, nil
+}
+
+func GetUserIdFromScreenName(screenname string) (int, error) {
 
 	var id int
 
-	row := DB.QueryRow("SELECT id FROM users WHERE name = ?", name)
+	row := DB.QueryRow("SELECT id FROM users WHERE screenname = ?", screenname)
 	err := row.Scan(&id)
 
 	if err != nil {
