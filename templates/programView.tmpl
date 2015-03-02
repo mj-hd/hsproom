@@ -139,12 +139,18 @@
 .user .row-content {
 	position: relative;
 }
+
 </style>
 {{ end }}
 
 {{ define "Content" }}
 
 <div class="container_box center-block">
+
+	<div id="errors" class="alert alert-danger">
+		エラーが発生しています。<br />
+	</div>
+
 	<div class="row">
 		<div class="panel panel-default">
 			<div class="panel-heading">
@@ -400,11 +406,15 @@
 		});
 
 		updateGoodCount();
+
+		$("#errors").hide();
 	});
 
 </script>
 
 <script type="text/javascript">
+
+	var critical = false;
 
 	// emscripten Module
 	var Module = {
@@ -415,6 +425,12 @@
 			return function(text) {
 				text = Array.prototype.slice.call(arguments).join(' ');
 				console.log(text);
+
+				if ((text.indexOf("#Error") == 0) || (critical)) {
+					$("#errors").show().append(text+'<br />')
+
+					critical = true;
+				}
 			};
 		})(),
 		printErr: function(text) {

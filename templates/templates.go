@@ -73,7 +73,7 @@ func subString(source string, from int, number int) string {
 		if total_size >= len(source) {
 			return ""
 		}
-		_, size := utf8.DecodeRuneInString(source)
+		_, size := utf8.DecodeRuneInString(source[total_size:])
 		total_size += size
 		count++
 	}
@@ -83,7 +83,7 @@ func subString(source string, from int, number int) string {
 	total_size = 0
 
 	for total_size < len(source) && count < number {
-		_, size := utf8.DecodeRuneInString(source)
+		_, size := utf8.DecodeRuneInString(source[total_size:])
 		total_size += size
 		count++
 	}
