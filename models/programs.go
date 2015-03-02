@@ -26,7 +26,7 @@ type ProgramInfo struct {
 	Modified    mysql.NullTime
 	Title       string
 	User        int
-	UserName  string
+	UserName    string
 	Good        int
 	Play        int
 	Description string
@@ -173,7 +173,7 @@ func (this *ProgramInfo) Remove() error {
 	return err
 }
 
-func (this *ProgramInfo) GetScreenName() (string) {
+func (this ProgramInfo) GetScreenName() string {
 
 	name, _ := GetUserScreenName(this.Id)
 
