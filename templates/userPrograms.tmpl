@@ -17,7 +17,7 @@
 
 <div class="col-md-2 col-md-offset-1 col-xs-12">
 
-	<button type="button" class="btn btn-default btn-block" data-toggle="collapse" data-target=".options_collapse">
+	<button type="button" class="btn btn-default btn-block hidden-sm hidden-md hidden-lg" data-toggle="collapse" data-target=".options_collapse">
 		<i class="mdi-navigation-expand-more"></i>オプション...
 	</button>
 
@@ -25,7 +25,7 @@
 		<a href="/program/" class="btn btn-default"><i class="mdi-social-poll"></i> ダッシュボード</a>
 	</div>
 
-	<div class="options_collapse collapse">
+	<div class="options_collapse collapse in">
 		<span class="">並び順</span>
 		<div class="btn-group-vertical options">
 			<a id="options_created" href="/user/programs/?s=c&u={{ .User }}" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
