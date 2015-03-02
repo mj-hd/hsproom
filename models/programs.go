@@ -732,7 +732,7 @@ func GetProgramListRelatedTo(out *[]ProgramInfo, title string, number int) error
 	var err error
 	for _, t := range token.Tokens() {
 		var result int
-		err = DB.QueryRow("SELECT count(id) FROM programs WHERE title LIKE '%"+t.String()+"%' AND title <> ?", title).Scan(&result)
+		err = DB.QueryRow("SELECT count(id) FROM programs WHERE title LIKE `%"+t.String()+"%` AND title <> ?", title).Scan(&result)
 
 		if err != nil {
 			continue
@@ -748,7 +748,7 @@ func GetProgramListRelatedTo(out *[]ProgramInfo, title string, number int) error
 		return errors.New("関連プログラムが見つかりませんでした。")
 	}
 
-	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE '%"+maxQuery+"%' AND title <> ? LIMIT ?", title, number)
+	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE `%"+maxQuery+"%` AND title <> ? LIMIT ?", title, number)
 
 	if err != nil {
 		return err
