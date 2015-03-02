@@ -373,6 +373,9 @@ function removeGood(programId) {
 $(document).ready(function() {
 	home();
 
+	if ({{ .User }} == 0) {
+		login();
+	}
 });
 
 </script>
