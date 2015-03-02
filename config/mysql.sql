@@ -39,11 +39,11 @@ CREATE TABLE `goods` (
 
 DELIMITER ;;
 /*!50003 SET SESSION SQL_MODE="NO_AUTO_VALUE_ON_ZERO" */;;
-/*!50003 CREATE */ /*!50017 DEFINER=`hsproom`@`localhost` */ /*!50003 TRIGGER `good_count_increment` AFTER INSERT ON `goods` FOR EACH ROW BEGIN
+/*!50003 CREATE */ /*!50003 TRIGGER `good_count_increment` AFTER INSERT ON `goods` FOR EACH ROW BEGIN
   UPDATE programs SET programs.good = programs.good + 1 WHERE programs.id = NEW.program;
  END */;;
 /*!50003 SET SESSION SQL_MODE="NO_AUTO_VALUE_ON_ZERO" */;;
-/*!50003 CREATE */ /*!50017 DEFINER=`hsproom`@`localhost` */ /*!50003 TRIGGER `good_count_decrement` AFTER DELETE ON `goods` FOR EACH ROW BEGIN
+/*!50003 CREATE */ /*!50003 TRIGGER `good_count_decrement` AFTER DELETE ON `goods` FOR EACH ROW BEGIN
   UPDATE programs SET programs.good = programs.good - 1 WHERE programs.id = OLD.program;
  END */;;
 DELIMITER ;
