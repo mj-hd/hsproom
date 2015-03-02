@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 
 	"hsproom/config"
 	"hsproom/models"
@@ -209,7 +210,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments
 
 	rawProgram.Id = request.FormValue("id")
-	rawProgram.Title = request.FormValue("title")
+	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
 	rawProgram.Description = request.FormValue("description")
 	rawProgram.Startax = request.FormValue("startax")
@@ -334,7 +335,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	var rawProgram models.RawProgram
 	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments
 
-	rawProgram.Title = request.FormValue("title")
+	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
 	rawProgram.Description = request.FormValue("description")
 	rawProgram.Startax = request.FormValue("startax")
@@ -630,7 +631,7 @@ type apiTwitterSearchMember struct {
 
 func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request) {
 
-	programName := request.URL.Query().Get("pn")
+	programName := bluemonday.UGCPolicy().Sanitize(request.URL.Query().Get("pn"))
 	rawNumber := request.URL.Query().Get("n")
 	rawOffset := request.URL.Query().Get("o")
 
@@ -661,6 +662,8 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	query := "#hsproom"
+
+	programName = strings.Replace(programName, " ", "_", -1)
 
 	if programName != "" {
 		query += " #" + programName

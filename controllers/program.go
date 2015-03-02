@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"hsproom/config"
 	"hsproom/models"
 	"hsproom/templates"
@@ -324,7 +326,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 	var programs []models.ProgramInfo
 	var sortKey models.ProgramColumn
 
-	queryWord := request.URL.Query().Get("q")
+	queryWord := bluemonday.UGCPolicy().Sanitize(request.URL.Query().Get("q"))
 	rawSortKey := request.URL.Query().Get("s")
 	page, err := strconv.Atoi(request.URL.Query().Get("p"))
 
