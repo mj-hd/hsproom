@@ -112,7 +112,7 @@ func (this *Program) Create() (int, error) {
 
 	this.Created = this.Created.Local()
 
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes())
+	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments ) VALUES ( ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes())
 	if err != nil {
 		return -1, err
 	}

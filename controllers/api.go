@@ -332,7 +332,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramTitle | models.ProgramUser | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments
+	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments
 
 	rawProgram.Title = request.FormValue("title")
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
@@ -356,25 +356,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	var userName string
-	userName, err := models.GetUserName(userId)
-
-	rawProgram.User = userName
-
-	if err != nil {
-		utils.PromulgateDebug(os.Stdout, err)
-
-		writeStruct(document, apiProgramCreateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: err.Error(),
-			},
-		}, 400)
-
-		return
-	}
-
-	err = rawProgram.Validate(targetFlags)
+	err := rawProgram.Validate(targetFlags)
 	if err != nil {
 		utils.PromulgateDebug(os.Stdout, err)
 
