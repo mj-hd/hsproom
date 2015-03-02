@@ -89,7 +89,7 @@ func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 	session.Values["User"] = nil
 	session.Save(request, document)
 
-	http.Redirect(document, request, "http://localhost:8080/", 301)
+	http.Redirect(document, request, config.SiteURL, 301)
 }
 
 func userEditHandler(document http.ResponseWriter, request *http.Request) {
