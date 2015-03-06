@@ -272,7 +272,7 @@ function updateUserPrograms(page) {
 
 function changeGoodProgramsPage(page) {
 	updateGoodPrograms(page).then(function(rowCount) {
-		var maxPage = Math.floow(rowCount / 5);
+		var maxPage = Math.floor(rowCount / 5);
 		if (rowCount % 5 == 0) {
 			maxPage--;
 		}

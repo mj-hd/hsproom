@@ -558,7 +558,7 @@
 		var defer = $.Deferred();
 		var processingNum = fileNames.length;
 	
-		for (var name of fileNames) {
+		$.each(fileNames, function (i, name) {
 			importDataArray(name).then(function () {
 				processingNum--;
 				if (processingNum == 0) {
@@ -567,7 +567,7 @@
 			}, function () {
 				defer.reject();
 			});
-		}
+		});
 	
 		return defer.promise();
 	}
@@ -601,10 +601,10 @@
 	
 			Module.finishedDataFileDownloads++;
 	
-			for (var name of fileNames) {
+			$.each(fileNames, function (i, name) {
 				DataRequest.prototype.requests["/" + name].process();
 				DataRequest.prototype.requests["/" + name] = null;
-			}
+			});
 	
 			Module['removeRunDependency']('datafile_data');
 	
