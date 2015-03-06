@@ -563,7 +563,14 @@ $(document).ready(function() {
 			dataType: "json",
 			data: form
 		}).success(function (json) {
-			assertBottom("success", json.Message);
+			var message = "";
+			if (!json.responseJSON) {
+				message = json.Message;
+			} else {
+				message = json.responseJSON.Message;
+			}
+
+			assertBottom("success", message);
 		}).error(function (json) {
 			
 			var modal = $("#modal");
@@ -571,7 +578,15 @@ $(document).ready(function() {
 			var modal_text = $("#modal_text");
 
 			modal_title.text("エラー");
-			modal_text.text(json.Message);
+
+			var message = "";
+			if (!json.responseJSON) {
+				message = json.Message;
+			} else {
+				message = json.responseJSON.Message;
+			}
+
+			modal_text.text(message);
 			modal.modal();
 
 		});
