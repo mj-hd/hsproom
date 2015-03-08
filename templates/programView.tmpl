@@ -370,7 +370,7 @@
 	function openTwitter() {
 
 		var title = encodeURIComponent("{{ .ProgramInfo.Title }}");
-		var hashtags = encodeURIComponent("hsproom #{{ .ProgramInfo.Title }}");
+		var hashtags = encodeURIComponent("hsproom #"+"{{ .ProgramInfo.Title }}".replace(/\W/g, ""));
 		var url = encodeURIComponent(location.href);
 
 		open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags=" + hashtags, "プログラムにコメントする", "width=600,height=331");

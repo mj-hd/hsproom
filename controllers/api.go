@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
-	"strings"
 
 	"hsproom/config"
 	"hsproom/models"
@@ -663,7 +663,21 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	query := "#hsproom"
 
-	programName = strings.Replace(programName, " ", "_", -1)
+	symbols, err := regexp.Compile("\\W")
+
+	if err != nil {
+		utils.PromulgateFatal(os.Stdout, err)
+
+		writeStruct(document, apiTwitterSearchMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "検索に失敗しました。",
+			},
+		}, 500)
+		return
+	}
+
+	programName = symbols.ReplaceAllString(programName, "")
 
 	if programName != "" {
 		query += " #" + programName
