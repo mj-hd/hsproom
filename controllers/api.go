@@ -663,7 +663,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	query := "#hsproom"
 
-	symbols, err := regexp.Compile("\\W")
+	symbols, err := regexp.Compile("[\\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]")
 
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
