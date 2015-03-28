@@ -1,7 +1,8 @@
 package plugins
 
-var Plugins = map[string]func() interface{}{
-	"LoadProgramScript": loadProgramScript,
+import "html/template"
+
+var Plugins = map[string]func() template.HTML{
 }
 
 func init() {
