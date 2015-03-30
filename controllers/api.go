@@ -307,6 +307,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 type apiProgramCreateMember struct {
 	*apiMember
+	Id int
 }
 
 type apiNameValuePair struct {
@@ -388,7 +389,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	program.User = userId
 
-	_, err = program.Create()
+	id, err := program.Create()
 	if err != nil {
 		utils.PromulgateFatal(os.Stdout, err)
 
@@ -407,6 +408,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 			Status:  "success",
 			Message: "保存に成功しました。",
 		},
+		Id: id,
 	}, 200)
 
 }

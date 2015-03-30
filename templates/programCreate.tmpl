@@ -562,14 +562,16 @@ $(document).ready(function() {
 			dataType: "json",
 			data: form
 		}).success(function (json) {
-			var message = "";
+			var response;
 			if (!json.responseJSON) {
-				message = json.Message;
+				response = json;
 			} else {
-				message = json.responseJSON.Message;
+				response = json.responseJSON;
 			}
 
-			assertBottom("success", message);
+			assertBottom("success", response.Message);
+
+			location.href = "/program/view/?pid="+response.Id
 		}).error(function (json) {
 			
 			var modal = $("#modal");
