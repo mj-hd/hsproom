@@ -593,7 +593,7 @@
 			ENV.HSP_SY = "480";
 			ENV.HSP_AUTOSCALE = "0";//スケーリングモード
 			ENV.HSP_FPS = "0";//フレームレート
-			ENV.HSP_LIMIT_STEP = "5000";//ブラウザに処理を返すまでの実行ステップ数
+			ENV.HSP_LIMIT_STEP = "{{ .ProgramInfo.Steps }}";//ブラウザに処理を返すまでの実行ステップ数
 		});
 		
 		function processPackageData() {

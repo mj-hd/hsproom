@@ -118,7 +118,7 @@
 						<div class="form-group row">
 							<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
 							<div class="col-md-6">
-								<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力しましょう。" name="title" />
+								<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力しましょう" data-hint="100文字以下で入力してください" name="title" />
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
@@ -251,6 +251,34 @@
 							</div>
 						</div>
 					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<b>高度な設定</b><span class="small text-warning"> 投稿したプログラムがうまく動作しない際に設定してください。</span>
+				</div>
+				<div class="panel-body">
+					<fieldset>
+	
+						<div class="form-group row">
+							<label for="steps" class="col-md-3 form-label text-right">6. ステップ数の上限</label>
+							<div class="col-md-6">
+								<input type="text" id="steps" class="form-control floating-label" placeholder="デフォルト:5000" data-hint="最大値は30000です" name="steps" />
+							</div>
+							<div class="help_cap col-md-3">
+								<p>
+									描画した部分がしばらくすると消えてしまう、画面がちらつく、などの問題が現れた場合に値を増やしてください。<strong>ただし、値の増加に伴いCPU使用率も上昇します。</strong>
+								</p>
+							</div>
+						</div>
+	
+					</fieldset>
+
 				</div>
 			</div>
 		</div>

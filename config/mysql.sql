@@ -1,30 +1,11 @@
-# ************************************************************
-# Sequel Pro SQL dump
-# バージョン 4096
-#
-# http://www.sequelpro.com/
-# http://code.google.com/p/sequel-pro/
-#
-# ホスト: 127.0.0.1 (MySQL 5.6.21)
-# データベース: hsproom_test
-# 作成時刻: 2015-03-01 08:06:06 +0000
-# ************************************************************
+-- Adminer 4.2.1 MySQL dump
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
-
-# テーブルのダンプ goods
-# ------------------------------------------------------------
+SET NAMES utf8;
+SET time_zone = '+00:00';
+SET foreign_key_checks = 0;
+SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 DROP TABLE IF EXISTS `goods`;
-
 CREATE TABLE `goods` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user` int(11) NOT NULL,
@@ -38,23 +19,20 @@ CREATE TABLE `goods` (
 
 
 DELIMITER ;;
-/*!50003 SET SESSION SQL_MODE="NO_AUTO_VALUE_ON_ZERO" */;;
-/*!50003 CREATE */ /*!50003 TRIGGER `good_count_increment` AFTER INSERT ON `goods` FOR EACH ROW BEGIN
+
+CREATE TRIGGER `good_count_increment` AFTER INSERT ON `goods` FOR EACH ROW
+BEGIN
   UPDATE programs SET programs.good = programs.good + 1 WHERE programs.id = NEW.program;
- END */;;
-/*!50003 SET SESSION SQL_MODE="NO_AUTO_VALUE_ON_ZERO" */;;
-/*!50003 CREATE */ /*!50003 TRIGGER `good_count_decrement` AFTER DELETE ON `goods` FOR EACH ROW BEGIN
+ END;;
+
+CREATE TRIGGER `good_count_decrement` AFTER DELETE ON `goods` FOR EACH ROW
+BEGIN
   UPDATE programs SET programs.good = programs.good - 1 WHERE programs.id = OLD.program;
- END */;;
+ END;;
+
 DELIMITER ;
-/*!50003 SET SESSION SQL_MODE=@OLD_SQL_MODE */;
-
-
-# テーブルのダンプ programs
-# ------------------------------------------------------------
 
 DROP TABLE IF EXISTS `programs`;
-
 CREATE TABLE `programs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `created` datetime NOT NULL,
@@ -67,16 +45,12 @@ CREATE TABLE `programs` (
   `description` text,
   `startax` longblob NOT NULL,
   `attachments` longblob,
+  `steps` int(10) unsigned NOT NULL DEFAULT '5000',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-
-# テーブルのダンプ users
-# ------------------------------------------------------------
-
 DROP TABLE IF EXISTS `users`;
-
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `screenname` varchar(50) NOT NULL DEFAULT '',
@@ -91,11 +65,4 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-
-
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- 2015-04-07 10:29:15
