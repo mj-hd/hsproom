@@ -51,7 +51,7 @@ func writeStruct(document http.ResponseWriter, s interface{}, httpStatus int) {
 		log.Fatal(os.Stdout, err)
 
 		document.WriteHeader(500)
-		document.Write([]byte("{ \"Status\" : \"error\", \"Message\" : \"なんか変…\" }"))
+		document.Write([]byte("{ \"Status\" : \"error\", \"Message\" : \"不明のエラーです。\" }"))
 
 		return
 	}
