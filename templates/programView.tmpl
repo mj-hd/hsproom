@@ -371,9 +371,24 @@
 
 		var title = encodeURIComponent("{{ .ProgramInfo.Title }}");
 		var hashtags = encodeURIComponent("hsproom #"+"{{ .ProgramInfo.Title }}".replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
-		var url = encodeURIComponent(location.href);
+		var url   = encodeURIComponent(location.href);
 
-		open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags=" + hashtags, "プログラムにコメントする", "width=600,height=331");
+		// ユーザ名の取得は後で統一も要検討
+		$.ajax({
+			url: '/api/user/info/',
+			type: "GET",
+			dataType: "json",
+			data: {
+				"u": "{{ .ProgramInfo.User }}"
+			}
+		}).success(function (data, status) {
+			var user = data.ScreenName;
+
+			open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags+"&amp;amp;via="+user, "プログラムにコメントする", "width=600,height=331");
+		}).error(function (data, status, error) {
+			open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags, "プログラムにコメントする", "width=600,height=331");
+		});
+
 
 	}
 
