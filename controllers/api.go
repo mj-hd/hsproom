@@ -97,7 +97,7 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 	}
 
 	// プログラムIDの取得
-	rawProgramId := request.FormValue("pid")
+	rawProgramId := request.FormValue("p")
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
@@ -507,7 +507,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 	document.Header().Set("Content-Type", "application/octet-stream")
 
-	rawProgramId := request.URL.Query().Get("pid")
+	rawProgramId := request.URL.Query().Get("p")
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {

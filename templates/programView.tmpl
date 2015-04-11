@@ -234,7 +234,7 @@
 							</div>
 							<div class="program_content">
 								<div class="program_item_heading">
-									<span class="h2"><a href="/program/view/?pid={{ .Id }}">{{ .Title }}</a></span>
+									<span class="h2"><a href="/program/view/?p={{ .Id }}">{{ .Title }}</a></span>
 									<span class="small"><a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
 								</div>
 								<div class="program_item_accessory">
@@ -272,7 +272,7 @@
 			url:  "/api/program/good/",
 			dataType: "json",
 			data: {
-				"pid": "{{ .ProgramInfo.Id }}"
+				"p": "{{ .ProgramInfo.Id }}"
 			}
 		}).success(function(data) {
 			$(".good_button").attr("href", "#");
@@ -533,7 +533,7 @@
 		var defer = $.Deferred();
 	
 		var xhr = new XMLHttpRequest();
-		xhr.open('GET', '/api/program/data/?pid={{ .ProgramInfo.Id }}&f=' + name, true);
+		xhr.open('GET', '/api/program/data/?p={{ .ProgramInfo.Id }}&f=' + name, true);
 		xhr.responseType = 'arraybuffer';
 		
 		xhr.onload = function(e) {

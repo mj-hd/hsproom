@@ -135,7 +135,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Template = "programView.tmpl"
 
 	// プログラムIDの取得
-	rawProgramId := request.URL.Query().Get("pid")
+	rawProgramId := request.URL.Query().Get("p")
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
