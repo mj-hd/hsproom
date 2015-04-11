@@ -61,7 +61,7 @@ func Del() {
 }
 
 func getSessionUser(request *http.Request) int {
-	session, _ := sessionStore.Get(request, "go-wiki")
+	session, _ := sessionStore.Get(request, config.SessionName)
 	if session.Values["User"] == nil {
 		return 0
 	}

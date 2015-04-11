@@ -15,6 +15,7 @@ var (
 	DisplayLog    bool   = true
 	LogLevel      int    = log.Level_Debug
 	LogFile       string = "log"
+	SessionName   string = "samplename"
 	SessionKey    string = "sessionkey"
 	TwitterKey    string = "Twitter's consumer key"
 	TwitterSecret string = "Twitter's consumer secret"
