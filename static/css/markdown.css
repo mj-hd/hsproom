@@ -1,0 +1,146 @@
+.markdown {
+  padding: 25px;
+}
+
+.markdown img {
+  display: block;
+  margin:  20px auto;
+  padding: 3px;
+  max-width: 80%;
+  height: auto;
+}
+
+.markdown p { margin: 0 0 20px 15px; }
+.markdown small { font-size: 85%; }
+.markdown strong { font-weight: bold; }
+.markdown em { font-style: italic; }
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 20px 0;
+  font-family: inherit;
+  font-weight: bold;
+  line-height: 20px;
+  color: inherit;
+  text-rendering: optimizelegibility;
+  border-bottom: 1px solid #dedede;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3 { line-height: 40px; }
+.markdown h1 { font-size: 38px; }
+.markdown h2 { font-size: 32px; }
+.markdown h3 { font-size: 24px; }
+.markdown h4 { font-size: 18px; }
+.markdown h5 { font-size: 14px; }
+.markdown h6 { font-size: 14px; }
+
+.markdown ul,ol {
+  padding: 0;
+  margin: 0 0 10px 25px;
+}
+
+.markdown ul ul,
+.markdown ul ol,
+.markdown ol ol,
+.markdown ol ul {
+  margin-bottom: 0;
+}
+
+.markdown li { line-height: 20px; }
+
+.markdown hr {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #ffffff;
+}
+
+.markdown blockquote {
+  font-size: 1.0em;
+  padding: 15px;
+  margin: 0 0 20px;
+  border-left: 5px solid #dedede;
+  color: #666666;
+  background: #fafafa;
+}
+
+.markdown code,
+.markdown pre {
+  padding: 0 3px 2px;
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 12px;
+  color: #333333;
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+          border-radius: 3px;
+}
+
+.markdown code {
+  padding: 2px 4px;
+  color: #d14;
+  white-space: nowrap;
+  background-color: #f7f7f9;
+  border: 1px solid #e1e1e8;
+}
+
+.markdown pre {
+  display: block;
+  padding: 9.5px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 20px;
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre;
+  white-space: pre-wrap;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+}
+
+.markdown pre code {
+  padding: 0;
+  color: inherit;
+  white-space: pre;
+  white-space: pre-wrap;
+  background-color: transparent;
+  border: 0;
+}
+
+.markdown table {
+  width: 100%;
+  margin-bottom: 20px;
+  border: 1px solid #dddddd;
+  border-collapse: collapse;
+  border-left: 0;
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+}
+
+.markdown table th,
+.markdown table td {
+  padding: 8px;
+  line-height: 20px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #dddddd;
+  border-left: 1px solid #dddddd;
+}
+
+.markdown table th { font-weight: bold; }
+.markdown table thead th { vertical-align: bottom; }
+
+.markdown table thead:first-child tr:first-child th,
+.markdown table thead:first-child tr:first-child td {
+  border-top: 0;
+}
