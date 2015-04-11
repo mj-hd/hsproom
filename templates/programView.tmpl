@@ -373,7 +373,7 @@
 		var hashtags = encodeURIComponent("hsproom #"+"{{ .ProgramInfo.Title }}".replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
 		var url = encodeURIComponent(location.href);
 
-		open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags+"&amp;amp;via="+{{ .ProgramInfo.UserName }}, "プログラムにコメントする", "width=600,height=331");
+		open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags=" + hashtags, "プログラムにコメントする", "width=600,height=331");
 
 	}
 
