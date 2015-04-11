@@ -18,9 +18,9 @@ import (
 
 func init() {
 
-	Log.LogFile = config.LogFile
-	Log.DisplayLog = config.DisplayLog
-	Log.LogLevel = config.LogLevel
+	log.LogFile = config.LogFile
+	log.DisplayLog = config.DisplayLog
+	log.LogLevel = config.LogLevel
 
 }
 
