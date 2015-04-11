@@ -1,4 +1,4 @@
-package utils
+package log
 
 import (
 	"fmt"
@@ -26,9 +26,9 @@ var LogFile string
 var DisplayLog bool
 var LogLevel int
 
-func PromulgateInfoStr(w io.Writer, message string) {
+func InfoStr(w io.Writer, message string) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -36,9 +36,9 @@ func PromulgateInfoStr(w io.Writer, message string) {
 	})
 }
 
-func PromulgateInfo(w io.Writer, err error) {
+func Info(w io.Writer, err error) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -46,9 +46,9 @@ func PromulgateInfo(w io.Writer, err error) {
 	})
 }
 
-func PromulgateDebugStr(w io.Writer, message string) {
+func DebugStr(w io.Writer, message string) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -56,9 +56,9 @@ func PromulgateDebugStr(w io.Writer, message string) {
 	})
 }
 
-func PromulgateDebug(w io.Writer, err error) {
+func Debug(w io.Writer, err error) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -66,9 +66,9 @@ func PromulgateDebug(w io.Writer, err error) {
 	})
 }
 
-func PromulgateErrorStr(w io.Writer, message string) {
+func ErrorStr(w io.Writer, message string) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -76,9 +76,9 @@ func PromulgateErrorStr(w io.Writer, message string) {
 	})
 }
 
-func PromulgateError(w io.Writer, err error) {
+func Error(w io.Writer, err error) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -86,9 +86,9 @@ func PromulgateError(w io.Writer, err error) {
 	})
 }
 
-func PromulgateFatalStr(w io.Writer, message string) {
+func FatalStr(w io.Writer, message string) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -96,9 +96,9 @@ func PromulgateFatalStr(w io.Writer, message string) {
 	})
 }
 
-func PromulgateFatal(w io.Writer, err error) {
+func Fatal(w io.Writer, err error) {
 	_, file, line, _ := runtime.Caller(1)
-	Promulgate(w, ErrorDetails{
+	PrintLog(w, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -106,7 +106,7 @@ func PromulgateFatal(w io.Writer, err error) {
 	})
 }
 
-func Promulgate(w io.Writer, details ErrorDetails) {
+func PrintLog(w io.Writer, details ErrorDetails) {
 
 	if details.Level < LogLevel {
 		return

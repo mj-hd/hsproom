@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"hsproom/gum"
-	"hsproom/utils"
+	"hsproom/utils/log"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 		err := gum.Daemonize()
 
 		if err != nil {
-			utils.PromulgateFatal(os.Stdout, err)
+			log.Fatal(os.Stdout, err)
 		}
 
 	}

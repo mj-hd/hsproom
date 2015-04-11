@@ -4,7 +4,7 @@ import (
 	"hsproom/config"
 	"hsproom/models"
 	"hsproom/templates"
-	"hsproom/utils"
+	"hsproom/utils/log"
 	"net/http"
 	"os"
 	"strconv"
@@ -28,7 +28,7 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 	uid, err := strconv.Atoi(rawUid)
 
 	if err != nil {
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "ユーザが見つかりませんでした。")
 		return
@@ -38,7 +38,7 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 	err = user.Load(uid)
 
 	if err != nil {
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "ユーザが見つかりませんでした。")
 		return
@@ -49,7 +49,7 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 	_, err = models.GetProgramListByUser(models.ProgramColCreated, &programs, user.Id, true, 0, 4)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -64,7 +64,7 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 		UserPrograms: &programs,
 	})
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
 	}
@@ -79,7 +79,7 @@ func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 	session, err := sessionStore.Get(request, "go-wiki")
 
 	if err != nil {
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "ログアウトに失敗しました。")
 
@@ -116,7 +116,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 
 	if err != nil {
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -142,7 +142,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	}
 
 	if !models.ExistsUser(userId) {
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "ユーザが存在しません。")
 		return
@@ -152,7 +152,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	i, err := models.GetProgramListByUser(sortKey, &programs, userId, true, page*10, 10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -166,7 +166,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	userName, err := models.GetUserName(userId)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -201,7 +201,7 @@ func userSettingsHandler(document http.ResponseWriter, request *http.Request) {
 	userId := getSessionUser(request)
 
 	if userId == 0 {
-		utils.PromulgateDebugStr(os.Stdout, "匿名の管理画面へのアクセス")
+		log.DebugStr(os.Stdout, "匿名の管理画面へのアクセス")
 
 		showError(document, request, "ログインが必要です。")
 		// TODO: ログインさせる。
@@ -212,7 +212,7 @@ func userSettingsHandler(document http.ResponseWriter, request *http.Request) {
 	err := user.Load(userId)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return

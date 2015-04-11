@@ -1,6 +1,6 @@
 package config
 
-import "hsproom/utils"
+import "hsproom/utils/log"
 
 var (
 	RootPath      string = "/path/to/your/site"
@@ -13,7 +13,7 @@ var (
 	DBUser        string = "database_user"
 	DBPass        string = "database_pass"
 	DisplayLog    bool   = true
-	LogLevel      int    = utils.Level_Debug
+	LogLevel      int    = log.Level_Debug
 	LogFile       string = "log"
 	SessionKey    string = "sessionkey"
 	TwitterKey    string = "Twitter's consumer key"

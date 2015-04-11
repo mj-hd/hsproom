@@ -7,7 +7,7 @@ import (
 	"hsproom/config"
 	"hsproom/models"
 	"hsproom/templates"
-	"hsproom/utils"
+	"hsproom/utils/log"
 )
 
 type indexMember struct {
@@ -27,7 +27,7 @@ func indexHandler(document http.ResponseWriter, request *http.Request) {
 	_, err := models.GetProgramListBy(models.ProgramColCreated, &programs, true, 0, 4)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの読み込みに失敗しました。")
 
@@ -42,7 +42,7 @@ func indexHandler(document http.ResponseWriter, request *http.Request) {
 		RecentPrograms: &programs,
 	})
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 		showError(document, request, "ページの表示に失敗しました。")
 		return
 	}

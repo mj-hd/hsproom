@@ -6,7 +6,7 @@ import (
 
 	"hsproom/config"
 	"hsproom/templates"
-	"hsproom/utils"
+	"hsproom/utils/log"
 )
 
 func helpHandler(document http.ResponseWriter, request *http.Request) {
@@ -21,7 +21,7 @@ func helpHandler(document http.ResponseWriter, request *http.Request) {
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 	}

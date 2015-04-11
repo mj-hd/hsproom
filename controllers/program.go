@@ -10,7 +10,7 @@ import (
 	"hsproom/config"
 	"hsproom/models"
 	"hsproom/templates"
-	"hsproom/utils"
+	"hsproom/utils/log"
 )
 
 type programMember struct {
@@ -31,8 +31,8 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 	i, err := models.GetProgramRankingForAllTime(&goodPrograms, 0, 4)
 
 	if err != nil {
-		utils.PromulgateFatalStr(os.Stdout, "Error At :"+strconv.Itoa(i))
-		utils.PromulgateFatal(os.Stdout, err)
+		log.FatalStr(os.Stdout, "Error At :"+strconv.Itoa(i))
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました、管理人へ報告してください。")
 
@@ -43,7 +43,7 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました、管理人へ知らせてください。")
 
@@ -60,7 +60,7 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
 
@@ -102,7 +102,7 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 	_, err = models.GetProgramListBy(keyColumn, &programs, isDesc, 0, 10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
 		return
 	}
@@ -115,7 +115,7 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 		Programs: programs,
 	})
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
 		return
 	}
@@ -140,7 +140,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		utils.PromulgateInfo(os.Stdout, err)
+		log.Info(os.Stdout, err)
 		showError(document, request, "リクエストが不正です。")
 
 		document.WriteHeader(400)
@@ -154,7 +154,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 	err = program.Load(programId)
 	if err != nil {
 
-		utils.PromulgateInfo(os.Stdout, err)
+		log.Info(os.Stdout, err)
 		showError(document, request, "プログラムが存在しません。")
 
 		document.WriteHeader(404)
@@ -165,7 +165,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 	err = models.PlayProgram(program.Id)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -187,7 +187,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		RelatedPrograms: related,
 	})
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
 	}
 
@@ -217,7 +217,7 @@ func programPostHandler(document http.ResponseWriter, request *http.Request) {
 		},
 	})
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
 	}
 
@@ -235,7 +235,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "プログラムが見つかりません。")
 
@@ -261,7 +261,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "プログラムの読み込みに失敗しました。管理人へ問い合わせてください。")
 
@@ -279,7 +279,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		utils.PromulgateDebug(os.Stdout, err)
+		log.Debug(os.Stdout, err)
 
 		showError(document, request, "ページの読み込みに失敗しました。管理人へ問い合わせてください。")
 
@@ -300,7 +300,7 @@ func programCreateHandler(document http.ResponseWriter, request *http.Request) {
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。管理人へ報告してください。")
 	}
@@ -351,7 +351,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 	i, err := models.GetProgramListByQuery(&programs, queryWord, sortKey, true, 10, page*10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 
@@ -379,7 +379,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 		ProgramCount: i,
 	})
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
 		return
@@ -412,7 +412,7 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 	i, err := models.GetProgramRankingForDay(&programs, page*10, 10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -436,7 +436,7 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
 		return
@@ -460,7 +460,7 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 	i, err := models.GetProgramRankingForMonth(&programs, page*10, 10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -484,7 +484,7 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
 		return
@@ -509,7 +509,7 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 	i, err := models.GetProgramRankingForWeek(&programs, page*10, 10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -533,7 +533,7 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
 		return
@@ -558,7 +558,7 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 	i, err := models.GetProgramRankingForAllTime(&programs, page*10, 10)
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "エラーが発生しました。")
 		return
@@ -582,7 +582,7 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 	})
 
 	if err != nil {
-		utils.PromulgateFatal(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
 		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
 		return
