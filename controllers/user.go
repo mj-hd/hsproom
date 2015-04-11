@@ -76,7 +76,7 @@ func userListHandler(document http.ResponseWriter, request *http.Request) {
 
 func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 
-	session, err := sessionStore.Get(request, config.SessionName)
+	session, err := getSession(request)
 
 	if err != nil {
 		log.Debug(os.Stdout, err)

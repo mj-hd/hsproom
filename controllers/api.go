@@ -867,7 +867,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 
 	}
 
-	session, err := sessionStore.Get(request, config.SessionName)
+	session, err := getSession(request)
 	if err != nil {
 		log.Fatal(os.Stdout, err)
 
