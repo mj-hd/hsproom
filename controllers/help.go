@@ -24,7 +24,7 @@ func helpHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "help.tmpl"
 
-	mdFile := config.TemplatesPath + "help/main.md"
+	mdFile := config.TemplatesPath + "markdowns/help.md"
 
 	mdRaw, err := ioutil.ReadFile(mdFile)
 	if err != nil {
