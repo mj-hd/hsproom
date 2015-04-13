@@ -661,7 +661,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	offset, err := strconv.Atoi(rawOffset)
+	offset, err := strconv.ParseInt(rawOffset, 10, 64)
 	if err != nil {
 		log.Debug(os.Stdout, err)
 

@@ -117,14 +117,14 @@ func (this *Client) Close() {
 	this.accessToken = ""
 }
 
-func (this *Client) SearchTweets(query string, number int, offsetId int) (SearchResponse, error) {
+func (this *Client) SearchTweets(query string, number int, offsetId int64) (SearchResponse, error) {
 	if this.accessToken == "" {
 		return SearchResponse{}, errors.New("Must be initialized before calling this method.")
 	}
 
 	encodedQuery := url.QueryEscape(query)
 
-	request, err := http.NewRequest("GET", "https://api.twitter.com/1.1/search/tweets.json?q="+encodedQuery+"&result_type=recent&count="+strconv.Itoa(number)+"&since_id="+strconv.Itoa(offsetId), nil)
+	request, err := http.NewRequest("GET", "https://api.twitter.com/1.1/search/tweets.json?q="+encodedQuery+"&result_type=recent&count="+strconv.Itoa(number)+"&since_id="+strconv.FormatInt(offsetId, 10), nil)
 	if err != nil {
 		return SearchResponse{}, err
 	}

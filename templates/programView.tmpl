@@ -312,7 +312,7 @@
 		}
 	}();	
 
-	var max_id = 1;
+	var max_id = "1";
 
 	function reloadComments() {
 		$.ajax({
@@ -345,7 +345,7 @@
 
 			$("#tweets").prepend(tweets.html());
 
-			max_id = data.Tweets.search_metadata.max_id;
+			max_id = data.Tweets.search_metadata.max_id_str;
 		}).error( function (data, status, error) {
 		});
 
