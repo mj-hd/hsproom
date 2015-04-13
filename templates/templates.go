@@ -3,6 +3,8 @@ package templates
 import (
 	"html/template"
 	"io"
+	"os"
+	"io/ioutil"
 	"unicode/utf8"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -10,6 +12,7 @@ import (
 
 	"hsproom/config"
 	"hsproom/plugins"
+	"hsproom/utils/log"
 )
 
 type Template struct {
@@ -35,6 +38,7 @@ func (this *Template) Render(w io.Writer, member interface{}) error {
 		"linkJS":     linkJS,
 		"plugin":     plugin,
 		"markdown":   markdown,
+		"markdownFile": markdownFile,
 		"subString":  subString,
 	}).ParseFiles(config.LayoutsPath+this.Layout, config.TemplatesPath+this.Template)).Execute(w, member)
 }
@@ -53,6 +57,19 @@ func plugin(name string) template.HTML {
 }
 func markdown(markdown string) template.HTML {
 	return template.HTML(bluemonday.UGCPolicy().SanitizeBytes(blackfriday.MarkdownCommon([]byte(markdown))))
+}
+func markdownFile(file string) template.HTML {
+
+	raw, err := ioutil.ReadFile(config.TemplatesPath + "markdowns/" + file)
+	if err != nil {
+		log.Fatal(os.Stdout, err)
+
+		return template.HTML("See other...")
+	}
+
+	md := blackfriday.MarkdownCommon(raw)
+
+	return template.HTML(md)
 }
 func subString(source string, from int, number int) string {
 
