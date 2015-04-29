@@ -12,6 +12,7 @@ import (
 	"hsproom/models"
 	"hsproom/utils/log"
 	"hsproom/utils/twitter"
+	"hsproom/utils/google"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
@@ -19,6 +20,7 @@ import (
 
 var twitterClient *twitter.Client
 var oauthClient *twitter.OAuthClient
+var oauth2Client *google.OAuth2Client
 
 func apiInit() {
 	var err error
@@ -31,6 +33,11 @@ func apiInit() {
 
 	// 3-legged
 	oauthClient, err = twitter.NewOAuthClient(config.TwitterKey, config.TwitterSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	oauth2Client, err = google.NewOAuth2Client(config.GoogleKey, config.GoogleSecret)
 	if err != nil {
 		panic(err)
 	}
@@ -731,7 +738,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 }
 
-type apiTwitterRequestTokenMember struct {
+type apiOAuthRequestTokenMember struct {
 	*apiMember
 	AuthURL string
 }
@@ -740,7 +747,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 	if request.Method != "GET" {
 		log.DebugStr(os.Stdout, "GET以外のRequestTokenリクエスト")
 
-		writeStruct(document, apiTwitterRequestTokenMember{
+		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
 				Status:  "error",
 				Message: "GETを使用してください。",
@@ -754,7 +761,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 	if callbackUrl == "" {
 		log.DebugStr(os.Stdout, "callback指定のないRequestTokenリクエスト")
 
-		writeStruct(document, apiTwitterRequestTokenMember{
+		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
 				Status:  "error",
 				Message: "コールバック指定が必要です。",
@@ -767,7 +774,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 	if err != nil {
 		log.Fatal(os.Stdout, err)
 
-		writeStruct(document, apiTwitterRequestTokenMember{
+		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
 				Status:  "error",
 				Message: "内部エラーが発生しました。",
@@ -776,7 +783,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 		return
 	}
 
-	writeStruct(document, apiTwitterRequestTokenMember{
+	writeStruct(document, apiOAuthRequestTokenMember{
 		apiMember: &apiMember{
 			Status:  "success",
 			Message: "URLの取得に成功しました。",
@@ -880,6 +887,160 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	session.Save(request, document)
 
 	callbackUrl := request.URL.Query().Get("c")
+	if callbackUrl == "" {
+		callbackUrl = config.SiteURL + "/"
+	}
+
+	http.Redirect(document, request, callbackUrl, 301)
+	return
+}
+
+func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Request) {
+	if request.Method != "GET" {
+		log.DebugStr(os.Stdout, "GET以外のGoogleRequestTokenリクエスト")
+
+		writeStruct(document, apiOAuthRequestTokenMember{
+			apiMember: &apiMember{
+				Status: "error",
+				Message: "GETを使用してください。",
+			},
+		}, 403)
+		return
+	}
+
+	url, err := oauth2Client.GetAuthURL(config.SiteURL + "/api/google/access_token/")
+	if err != nil {
+		log.Fatal(os.Stdout, err)
+
+		writeStruct(document, apiOAuthRequestTokenMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "内部エラーが発生しました。",
+			},
+		}, 500)
+		return
+	}
+
+	session, err := getSession(request)
+	if err != nil {
+		log.Debug(os.Stdout, err)
+
+		writeStruct(document, apiOAuthRequestTokenMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "クッキーが有効ではありません。",
+			},
+		}, 400)
+		return
+	}
+
+	session.Values["Callback"] = request.Referer()
+	session.Save(request, document)
+
+	writeStruct(document, apiOAuthRequestTokenMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "URLの取得に成功しました。",
+		},
+		AuthURL: url,
+	}, 200)
+}
+
+func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "GET" {
+		log.DebugStr(os.Stdout, "GET以外のGoogleAccessTokenリクエスト")
+
+		document.WriteHeader(403)
+
+		return
+	}
+
+	verifier := request.URL.Query().Get("state")
+	token := request.URL.Query().Get("code")
+
+	if verifier == "" || token == "" {
+		log.DebugStr(os.Stdout, "クエリが空")
+
+		document.WriteHeader(403)
+
+		return
+	}
+
+	accessToken, err := oauth2Client.GetToken(verifier, token)
+	if err != nil {
+		log.Fatal(os.Stdout, err)
+
+		document.WriteHeader(500)
+
+		return
+	}
+
+	userinfo, err := oauth2Client.GetUser(accessToken)
+
+	if err != nil {
+		log.Fatal(os.Stdout, err)
+
+		document.WriteHeader(500)
+
+		return
+	}
+
+	var dbUser models.User
+	dbUser.ScreenName = userinfo.IdString
+	dbUser.Name       = userinfo.Name
+	dbUser.Profile    = ""
+	dbUser.IconURL    = userinfo.Picture
+	dbUser.Location   = userinfo.Locale
+	dbUser.Website    = userinfo.Link
+
+	var id int
+
+	var oldUser models.User
+	err = oldUser.LoadFromScreenName(userinfo.IdString)
+
+	if err != nil {
+		id, err = dbUser.Create()
+
+		if err != nil {
+			log.Fatal(os.Stdout, err)
+
+			document.WriteHeader(500)
+
+			return
+		}
+	} else {
+	
+		id = oldUser.Id
+		dbUser.Id = oldUser.Id
+
+		err = dbUser.Update()
+
+		if err != nil {
+			log.Fatal(os.Stdout, err)
+
+			document.WriteHeader(500)
+
+			return
+		}
+	}
+
+	session, err := getSession(request)
+	if err != nil {
+		log.Fatal(os.Stdout, err)
+
+		document.WriteHeader(403)
+
+		return
+	}
+
+	session.Values["User"] = id
+
+	callbackUrl := session.Values["Callback"].(string)
+
+	session.Values["Callback"] = ""
+	session.Save(request, document)
+
 	if callbackUrl == "" {
 		callbackUrl = config.SiteURL + "/"
 	}

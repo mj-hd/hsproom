@@ -50,6 +50,8 @@ func init() {
 	Router.Register("/api/program/thumbnail/", apiProgramThumbnailHandler)
 	Router.Register("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
 	Router.Register("/api/twitter/access_token/", apiTwitterAccessTokenHandler)
+	Router.Register("/api/google/request_token/", apiGoogleRequestTokenHandler)
+	Router.Register("/api/google/access_token/", apiGoogleAccessTokenHandler)
 	Router.Register("/api/user/info/", apiUserInfoHandler)
 	Router.Register("/api/user/programs/", apiUserProgramsHandler)
 	Router.Register("/api/user/goods/", apiUserGoodsHandler)
