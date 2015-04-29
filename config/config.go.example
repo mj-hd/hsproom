@@ -19,4 +19,6 @@ var (
 	SessionKey    string = "sessionkey"
 	TwitterKey    string = "Twitter's consumer key"
 	TwitterSecret string = "Twitter's consumer secret"
+	GoogleKey     string = "Google's ClientID"
+	GoogleSecret  string = "Google's ClientSecret"
 )
