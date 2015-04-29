@@ -642,7 +642,7 @@ $(document).ready(function() {
 	$("#description_count").text(String($(this).val().length) + " / 500 文字");
 
 	if ({{ .User }} == 0) {
-		login();
+		document.location.href = "/user/login/";
 	}
 
 });

@@ -934,7 +934,12 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 		return
 	}
 
-	session.Values["Callback"] = request.Referer()
+	callbackUrl := request.URL.Query().Get("c")
+	if callbackUrl == "" {
+		callbackUrl = config.SiteURL
+	}
+
+	session.Values["Callback"] = callbackUrl
 	session.Save(request, document)
 
 	writeStruct(document, apiOAuthRequestTokenMember{

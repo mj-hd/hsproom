@@ -83,7 +83,7 @@
 			</form>
 			<ul class="nav navbar-nav navbar-right">
 				{{ if eq .User 0 }}
-					<li id="login"><a href="javascript:login();">ログイン</a></li>
+					<li id="login"><a href="/user/login/">ログイン</a></li>
 				{{ else }}
 				<li><img id="header_user_icon" class="img-circle" width=60 alt="{{ .User }}" /></li>
 				<li id="header_user" class="dropdown">
@@ -115,26 +115,6 @@
 
 
 <script type="text/javascript">
-
-	function login() {
-		var authUrl = "";
-
-		$.ajax({
-			type: "GET",
-			url:  "/api/google/request_token/",
-			dataType: "json",
-		}).success(function (data, status) {
-			authUrl = data.AuthURL;
-
-			document.location = authUrl;
-		}).error(function (xhr, data, status) {
-			// エラー処理
-			// ダイアログを出すなど
-
-		}).complete(function (data, status) {
-		});
-
-	}
 
 	function assertBottom(level, message) {
 		var status_bar = $("footer");

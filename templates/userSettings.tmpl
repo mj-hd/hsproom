@@ -374,7 +374,7 @@ $(document).ready(function() {
 	home();
 
 	if ({{ .User }} == 0) {
-		login();
+		document.location.href = "/user/login/";
 	}
 });
 

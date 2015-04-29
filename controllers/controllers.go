@@ -32,6 +32,7 @@ func init() {
 	Router.Register("/program/ranking/monthly/", programRankingMonthlyHandler)
 	Router.Register("/program/ranking/alltime/", programRankingAllTimeHandler)
 	Router.Register("/user/logout/", userLogoutHandler)
+	Router.Register("/user/login/", userLoginHandler)
 	Router.Register("/user/view/", userViewHandler)
 	Router.Register("/user/edit/", userEditHandler)
 	Router.Register("/user/list/", userListHandler)
@@ -80,6 +81,16 @@ func getSessionUser(request *http.Request) int {
 	}
 
 	return session.Values["User"].(int)
+}
+
+func removeSession(document http.ResponseWriter, request *http.Request) {
+	session, err := getSession(request)
+	if err != nil {
+		return
+	}
+
+	session.Options = &sessions.Options{MaxAge: -1, Path: "/"}
+	session.Save(request, document)
 }
 
 type Routes struct {

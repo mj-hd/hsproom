@@ -623,7 +623,7 @@ $(document).ready(function() {
 	});
 
 	if ({{ .User }} == 0) {
-		login();
+		document.location.href = "/user/login/";
 	}
 
 });

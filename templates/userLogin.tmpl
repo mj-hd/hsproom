@@ -1,0 +1,43 @@
+{{ define "Header" }}
+
+{{ end }}
+{{ define "Content" }}
+
+<div class="col-md-8 col-md-offset-2">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3>ログイン</h3>
+		</div>
+		<div class="panel-body">
+			以下のサービスを使って、ログインすることができます。<br />
+			<a href="javascript:loginWith('twitter');">{{ embedImage "login_twitter.png" "Twitterでサインイン" }}</a><br />
+			<a href="javascript:loginWith('google');">{{ embedImage "login_google.png" "Google+でサインイン" }}</a>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+	function loginWith(service) {
+		var authUrl = "";
+
+		$.ajax({
+			type: "GET",
+			url:  "/api/"+service+"/request_token/",
+			dataType: "json",
+			data: {
+				"c" : document.referrer
+			}
+		}).success(function (data, status) {
+			authUrl = data.AuthURL;
+
+			document.location = authUrl;
+		}).error(function (xhr, data, status) {
+		}).complete(function (data, status) {
+		});
+
+	}
+
+</script>
+
+{{ end }}

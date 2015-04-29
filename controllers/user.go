@@ -74,22 +74,42 @@ func userListHandler(document http.ResponseWriter, request *http.Request) {
 
 }
 
-func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
+func userLoginHandler(document http.ResponseWriter, request *http.Request) {
 
-	session, err := getSession(request)
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "userLogin.tmpl"
+
+
+	err := tmpl.Render(document, templates.DefaultMember{
+		Title: "ログイン",
+		User: getSessionUser(request),
+	})
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Fatal(os.Stdout, err)
 
-		showError(document, request, "ログアウトに失敗しました。")
-
-		return
+		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
 	}
+}
 
-	session.Values["User"] = nil
-	session.Save(request, document)
+func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 
-	http.Redirect(document, request, config.SiteURL, 301)
+	var tmpl templates.Template
+	tmpl.Layout = "default.tmpl"
+	tmpl.Template = "userLogout.tmpl"
+
+	removeSession(document, request)
+
+	err := tmpl.Render(document, templates.DefaultMember{
+		Title: "ログアウト中です...",
+		User:  0,
+	})
+	if err != nil {
+		log.Fatal(os.Stdout, err)
+
+		showError(document, request, "ログアウト中にエラーが発生しました。")
+	}
 }
 
 func userEditHandler(document http.ResponseWriter, request *http.Request) {

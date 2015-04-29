@@ -1,0 +1,23 @@
+{{ define "Header" }}
+
+{{ end }}
+{{ define "Content" }}
+
+<div class="col-md-9 col-md-offset-2">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3>ログアウト中です…</h3>
+		</div>
+		<div class="panel-body">
+			しばらくたってもページが移動しない場合は、<a href="/">ここ</a>をクリックしてください。
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		document.location.href = "/";
+	});
+</script>
+
+{{ end }}
