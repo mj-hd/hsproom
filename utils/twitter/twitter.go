@@ -152,34 +152,34 @@ func (this *Client) SearchTweets(query string, number int, offsetId int64) (Sear
 	return tweets, nil
 }
 
-type requestTokenPool struct {
+type OAuthRequestTokenPool struct {
 	tokens map[string]*oauth.RequestToken
 	mutex  sync.Mutex
 }
 
-func newRequestTokenPool() *requestTokenPool {
-	var tokenPool requestTokenPool
+func NewOAuthRequestTokenPool() *OAuthRequestTokenPool {
+	var tokenPool OAuthRequestTokenPool
 
 	tokenPool.tokens = make(map[string]*oauth.RequestToken)
 
 	return &tokenPool
 }
 
-func (this *requestTokenPool) Add(token *oauth.RequestToken) {
+func (this *OAuthRequestTokenPool) Add(token *oauth.RequestToken) {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
 	this.tokens[token.Token] = token
 }
 
-func (this *requestTokenPool) Del(token string) {
+func (this *OAuthRequestTokenPool) Del(token string) {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
 	delete(this.tokens, token)
 }
 
-func (this *requestTokenPool) Get(token string) *oauth.RequestToken {
+func (this *OAuthRequestTokenPool) Get(token string) *oauth.RequestToken {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
@@ -188,7 +188,7 @@ func (this *requestTokenPool) Get(token string) *oauth.RequestToken {
 
 type OAuthClient struct {
 	Config    *oauth.Consumer
-	tokenPool *requestTokenPool
+	tokenPool *OAuthRequestTokenPool
 }
 
 func NewOAuthClient(consumerKey string, consumerSecret string) (*OAuthClient, error) {
@@ -204,7 +204,7 @@ func NewOAuthClient(consumerKey string, consumerSecret string) (*OAuthClient, er
 		},
 	)
 
-	client.tokenPool = newRequestTokenPool()
+	client.tokenPool = NewOAuthRequestTokenPool()
 
 	return client, nil
 }
