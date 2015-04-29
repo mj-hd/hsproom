@@ -85,7 +85,7 @@
 				{{ if eq .User 0 }}
 					<li id="login"><a href="javascript:login();">ログイン</a></li>
 				{{ else }}
-				<li><img id="header_user_icon" class="img-circle" alt="{{ .User }}" /></li>
+				<li><img id="header_user_icon" class="img-circle" width=60 alt="{{ .User }}" /></li>
 				<li id="header_user" class="dropdown">
 					<a id="header_username" href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">ユーザ名 <b class="caret"></b></a>
 					<ul class="dropdown-menu">
@@ -121,11 +121,8 @@
 
 		$.ajax({
 			type: "GET",
-			url:  "/api/twitter/request_token/",
+			url:  "/api/google/request_token/",
 			dataType: "json",
-			data: {
-				"c": location.href
-			}
 		}).success(function (data, status) {
 			authUrl = data.AuthURL;
 
