@@ -49,7 +49,6 @@ CREATE TABLE `programs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -59,8 +58,6 @@ CREATE TABLE `users` (
   `website` varchar(300) NOT NULL,
   `location` varchar(50) NOT NULL,
   `icon_url` varchar(140) NOT NULL,
-  `token` varchar(140) NOT NULL,
-  `secret` varchar(140) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

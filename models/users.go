@@ -4,8 +4,6 @@ type User struct {
 	Id       int
 	Name     string
 	ScreenName string
-	Token    string
-	Secret   string
 	Profile  string
 	IconURL  string
 	Website  string
@@ -14,8 +12,8 @@ type User struct {
 
 func (this *User) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, token, secret, website, location FROM users WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Token, &this.Secret, &this.Website, &this.Location)
+	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, website, location FROM users WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Website, &this.Location)
 
 	if err != nil {
 		return err
@@ -25,8 +23,8 @@ func (this *User) Load(id int) error {
 }
 
 func (this *User) LoadFromScreenName(screenname string) error {
-	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, token, secret, website, location FROM users WHERE screenname = ?", screenname)
-	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Token, &this.Secret, &this.Website, &this.Location)
+	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, website, location FROM users WHERE screenname = ?", screenname)
+	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Website, &this.Location)
 
 	if err != nil {
 		return err
@@ -37,8 +35,8 @@ func (this *User) LoadFromScreenName(screenname string) error {
 
 func (this *User) Update() error {
 
-	_, err := DB.Exec("UPDATE users SET name = ?, screenname = ?, profile = ?, icon_url = ?, token = ?, secret = ?, website = ?, location = ? WHERE id = ?",
-		this.Name, this.ScreenName, this.Profile, this.IconURL, this.Token, this.Secret, this.Website, this.Location, this.Id)
+	_, err := DB.Exec("UPDATE users SET name = ?, screenname = ?, profile = ?, icon_url = ?, website = ?, location = ? WHERE id = ?",
+		this.Name, this.ScreenName, this.Profile, this.IconURL, this.Website, this.Location, this.Id)
 
 	if err != nil {
 		return err
@@ -49,7 +47,7 @@ func (this *User) Update() error {
 
 func (this *User) Create() (int, error) {
 
-	result, err := DB.Exec("INSERT INTO users ( name, screenname, profile, icon_url, token, secret, website, location) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", this.Name, this.ScreenName, this.Profile, this.IconURL, this.Token, this.Secret, this.Website, this.Location)
+	result, err := DB.Exec("INSERT INTO users ( name, screenname, profile, icon_url, website, location) VALUES ( ?, ?, ?, ?, ?, ? )", this.Name, this.ScreenName, this.Profile, this.IconURL, this.Website, this.Location)
 	if err != nil {
 		return -1, err
 	}

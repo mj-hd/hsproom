@@ -836,11 +836,9 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	var dbUser models.User
 	dbUser.ScreenName = user.ScreenName
 	dbUser.Name = user.Name
-	dbUser.Token = accessToken.Token
-	dbUser.Secret = accessToken.Secret
 	dbUser.Profile = user.Description
 	dbUser.IconURL = user.ProfileImageURL
-	dbUser.Website = user.URL
+	dbUser.Website = "https://twitter.com/" + user.ScreenName
 	dbUser.Location = user.Location
 
 	var id int
