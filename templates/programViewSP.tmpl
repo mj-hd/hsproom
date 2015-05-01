@@ -1,0 +1,231 @@
+{{ define "Header" }}
+
+<meta name="viewport" content="width=640, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<style type="text/css">
+
+	* {
+		font-size: 30px;
+		margin:  0;
+		padding: 0;
+	}
+
+	small {
+		font-size: 20px;
+	}
+	small a {
+		font-size: 20px;
+	}
+
+	nav {
+		width:  100%;
+		height: 100px;
+
+		background: #009587;
+		color: #ffffff;
+	}
+
+	nav ul {
+		height: 100px;
+
+		list-style: none;
+
+		margin:  0;
+		padding: 0;
+	}
+
+	nav ul li {
+		height: 100px;
+	}
+
+	.nav_left {
+		margin-right: 20px;
+	}
+
+	.nav_center {
+		height: 100px;
+
+		line-height: 100px;
+
+		margin-left:  auto;
+		margin-right: auto;
+
+		text-align: center;
+	}
+
+	nav ul li a {
+		line-height: 100px;
+		color: #ffffff;
+	}
+
+	nav ul li i {
+		font-size: 60px;
+	}
+
+	.description_heading {
+		width:  100%;
+
+		color: #333;
+		background: #ccc;
+
+		margin:  0;
+		padding: 10px;
+
+		text-align: center;
+	}
+
+	.user_box {
+		margin:  20px;
+		padding: 20px;
+	}
+
+	.indicators {
+		height: 80px;
+		line-height: 80px;
+
+		text-align: right;
+
+		padding-right: 20px;
+
+		color: #666666;
+
+		float: right;
+	}
+
+	.information {
+		height: 80px;
+		line-height: 80px;
+
+		text-align: left;
+
+		padding-left: 20px;
+
+		float: left;
+	}
+
+</style>
+
+{{ end }}
+
+{{ define "Content" }}
+
+
+<nav>
+	<ul>
+		<li class="col-xs-1 nav_left">
+			<a href="javascript:history.back();"><i class="mdi-navigation-arrow-back"></i></a>
+		</li>
+		<li class="col-xs-10 nav_center">
+			{{ subString .ProgramInfo.Title 0 20 }}
+		</li>
+	</ul>
+
+</nav>
+
+<div class="information">
+	<small>by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a>, at {{ .ProgramInfo.Created.Format "2006年1月_2日" }}</small>
+</div>
+<div class="indicators">
+	<i class="mdi-av-play-circle-outline"></i>{{ .ProgramInfo.Play }}
+	<a href="javascript:good();" class="btn btn-default btn-raised" ><i class="mdi-social-mood"></i> <span id="good"></span></a> 
+</div>
+
+
+<canvas id="screen" width=640 height=480></canvas>
+
+<div class="description_heading">
+	説明
+</div>
+
+<div class="description markdown">
+	{{ markdown .ProgramInfo.Description }}
+</div>
+
+<div class="user_box shadow-z-2">
+	<div class="list-group">
+		<div class="list-group-item">
+			<div class="row-picture">
+				<img id="profile_icon" class="circle" alt="icon">
+			</div>
+			<div class="row-content">
+				<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a></h4>
+				<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
+				<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.User }}">詳しく...</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+	function setProfile() {
+		$.ajax({
+			url: "/api/user/info/",
+			type: "GET",
+			dataType: "json",
+			cache: false,
+			data: {
+				"u": "{{ .ProgramInfo.User }}"
+			},
+		}).success(function (data, status) {
+			$("#profile").text(data.Profile.substring(0, 50) + "...");
+			$("#profile_icon").attr("src", data.IconURL);
+		}).error(function (data, status, error) {
+		});
+	}
+
+	function updateGoodCount() {
+	
+		$.ajax({
+			type: "GET",
+			dataType: "json",
+			url: "/api/program/good/count/",
+			data: {
+				"p": {{ .ProgramInfo.Id }}
+			}
+		}).success(function (data) {
+			$("#good").text(data.GoodCount);
+		}).error(function (data) {
+			assertBottom("いいね数の取得に失敗しました。");
+		});
+	}
+
+	function good() {
+		$.ajax({
+			type: "POST",
+			url:  "/api/program/good/",
+			dataType: "json",
+			data: {
+				"p": "{{ .ProgramInfo.Id }}"
+			}
+		}).success(function(data) {
+			$(".good_button").attr("href", "#").addClass("disabled");
+
+			updateGoodCount();
+
+			assertBottom("success", "いいね!しました。");
+		}).error(function(data) {
+			$(".good_button").attr("href", "#").addClass("disabled");
+			assertBottom("error", data.responseJSON.Message);
+		});
+	}
+
+	$(document).ready(function() {
+
+		setProfile();
+		updateGoodCount();
+	
+	});
+
+	var pid = {{ .ProgramInfo.Id }};
+	var steps = "{{ .ProgramInfo.Steps }}";
+
+	{{ plugin "loadProgram" }}
+
+</script>
+
+{{ linkJS "program.js" }}
+{{ linkJS "hsp3dish.js" }}
+
+{{ end }}

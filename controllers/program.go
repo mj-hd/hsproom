@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
 
@@ -131,8 +132,21 @@ type programViewMember struct {
 func programViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	var tmpl templates.Template
-	tmpl.Layout = "default.tmpl"
-	tmpl.Template = "programView.tmpl"
+
+	// スマホ
+	if	strings.Contains(request.UserAgent(), "iPod") ||
+		strings.Contains(request.UserAgent(), "iPhone") ||
+		strings.Contains(request.UserAgent(), "Android") {
+
+		tmpl.Layout   = "empty.tmpl"
+		tmpl.Template = "programViewSP.tmpl"
+		
+	} else {
+
+		tmpl.Layout = "default.tmpl"
+		tmpl.Template = "programView.tmpl"
+
+	}
 
 	// プログラムIDの取得
 	rawProgramId := request.URL.Query().Get("p")
