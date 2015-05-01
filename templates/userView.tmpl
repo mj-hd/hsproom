@@ -35,7 +35,7 @@
 						</div>
 
 						<div class="user_name">
-							<h2><a href="https://twitter.com/{{ .UserInfo.ScreenName }}">{{ .UserInfo.Name }}</a></h2>
+							<h2><a href="{{ .UserInfo.Website }}">{{ .UserInfo.Name }}</a></h2>
 						</div>
 					</div>
 
@@ -44,10 +44,6 @@
 					</div>
 
 					<hr />
-
-					<div class="user_website">
-						<i class="mdi-action-language"></i><a href="{{ .UserInfo.Website }}">{{ .UserInfo.Website }}</a>
-					</div>
 
 					<div class="user_location">
 						<i class="mdi-communication-location-on"></i>{{ .UserInfo.Location }}
