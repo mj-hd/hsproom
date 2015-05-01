@@ -27,7 +27,7 @@
 		<a href="/program/" class="btn btn-default disabled"><i class="mdi-social-poll"></i> ダッシュボード</a>
 	</div>
 
-	<div class="options_collapse collapse in">
+	<div class="options_collapse collapse">
 		<span class="">プログラムを探す</span>
 		<div class="btn-group-vertical options">
 			<a href="/program/search/?q=&s=c" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
@@ -136,5 +136,14 @@
 	</div>
 </div>
 
+<script type="text/javascript">
+
+	$(document).ready(function () {
+		if ($(window).width() > 768) {
+			$(".collapse").removeClass("collapse");
+		}
+	});
+
+</script>
 
 {{ end }}
