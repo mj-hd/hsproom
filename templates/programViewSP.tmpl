@@ -110,6 +110,28 @@
 		float: left;
 	}
 
+	.share_box {
+		height: 80px;
+		line-height: 80px;
+
+		text-align: center;
+
+		margin: 20px;
+	}
+
+	.share_box a {
+		display: block;
+
+		width: 100%;
+		height: 80px;
+
+		line-height: 80px;
+
+		border-bottom: 3px solid #00a194;
+
+		font-size: 30px;
+	}
+
 </style>
 
 {{ end }}
@@ -146,6 +168,10 @@
 
 <div class="description markdown">
 	{{ markdown .ProgramInfo.Description }}
+	<br />
+	<div class="share_box">
+		<a href="javascript:openTwitter();" class="btn btn-default btn-raised">Twitterでコメントする</a>
+	</div>
 </div>
 
 <div class="user_box shadow-z-2">
@@ -217,6 +243,33 @@
 		});
 	}
 
+	function openTwitter() {
+
+		var title = encodeURIComponent("{{ .ProgramInfo.Title }}");
+		var hashtags = encodeURIComponent(("hsproom #"+"{{ .ProgramInfo.Title }}").replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
+		var url   = encodeURIComponent(location.href);
+
+		// ユーザ名の取得は後で統一も要検討
+		$.ajax({
+			url: '/api/user/info/',
+			type: "GET",
+			dataType: "json",
+			data: {
+				"u": "{{ .ProgramInfo.User }}"
+			}
+		}).success(function (data, status) {
+			var user = data.ScreenName;
+
+			location = "https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags+"&amp;amp;via="+user;
+
+		}).error(function (data, status, error) {
+
+			location = "https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags;
+
+		});
+
+	}
+
 	$(document).ready(function() {
 
 		setProfile();
@@ -231,7 +284,6 @@
 
 </script>
 
-{{ linkJS "program.js" }}
 {{ linkJS "hsp3dish.js" }}
 
 {{ end }}
