@@ -177,7 +177,7 @@ function runWithFS() {
 		ENV.HSP_SY = "480";
 		ENV.HSP_AUTOSCALE = "0";//スケーリングモード
 		ENV.HSP_FPS = "0";//フレームレート
-		ENV.HSP_LIMIT_STEP = steps;//ブラウザに処理を返すまでの実行ステップ数
+		ENV.HSP_LIMIT_STEP = steps === "0" ? "5000" : steps;//ブラウザに処理を返すまでの実行ステップ数
 	});
 	
 	function processPackageData() {
