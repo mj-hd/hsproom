@@ -1,5 +1,7 @@
 {{ define "Header" }}
 
+{{ linkJS "jquery.nodoubletap.js" }}
+
 <meta name="viewport" content="width=640, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 
@@ -132,6 +134,41 @@
 		font-size: 30px;
 	}
 
+	#virtual_key {
+		width: 100%;
+
+		padding: 10px;
+	}
+
+	#virtual_key a {
+		font-size: 20px;
+
+		margin:  5px;
+	}
+
+	#virtual_key .pad a {
+		width: 90px;
+		height: 65px;
+
+		line-height: 65px;
+	}
+
+	#virtual_key .keys a {
+		width: 90px;
+		height: 65px;
+
+		line-height: 65px;
+	}
+
+	#virtual_key .bottom {
+		width: 330px;
+		margin: 0 auto;
+	}
+
+	#virtual_key .bottom a {
+		width: 150px;
+	}
+
 </style>
 
 {{ end }}
@@ -161,6 +198,51 @@
 
 
 <canvas id="screen" width=640 height=480></canvas>
+
+<div id="virtual_key">
+	<div class="row">
+		<table class="keys col-xs-6">
+			<tr>
+				<td></td>
+				<td><a  id="key_w" class="btn btn-raised btn-primary">W</a></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><a id="key_a" class="btn btn-raised btn-primary">A</a></td>
+				<td><a id="key_s" class="btn btn-raised btn-primary">S</a></td>
+				<td><a id="key_d" class="btn btn-raised btn-primary">D</a></td>
+			</tr>
+			<tr>
+				<td><a id="key_z" class="btn btn-raised btn-primary">Z</a></td>
+				<td><a id="key_x" class="btn btn-raised btn-primary">X</a></td>
+				<td><a id="key_c" class="btn btn-raised btn-primary">C</a></td>
+			</tr>
+		</table>
+		<table class="pad col-xs-6">
+			<tr>
+				<td></td>
+				<td><a id="arrow_up" class="btn btn-raised btn-primary"><i class="mdi-navigation-expand-less"></i></a></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><a id="arrow_left" class="btn btn-raised btn-primary"><i class="mdi-navigation-chevron-left"></i></a></td>
+				<td></td>
+				<td><a id="arrow_right" class="btn btn-raised btn-primary"><i class="mdi-navigation-chevron-right"></i></a></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><a id="arrow_down" class="btn btn-raised btn-primary"><i class="mdi-navigation-expand-more"></i></a></td>
+				<td></td>
+			</tr>
+		</table>
+	</div>
+	<div class="row">
+		<div class="bottom">
+			<a id="space" class="btn btn-raised btn-primary">SPACE</a>
+			<a id="enter" class="btn btn-raised btn-primary">ENTER</a>
+		</div>
+	</div>
+</div>
 
 <div class="description_heading">
 	説明
@@ -270,7 +352,71 @@
 
 	}
 
+	function emulateKey(keycode, keyEventName) {
+
+		if (document.createEvent) {
+			var e = document.createEvent("KeyboardEvent");
+
+			Object.defineProperty(e, 'keyCode', {
+						get : function() {
+							return this.keyCodeVal;
+						}
+			});
+			Object.defineProperty(e, 'which', {
+						get : function() {
+							return this.keyCodeVal;
+						}
+			});
+
+			
+			if (e.initKeyEvent) {
+				e.initKeyEvent("key"+keyEventName,true,true,window,false,false,false,false,keycode,0);
+			} else if (e.initKeyboardEvent) {
+				e.initKeyboardEvent("key"+keyEventName,true,true,window,false,false,false,false,keycode,keycode);
+			}
+
+			e.keyCodeVal = keycode;
+
+			document.body.dispatchEvent(e);
+
+		} else if (document.createEventObject) {
+			var e = document.createEventObject();
+			e.keyCode = keycode;
+			document.body.fireEvent("onkey"+keyEventName, e);
+		}
+	}
+
 	$(document).ready(function() {
+
+		$("body").nodoubletap();
+
+		$("#arrow_left").bind("touchstart mousedown",  function() {emulateKey(37, "down");});
+		$("#arrow_left").bind("touchend mouseup",      function() {emulateKey(37, "up");  });
+		$("#arrow_up").bind("touchstart mousedown",    function() {emulateKey(38, "down");});
+		$("#arrow_up").bind("touchend mouseup",        function() {emulateKey(38, "up");  });
+		$("#arrow_right").bind("touchstart mousedown", function() {emulateKey(39, "down");});
+		$("#arrow_right").bind("touchend mouseup",     function() {emulateKey(39, "up");  });
+		$("#arrow_down").bind("touchstart mousedown",  function() {emulateKey(40, "down");});
+		$("#arrow_down").bind("touchend mouseup",      function() {emulateKey(40, "up");  });
+		$("#space").bind("touchstart mousedown",       function() {emulateKey(32, "down");});
+		$("#space").bind("touchend mouseup",           function() {emulateKey(32, "up");  });
+		$("#enter").bind("touchstart mousedown",       function() {emulateKey(13, "down");});
+		$("#enter").bind("touchend mouseup",           function() {emulateKey(13, "up");  });
+		$("#key_w").bind("touchstart mousedown",  function() {emulateKey(87, "down");});
+		$("#key_w").bind("touchend mouseup",      function() {emulateKey(87, "up");  });
+		$("#key_a").bind("touchstart mousedown",  function() {emulateKey(65, "down");});
+		$("#key_a").bind("touchend mouseup",      function() {emulateKey(65, "up");  });
+		$("#key_s").bind("touchstart mousedown",  function() {emulateKey(83, "down");});
+		$("#key_s").bind("touchend mouseup",      function() {emulateKey(83, "up");  });
+		$("#key_d").bind("touchstart mousedown",  function() {emulateKey(68, "down");});
+		$("#key_d").bind("touchend mouseup",      function() {emulateKey(68, "up");  });
+		$("#key_z").bind("touchstart mousedown",  function() {emulateKey(90, "down");});
+		$("#key_z").bind("touchend mouseup",      function() {emulateKey(90, "up");  });
+		$("#key_x").bind("touchstart mousedown",  function() {emulateKey(88, "down");});
+		$("#key_x").bind("touchend mouseup",      function() {emulateKey(88, "up");  });
+		$("#key_c").bind("touchstart mousedown",  function() {emulateKey(67, "down");});
+		$("#key_c").bind("touchend mouseup",      function() {emulateKey(67, "up");  });
+
 
 		setProfile();
 		updateGoodCount();
