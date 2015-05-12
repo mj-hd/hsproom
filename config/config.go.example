@@ -2,23 +2,27 @@ package config
 
 import "hsproom/utils/log"
 
-var (
-	RootPath      string = "/path/to/your/site"
-	SiteTitle     string = "HSP部屋"
-	SiteURL       string = "http://localhost:8080"
-	ServerPort    string = "8080"
-	DBHost        string = "localhost"
-	DBPort        string = "3306"
-	DBName        string = "database_name"
-	DBUser        string = "database_user"
-	DBPass        string = "database_pass"
-	DisplayLog    bool   = true
-	LogLevel      int    = log.Level_Debug
-	LogFile       string = "log"
-	SessionName   string = "samplename"
-	SessionKey    string = "sessionkey"
-	TwitterKey    string = "Twitter's consumer key"
-	TwitterSecret string = "Twitter's consumer secret"
-	GoogleKey     string = "Google's ClientID"
-	GoogleSecret  string = "Google's ClientSecret"
+const (
+	RootPath               string = "/path/to/your/site"
+	SiteTitle              string = "HSP部屋"
+	SiteURL                string = "http://localhost:8080"
+	ServerPort             string = "8080"
+	DBHost                 string = "localhost"
+	DBPort                 string = "3306"
+	DBName                 string = "database_name"
+	DBUser                 string = "database_user"
+	DBPass                 string = "database_pass"
+	DisplayLog             bool   = true
+	LogLevel               int    = log.Level_Debug
+	LogFile                string = "log"
+	SessionName            string = "samplename"
+	SessionKey             string = "sessionkey"
+	TwitterKey             string = "Twitter's consumer key"
+	TwitterSecret          string = "Twitter's consumer secret"
+	TwitterBotKey          string = "Twitter's consumer key for bot"
+	TwitterBotSecret       string = "Twitter's consumer secret for bot"
+	TwitterBotAccessKey    string = "Twitter's access key for bot"
+	TwitterBotAccessSecret string = "Twitter's access secret for bot"
+	GoogleKey              string = "Google's ClientID"
+	GoogleSecret           string = "Google's ClientSecret"
 )

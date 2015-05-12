@@ -10,6 +10,7 @@ import (
 
 	"hsproom/config"
 	"hsproom/models"
+	"hsproom/bot"
 	"hsproom/utils/log"
 	"hsproom/utils/twitter"
 	"hsproom/utils/google"
@@ -429,6 +430,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 		Id: id,
 	}, 200)
 
+	bot.UpdateTweet("新しいプログラムが投稿されました。/ "+ program.Title +" "+config.SiteURL+"/program/view/?p="+strconv.Itoa(id)+" #hsproom")
 }
 
 type apiProgramDataListMember struct {

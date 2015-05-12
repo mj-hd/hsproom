@@ -29,8 +29,8 @@ func NewClient(consumerKey string, consumerSecret string) (*Client, error) {
 
 	var client Client
 
-	client.consumerKey = consumerKey
-	client.consumerSecret = consumerSecret
+	client.consumerKey        = consumerKey
+	client.consumerSecret     = consumerSecret
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{},
@@ -89,6 +89,23 @@ func (this *Client) validate() error {
 	return nil
 }
 
+func (this *Client) Get(method string, url string) (*http.Response, error) {
+
+	if this.accessToken == "" {
+		return nil, errors.New("Must be initialized before calling this method.")
+	}
+
+	request, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("User-Agent", "HSPRoom")
+	request.Header.Set("Authorization", "Bearer "+this.accessToken)
+
+	return this.httpClient.Do(request)
+}
+
 func (this *Client) Close() {
 
 	bearerToken := base64.StdEncoding.EncodeToString([]byte(this.consumerKey + ":" + this.consumerSecret))
@@ -118,21 +135,12 @@ func (this *Client) Close() {
 }
 
 func (this *Client) SearchTweets(query string, number int, offsetId int64) (SearchResponse, error) {
-	if this.accessToken == "" {
-		return SearchResponse{}, errors.New("Must be initialized before calling this method.")
-	}
 
 	encodedQuery := url.QueryEscape(query)
 
-	request, err := http.NewRequest("GET", "https://api.twitter.com/1.1/search/tweets.json?q="+encodedQuery+"&result_type=recent&count="+strconv.Itoa(number)+"&since_id="+strconv.FormatInt(offsetId, 10), nil)
-	if err != nil {
-		return SearchResponse{}, err
-	}
+	url := "https://api.twitter.com/1.1/search/tweets.json?q="+encodedQuery+"&result_type=recent&count="+strconv.Itoa(number)+"&since_id="+strconv.FormatInt(offsetId, 10)
 
-	request.Header.Set("User-Agent", "HSPRoom")
-	request.Header.Set("Authorization", "Bearer "+this.accessToken)
-
-	response, err := this.httpClient.Do(request)
+	response, err := this.Get("GET", url)
 	if err != nil {
 		return SearchResponse{}, err
 	}
@@ -268,6 +276,27 @@ func (this *OAuthClient) CheckUserCredentialsAndGetUser(accessToken *oauth.Acces
 	}
 
 	return &user, nil
+}
+
+func (this *OAuthClient) UpdateTweet(accessToken *oauth.AccessToken, message string) error {
+
+	response, err := this.Config.Post(
+		"https://api.twitter.com/1.1/statuses/update.json",
+		map[string]string{
+			"status": message,
+		},
+		accessToken)
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return errors.New("HTTP Status " + response.Status + " has returned.")
+	}
+
+	return nil
 }
 
 /*func main() {

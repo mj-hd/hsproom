@@ -11,6 +11,7 @@ import (
 	"hsproom/models"
 	"hsproom/plugins"
 	"hsproom/templates"
+	"hsproom/bot"
 	"hsproom/utils/log"
 
 	"github.com/gorilla/context"
@@ -29,6 +30,7 @@ func Del() {
 	controllers.Del()
 	templates.Del()
 	plugins.Del()
+	bot.Del()
 }
 
 func Start() {
