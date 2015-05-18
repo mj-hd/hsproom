@@ -1,1 +1,1 @@
-/Users/mjhd/Projects/hsproom/try-hsp/ace-builds/src-min-noconflict/mode-hsp.js
+../../try-hsp/ace-builds/src-min-noconflict/mode-hsp.js
