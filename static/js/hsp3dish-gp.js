@@ -1,0 +1,1 @@
+../../try-hsp/resources/hsp3dish-gp.js
