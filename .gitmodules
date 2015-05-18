@@ -1,0 +1,6 @@
+[submodule "try-hsp"]
+	path = try-hsp
+	url = https://github.com/zakki/try-hsp
+[submodule "ace-builds"]
+	path = ace-builds
+	url = https://github.com/ajaxorg/ace-builds/

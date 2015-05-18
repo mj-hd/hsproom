@@ -1,0 +1,1 @@
+/Users/mjhd/Projects/hsproom/try-hsp/resources/hspcmp.js
