@@ -18,6 +18,7 @@ type Program struct {
 	Startax     []byte
 	Attachments *Attachments
 	Thumbnail   []byte
+	Sourcecode  []byte
 }
 
 type ProgramInfo struct {
@@ -56,8 +57,8 @@ func (this *Program) Load(id int) error {
 
 	var rawAttachments []byte
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, attachments, steps FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &rawAttachments, &this.Steps)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, attachments, steps, sourcecode FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &rawAttachments, &this.Steps, &this.Sourcecode)
 
 	if err != nil {
 		return err
@@ -91,8 +92,8 @@ func (this *Program) Update() error {
 		return err
 	}
 
-	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, attachments = ?, steps = ? WHERE id = ?",
-		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Id)
+	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, attachments = ?, steps = ?, sourcecode = ? WHERE id = ?",
+		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode, this.Id)
 
 	if err != nil {
 		return err
@@ -113,7 +114,7 @@ func (this *Program) Create() (int, error) {
 
 	this.Created = this.Created.Local()
 
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments, steps ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps)
+	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments, steps, sourcecode ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode)
 	if err != nil {
 		return -1, err
 	}
@@ -193,6 +194,7 @@ type RawProgram struct {
 	Startax     string
 	Attachments string
 	Steps       string
+	Sourcecode  string
 }
 
 const (
@@ -206,6 +208,7 @@ const (
 	ProgramStartax
 	ProgramAttachments
 	ProgramSteps
+	ProgramSourcecode
 )
 
 func (this *RawProgram) Validate(flag uint) error {
@@ -285,6 +288,12 @@ func (this *RawProgram) Validate(flag uint) error {
 		if 0 <= steps && steps <= 30000 { } else {
 			return errors.New("ステップ上限数が範囲外です。")
 		}
+	}
+
+	if (flag & ProgramSourcecode) != 0 {
+	
+		// TODO: implement
+
 	}
 
 	return nil
@@ -411,6 +420,12 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		program.Thumbnail = data
 	}
 
+	if (flag & ProgramSourcecode) != 0 {
+
+		program.Sourcecode = []byte(this.Sourcecode)
+
+	}
+
 	return program, nil
 }
 
@@ -491,6 +506,7 @@ const (
 	ProgramColPlay
 	ProgramColThumbnail
 	ProgramColSteps
+	ProgramColSourcecode
 )
 
 func (this *ProgramColumn) String() string {
@@ -519,6 +535,8 @@ func (this *ProgramColumn) String() string {
 		return "thumbnail"
 	case ProgramColSteps:
 		return "steps"
+	case ProgramColSourcecode:
+		return "sourcecode"
 	}
 
 	return ""

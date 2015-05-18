@@ -31,6 +31,8 @@ func init() {
 	Router.Register("/program/ranking/weekly/", programRankingWeeklyHandler)
 	Router.Register("/program/ranking/monthly/", programRankingMonthlyHandler)
 	Router.Register("/program/ranking/alltime/", programRankingAllTimeHandler)
+	Router.Register("/source/create/", sourceCreateHandler)
+	Router.Register("/source/edit/", sourceEditHandler)
 	Router.Register("/user/logout/", userLogoutHandler)
 	Router.Register("/user/login/", userLoginHandler)
 	Router.Register("/user/view/", userViewHandler)
