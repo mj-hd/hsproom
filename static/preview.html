@@ -3,7 +3,16 @@
 <head>
 	<meta charset="utf-8">
 	<style type="text/css">
+		* {
+			margin:  0;
+			padding: 0;
+		}
 		canvas {
+			position: absolute;
+			top:    0;
+			bottom: 0;
+			left:   0;
+			right:  0;
 		}
 	</style>
 </head>
@@ -45,7 +54,8 @@ var Module = {
 		}
 	},
 	canvas: document.getElementById('canvas'),
-	arguments: ["start.ax"]
+	arguments: ["start.ax"],
+	filePackagePrefixURL: "/static/data/",
 //	noInitialRun: true
 };
 Module["preRun"].push(function() {
@@ -57,7 +67,7 @@ Module["preRun"].push(function() {
 <script async type="text/javascript" src="/static/js/hsp3dish-gp.js"></script>
 
 <script type="text/javascript">
-	function run(data, steps) {
+	function runAX(data, steps) {
 		if (!data) {
 			console.log("Empty!!");
 		}

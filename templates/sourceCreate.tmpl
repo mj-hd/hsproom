@@ -4,6 +4,13 @@
 	#editor {
 		height: 500px;
 	}
+	#preview_dialog .modal-dialog {
+		width:  688px;
+		height: 580px;
+	}
+	#preview_dialog .modal-dialog .modal-body {
+		max-height: 580px;
+	}
 
 	.toolbar {
 	}
@@ -121,7 +128,7 @@
 				<h4 class="modal-title">プレビュー</h4>
 			</div>
 			<div class="modal-body">
-				<iframe id="preview_frame" src="/static/preview.html" width=640 height=480 border=0 scrolling=no tabindex=1></iframe>
+				<iframe id="preview_frame" src="/static/preview.html" width=640 height=480 border="0" scrolling="no"></iframe>
 			</div>
 			<div class="modal-footer">
 				<button class="btn btn-default" data-dismiss="modal">閉じる</button>
@@ -137,15 +144,16 @@ var Module = {
 	postRun: [],
 	print: (function() {
 		/*var element = document.getElementById('output');
-		if (element) element.value = ''; // clear browser cache
+		if (element) element.value = ''; // clear browser cache*/
 		return function(text) {
-			text = Array.prototype.slice.call(arguments).join(' ');
+			/*text = Array.prototype.slice.call(arguments).join(' ');
 			console.log(text);
 			if (element) {
 				element.value += text + "\n";
 				element.scrollTop = element.scrollHeight; // focus on bottom
-			}
-		};*/
+			}*/
+			console.log(text);
+		};
 	})(),
 	printErr: function(text) {
 		text = Array.prototype.slice.call(arguments).join(' ');
@@ -175,12 +183,14 @@ var Module = {
 			if (!text) spinnerElement.style.display = 'none';
 		}
 		statusElement.innerHTML = text;*/
+		console.log(text);
 	},
 	totalDependencies: 0,
 	monitorRunDependencies: function(left) {
 		/*this.totalDependencies = Math.max(this.totalDependencies, left);
 		Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');*/
-	}
+	},
+	filePackagePrefixURL: "/static/data/",
 };
 
 </script>
@@ -212,12 +222,13 @@ var Module = {
 
 		Module.ccall('hsc_ini', 'number', ['number', 'number', 'number', 'number'],
 											[0, fnamePtr, 0, 0]);
+		console.log("Compiler Initialized");
 
 		var option = 4;
 		option |= validateOnly ? 2 : 0;
 		var stat = Module.ccall('hsc_comp', 'number', ['number', 'number', 'number', 'number'],
 													[0, option, 0, 0]);
-		console.log("Initialized with " + option);
+		console.log("Compiled with " + option);
 		console.log("Compile result: " + stat);
 
 		var mesPtr = Module._malloc(0x1000);
@@ -249,7 +260,7 @@ var Module = {
 			dismiss_error();
 
 			if (!validateOnly) {
-				run();
+				runProgram();
 			}
 			assertBottom("success", "正常にコンパイルできました。");
 		} else {
@@ -259,7 +270,7 @@ var Module = {
 		}
 	}
 
-	function run() {
+	function runProgram() {
 		var data = FS.readFile('source.ax');
 
 		$("#preview_dialog").modal({
@@ -269,7 +280,7 @@ var Module = {
 		var frame = $("#preview_frame")[0];
 
 		frame.onload = function() {
-			frame.contentWindow["run"](data, "5000");
+			frame.contentWindow["runAX"](data, "5000");
 		};
 		frame.contentWindow.location.reload();
 	}
@@ -320,6 +331,25 @@ var Module = {
 			updatePreview();
 
 			$("#description_count").text(String($(this).val().length) + " / 500 文字");
+		});
+
+		$("#preview_dialog").on("hidden", function() {
+			var iframe = $("#preview_frame")[0];
+
+			var iframedoc = null;
+			if(iframe.contentDocument){
+				iframedoc = iframe.contentDocument; 
+			} else if(iframe.contentWindow){ 
+				iframedoc = iframe.contentWindow.document;
+			} else if(iframe.document){
+				iframedoc = iframe.document;
+			}
+			
+			if(iframedoc!=null){
+				iframedoc.open();
+				iframedoc.write("");
+				iframedoc.close();
+			}	
 		});
 
 	});
