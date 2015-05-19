@@ -51,6 +51,7 @@
 					</div>
 					<div class="btn-group btn-group-sm" role="group">
 						<button type="button" class="btn btn-default btn-flat" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="実行(F5)" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i></button>
+						<button type="button" class="btn btn-default btn-flat" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="文法チェック(F3)" onclick="compile(true);" ><i class="mdi-action-done"></i></button>
 						<button type="button" class="btn btn-default btn-flat" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="ヘルプ(F1)"><i class="mdi-action-help"></i></button>
 					</div>
 				</div>
@@ -73,6 +74,11 @@
 
 	goto *main
 				</pre>
+				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
+					<button type="button" class="close" onclick="dismiss_error();">×</button>
+					<div id="error_caption">
+					</div>
+				</div>
 
 				<label for="description" class="form-label">3. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span></label>
 				<div class="row">
@@ -107,58 +113,75 @@
 
 </form>
 
+<div id="preview_dialog" class="modal fade" tabindex="-1">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title">プレビュー</h4>
+			</div>
+			<div class="modal-body">
+				<iframe id="preview_frame" src="/static/preview.html" width=640 height=480 border=0 scrolling=no tabindex=1></iframe>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
 
 var Module = {
-    preRun: [],
-    postRun: [],
-    print: (function() {
-      /*var element = document.getElementById('output');
-      if (element) element.value = ''; // clear browser cache
-      return function(text) {
-        text = Array.prototype.slice.call(arguments).join(' ');
-        console.log(text);
-        if (element) {
-          element.value += text + "\n";
-          element.scrollTop = element.scrollHeight; // focus on bottom
-        }
-      };*/
-    })(),
-    printErr: function(text) {
-      text = Array.prototype.slice.call(arguments).join(' ');
-      if (0) { // XXX disabled for safety typeof dump == 'function') {
-        dump(text + '\n'); // fast, straight to the real console
-      } else {
-        console.error(text);
-      }
-    },
-    canvas: {},
-    setStatus: function(text) {
-      /*if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
-      if (text === Module.setStatus.text) return;
-      var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-      var now = Date.now();
-      if (m && now - Date.now() < 30) return; // if this is a progress update, skip it if too soon
-      if (m) {
-        text = m[1];
-        progressElement.value = parseInt(m[2])*100;
-        progressElement.max = parseInt(m[4])*100;
-        progressElement.hidden = false;
-        spinnerElement.hidden = false;
-      } else {
-        progressElement.value = null;
-        progressElement.max = null;
-        progressElement.hidden = true;
-        if (!text) spinnerElement.style.display = 'none';
-      }
-      statusElement.innerHTML = text;*/
-    },
-    totalDependencies: 0,
-    monitorRunDependencies: function(left) {
-      /*this.totalDependencies = Math.max(this.totalDependencies, left);
-      Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');*/
-    }
-  };
+	preRun: [],
+	postRun: [],
+	print: (function() {
+		/*var element = document.getElementById('output');
+		if (element) element.value = ''; // clear browser cache
+		return function(text) {
+			text = Array.prototype.slice.call(arguments).join(' ');
+			console.log(text);
+			if (element) {
+				element.value += text + "\n";
+				element.scrollTop = element.scrollHeight; // focus on bottom
+			}
+		};*/
+	})(),
+	printErr: function(text) {
+		text = Array.prototype.slice.call(arguments).join(' ');
+		if (0) { // XXX disabled for safety typeof dump == 'function') {
+			dump(text + '\n'); // fast, straight to the real console
+		} else {
+			console.error(text);
+		}
+	},
+	canvas: {},
+	setStatus: function(text) {
+		/*if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+		if (text === Module.setStatus.text) return;
+		var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+		var now = Date.now();
+		if (m && now - Date.now() < 30) return; // if this is a progress update, skip it if too soon
+		if (m) {
+			text = m[1];
+			progressElement.value = parseInt(m[2])*100;
+			progressElement.max = parseInt(m[4])*100;
+			progressElement.hidden = false;
+			spinnerElement.hidden = false;
+		} else {
+			progressElement.value = null;
+			progressElement.max = null;
+			progressElement.hidden = true;
+			if (!text) spinnerElement.style.display = 'none';
+		}
+		statusElement.innerHTML = text;*/
+	},
+	totalDependencies: 0,
+	monitorRunDependencies: function(left) {
+		/*this.totalDependencies = Math.max(this.totalDependencies, left);
+		Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');*/
+	}
+};
 
 </script>
 
@@ -172,6 +195,8 @@ var Module = {
 	var editor;
 
 	function compile(validateOnly) {
+		console.log("Compile:");
+
 		var fname = "source.hsp";
 
 		var code = editor.getValue();
@@ -188,8 +213,11 @@ var Module = {
 		Module.ccall('hsc_ini', 'number', ['number', 'number', 'number', 'number'],
 											[0, fnamePtr, 0, 0]);
 
+		var option = 4;
+		option |= validateOnly ? 2 : 0;
 		var stat = Module.ccall('hsc_comp', 'number', ['number', 'number', 'number', 'number'],
-													[0, validateOnly ? 2 & 4 : 4, 0, 0]);
+													[0, option, 0, 0]);
+		console.log("Initialized with " + option);
 		console.log("Compile result: " + stat);
 
 		var mesPtr = Module._malloc(0x1000);
@@ -199,11 +227,13 @@ var Module = {
 		var message = Module.Pointer_stringify(mesPtr);
 		var lines = message.split("\n");
 
+		// エラー行チェック
 		for (var i = 0; i < lines.length; i++) {
 			var err = lines[i].match(/\.hsp\(([0-9]+)\) : error /);
 			if (err && err[1]) {
 				var lineno = +err[1];
 				editor.gotoLine(lineno);
+				editor.session.clearAnnotations();
 				editor.session.setAnnotations([{
 					row:lineno - 1 ,column: 0,
 					text: lines[i], type:"error"}]); 
@@ -214,6 +244,34 @@ var Module = {
 
 		Module._free(fnamePtr);
 		Module._free(mesPtr);
+
+		if (stat == 0) {
+			dismiss_error();
+
+			if (!validateOnly) {
+				run();
+			}
+			assertBottom("success", "正常にコンパイルできました。");
+		} else {
+			$("#error_caption").html(message.replace(/\n/g, "<br />"));
+			$("#error").show(500);
+			assertBottom("error", "エラーが発生しています。");
+		}
+	}
+
+	function run() {
+		var data = FS.readFile('source.ax');
+
+		$("#preview_dialog").modal({
+			keyboard: false,
+		});
+
+		var frame = $("#preview_frame")[0];
+
+		frame.onload = function() {
+			frame.contentWindow["run"](data, "5000");
+		};
+		frame.contentWindow.location.reload();
 	}
 
 	function open_external() {
@@ -234,6 +292,10 @@ var Module = {
 				$("#preview").html(json["Markdown"]);
 			}
 		});
+	}
+
+	function dismiss_error() {
+		$("#error").hide(500);
 	}
 
 	$(document).ready(function () {
