@@ -559,7 +559,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	if fileName == "startax" {
+	if fileName == "start.ax" {
 
 		document.WriteHeader(200)
 		document.Write(program.Startax)
