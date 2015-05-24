@@ -1,5 +1,5 @@
 {{ define "Header" }}
-
+{{ linkCSS "jquery.uploadbox.css" }}
 <style type="text/css">
 	#editor {
 		height: 500px;
@@ -11,7 +11,6 @@
 	#preview_dialog .modal-dialog .modal-body {
 		max-height: 580px;
 	}
-
 	.toolbar {
 	}
 
@@ -27,6 +26,11 @@
 		padding: 100px;
 
 		color: #aaaaaa;
+	}
+	.help_cap {
+		font-size: 0.9em;
+
+		color: #666666;
 	}
 </style>
 
@@ -52,14 +56,14 @@
 					<div class="btn-group btn-group-sm" role="group">
 						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">ファイル<span class="caret"></span></button>
 						<ul class="dropdown-menu" role="menu">
-							<li><a href="javascript:open_external();">ファイルをコンピュータから読み込む...</a></li>
-							<li><a href="javascript:save_external();">ファイルをコンピュータに保存する...</a></li>
+							<li><a href="javascript:download_source();">ソースコードをダウンロードする...</a></li>
+							<li><a href="javascript:download_ax();">AXファイルをダウンロードする...</a></li>
 						</ul>
 					</div>
 					<div class="btn-group btn-group-sm" role="group">
-						<button type="button" class="btn btn-default btn-flat" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="実行(F5)" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i></button>
-						<button type="button" class="btn btn-default btn-flat" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="文法チェック(F3)" onclick="compile(true);" ><i class="mdi-action-done"></i></button>
-						<button type="button" class="btn btn-default btn-flat" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="ヘルプ(F1)"><i class="mdi-action-help"></i></button>
+						<button type="button" class="btn btn-default btn-flat" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i>実行</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="compile(true);" ><i class="mdi-action-done"></i>文法チェック</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="void;"><i class="mdi-action-help"></i>ヘルプ</button>
 					</div>
 				</div>
 				<pre id="editor">
@@ -87,6 +91,22 @@
 					</div>
 				</div>
 
+				<div class="form-group row">
+					<div class="col-md-6">
+						<label for="attachments_box" class="form-label">3. 添付ファイル</label>
+						<div class="progress progress-default">
+							<div id="attachments_capacity" class="capacity progress-bar" style="width: 0%"></div>
+						</div>
+
+						<div id="attachments_box"></div>
+					</div>
+					<div class="col-md-6">
+						<label for="thumb_box" class="form-label">4. サムネイル画像</label>
+						<div id="thumb_box"></div>
+					</div>
+			
+				</div>
+
 				<label for="description" class="form-label">3. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span></label>
 				<div class="row">
 					<div class="col-md-6">
@@ -100,6 +120,8 @@
 						</div>
 					</div>
 				</div>
+
+
 			</div>
 		</div>
 
@@ -131,6 +153,7 @@
 				<iframe id="preview_frame" src="/static/preview.html" width=640 height=480 border="0" scrolling="no"></iframe>
 			</div>
 			<div class="modal-footer">
+				<button class="btn btn-default" onclick="capture_thumb();">サムネイルを撮る</button>
 				<button class="btn btn-default" data-dismiss="modal">閉じる</button>
 			</div>
 		</div>
@@ -200,9 +223,12 @@ var Module = {
 {{ linkJS "theme-monokai.js" }}
 {{ linkJS "hspcmp.js" }}
 
+{{ linkJS "jquery.uploadbox.js" }}
 <script type="text/javascript">
 
 	var editor;
+	var thumbnail = "";
+	var attachments = new Array(0);
 
 	function compile(validateOnly) {
 		console.log("Compile:");
@@ -280,33 +306,26 @@ var Module = {
 		var frame = $("#preview_frame")[0];
 
 		frame.onload = function() {
-			frame.contentWindow["runAX"](data, "5000");
+			frame.contentWindow["runAX"](data, "5000", attachments);
 		};
 		frame.contentWindow.location.reload();
 	}
 
-	function open_external() {
-	
-	}
-
-	function save_external() {
-	
-	}
-
-	function updatePreview() {
-		$.ajax({
-			type: "GET",
-			url: "/api/markdown/",
-			dataType: "json",
-			data: { text: $("#description").val() },
-			success: function (json) {
-				$("#preview").html(json["Markdown"]);
-			}
-		});
-	}
-
 	function dismiss_error() {
 		$("#error").hide(500);
+	}
+
+	function capture_thumb() {
+		var canvas   = $("#preview_frame").contents().find("#canvas")[0];
+		var imageUrl = canvas.toDataURL("image/png");
+
+		$("#thumb_box .upload_box_nofile").hide();
+		$("#thumb_box .upload_box_status").hide();
+		$("#thumb_box .upload_box_preview").attr("src", imageUrl).show();
+
+		thumbnail = imageUrl.split(',')[1];
+
+		assertBottom("success", "サムネイルとして設定しました。");
 	}
 
 	$(document).ready(function () {
@@ -327,10 +346,59 @@ var Module = {
 		editor.setTheme("ace/theme/monokai");
 		editor.getSession().setMode("ace/mode/hsp");
 
+		$("#attachments_box").uploadbox({
+			allowMultiFiles: true,
+			emptyText: "添付ファイルをドロップしてください。",
+			limitSize: 1024*1024*5
+		}).on("onupload", function(e, data, file) {
+			attachments.push({
+				"name":  file.name,
+				"value": data
+			});
+
+			updateAttachmentsProgress(1024*1024*5);
+		}).on("ondelete", function(e, fname) {
+			updateAttachmentsProgress(1024*1024*5);
+
+			var index = -1;
+	
+			$.each(attachments, function(i, attachment) {
+				if (attachment.name == fname) {
+					index = i;
+				}
+			});
+	
+			if (index < 0) {
+				return;
+			}
+	
+			attachments.splice(index, 1);
+
+		});
+		$("#thumb_box").uploadbox({
+			emptyText: "サムネイル画像をドロップしてください。",
+			emptyIconClass: "mdi-editor-insert-photo",
+			limitSize: 1024*1024*3
+		}).on("onupload", function(e, data) {
+			thumbnail = data;
+		});
+
 		$("#description").bind('input propertychange', function() {
 			updatePreview();
 
 			$("#description_count").text(String($(this).val().length) + " / 500 文字");
+
+			function updatePreview() {
+				$.ajax({
+					type: "GET",
+					url: "/api/markdown/",
+					dataType: "json",
+					data: { text: $("#description").val() },
+					success: function (json) {
+						$("#preview").html(json["Markdown"]);
+					}
+				});
+			}
 		});
 
 		$("#preview_dialog").on("hidden", function() {
@@ -351,6 +419,14 @@ var Module = {
 				iframedoc.close();
 			}	
 		});
+
+		function updateAttachmentsProgress(limit) {
+			var total = $("#attachments_box").data("totalSize");
+	
+			$("#attachments_capacity").css({
+				"width": String((total / limit) * 100) + "%"
+			});
+		}
 
 	});
 </script>

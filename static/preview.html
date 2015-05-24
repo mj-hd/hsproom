@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 	<meta charset="utf-8">
+	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
 	<style type="text/css">
 		* {
 			margin:  0;
@@ -22,28 +23,13 @@
 
 <script type="text/javascript">
 var Module = {
+	TOTAL_MEMORY: 1024*1024*50,
 	preRun: [],
 	postRun: [],
 	print: (function() {
-		/*var element = document.getElementById('output');
-		if (element) element.value = ''; // clear browser cache
 		return function(text) {
-			if (1) {
-				text = Array.prototype.slice.call(arguments).join(' ');
-				// These replacements are necessary if you render to raw HTML
-				//text = text.replace(/&/g, "&amp;");
-				//text = text.replace(/</g, "&lt;");
-				//text = text.replace(/>/g, "&gt;");
-				//text = text.replace('\n', '<br>', 'g');
-				console.log(text);
-				if (element) {
-					element.value += text + "\n";
-					element.scrollTop = element.scrollHeight; // focus on bottom
-				}
-			} else {
-				console.log(text);
-			}
-		};*/
+			console.log(text);
+		};
 	})(),
 	printErr: function(text) {
 		text = Array.prototype.slice.call(arguments).join(' ');
@@ -67,7 +53,7 @@ Module["preRun"].push(function() {
 <script async type="text/javascript" src="/static/js/hsp3dish-gp.js"></script>
 
 <script type="text/javascript">
-	function runAX(data, steps) {
+	function runAX(data, steps, attachments) {
 		if (!data) {
 			console.log("Empty!!");
 		}
@@ -84,8 +70,26 @@ Module["preRun"].push(function() {
 		var stream = FS.open("start.ax", 'w');
 		FS.write(stream, data, 0, data.length, 0);
 		FS.close(stream);
+
+		$.each(attachments, function(i, file) {
+			console.log("save " + file.name);
+			var attachment = FS.open(file.name, 'w');
+			var buffer = convertBase64ToArrayBuffer(file.value);
+			FS.write(attachment, buffer, 0, buffer.length, 0);
+			FS.close(attachment);
+		});
 	//	Module.callMain(["start.ax"]);
 		Module['removeRunDependency']('hsp start.ax');
+
+		function convertBase64ToArrayBuffer(base64) {
+			var data = window.atob(base64);
+			var buff = new ArrayBuffer(data.length);
+			var arr = new Uint8Array(buff);
+			for(var i = 0; i < data.length; i++) {
+				arr[i] = data.charCodeAt(i);
+			}
+			return arr;
+		}
 	}
 </script>
 
