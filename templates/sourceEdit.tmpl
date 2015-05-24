@@ -1,7 +1,509 @@
 {{ define "Header" }}
+{{ linkCSS "jquery.uploadbox.css" }}
+<style type="text/css">
+	#editor {
+		height: 500px;
+	}
+	#preview_dialog .modal-dialog {
+		width:  688px;
+		height: 580px;
+	}
+	#preview_dialog .modal-dialog .modal-body {
+		max-height: 580px;
+	}
+	.toolbar {
+	}
+
+	.form_group {
+		margin-bottom: 15px;
+	}
+
+	.preview_nomarkdown {
+		width: 100%;
+		height: 100%;
+
+		font-size: 2.5em;
+		padding: 100px;
+
+		color: #aaaaaa;
+	}
+	.help_cap {
+		font-size: 0.9em;
+
+		color: #666666;
+	}
+</style>
 
 {{ end }}
 
 {{ define "Content" }}
+
+<form id="edit_source" role="form" class="form-horizontal" action="/api/program/update/" method="POST" enctype="multipart/form-data">
+
+	<input type="hidden" name="id" value="{{ .Program.Id }}" />
+
+	<div class="col-md-8 col-md-offset-2">
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h2>新規作成</h2>
+			</div>
+			<div class="panel-body">
+				<div class="form_group">
+					<label for="title" class="form-label">1. タイトル</label>
+					<input type="text" id="title" class="form-control floating-label" placeholder="タイトルを入力しましょう" data-hint="100文字以内で入力してください" name="title" value="{{ .Program.Title }}" />
+				</div>
+	
+				<label for="editor" class="form-label">2. ソースコード</label>
+				<div class="toolbar btn-toolbar" role="toolbar">
+					<div class="btn-group btn-group-sm" role="group">
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">ファイル<span class="caret"></span></button>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="javascript:download_source();">ソースコードをダウンロードする...</a></li>
+							<li><a href="javascript:download_ax();">AXファイルをダウンロードする...</a></li>
+						</ul>
+					</div>
+					<div class="btn-group btn-group-sm" role="group">
+						<button type="button" class="btn btn-default btn-flat" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i>実行</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="compile(true);" ><i class="mdi-action-done"></i>文法チェック</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="void;"><i class="mdi-action-help"></i>ヘルプ</button>
+					</div>
+				</div>
+				<pre id="editor">{{ .Program.Sourcecode }}</pre>
+				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
+					<button type="button" class="close" onclick="dismiss_error();">×</button>
+					<div id="error_caption">
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-md-6">
+						<label for="attachments_box" class="form-label">3. 添付ファイル</label>
+						<div class="progress progress-default">
+							<div id="attachments_capacity" class="capacity progress-bar" style="width: 0%"></div>
+						</div>
+
+						<div id="attachments_box"></div>
+					</div>
+					<div class="col-md-6">
+						<label for="thumb_box" class="form-label">4. サムネイル画像</label>
+						<div id="thumb_box"></div>
+					</div>
+			
+				</div>
+
+				<label for="description" class="form-label">3. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span></label>
+				<div class="row">
+					<div class="col-md-6">
+						<textarea id="description" name="description" rows="12" class="form-control floating-label" placeholder="プログラムの説明文を入力しましょう">{{ .Program.Description }}</textarea>
+					</div>
+					<div class="col-md-6">
+						<div id="preview" class="markdown">
+							<div class="preview_nomarkdown">
+								<span>プレビュー</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-6">
+				<div class="form-group">
+					<button class="btn btn-default btn-raised form-control" type="reset">キャンセル</button>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="form-group">
+					<button class="btn btn-success btn-raised form-control" type="submit">投稿</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</form>
+
+<div id="preview_dialog" class="modal fade" tabindex="-1">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title">プレビュー</h4>
+			</div>
+			<div class="modal-body">
+				<iframe id="preview_frame" src="/static/preview.html" width=640 height=480 border="0" scrolling="no"></iframe>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-default" onclick="capture_thumb();">サムネイルを撮る</button>
+				<button class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="modal" class="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 id="modal_title" class="modal-title"></h4>
+			</div>
+			<div class="modal-body">
+				<p id="modal_text">One fine body…</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<script type="text/javascript">
+
+var Module = {
+	preRun: [],
+	postRun: [],
+	print: (function() {
+		return function(text) {
+			console.log(text);
+		};
+	})(),
+	printErr: function(text) {
+		text = Array.prototype.slice.call(arguments).join(' ');
+		if (0) { // XXX disabled for safety typeof dump == 'function') {
+			dump(text + '\n'); // fast, straight to the real console
+		} else {
+			console.error(text);
+		}
+	},
+	canvas: {},
+	setStatus: function(text) {
+		console.log(text);
+	},
+	totalDependencies: 0,
+	monitorRunDependencies: function(left) {
+	},
+	filePackagePrefixURL: "/static/data/",
+};
+
+</script>
+
+{{ linkJS "ace.js" }}
+{{ linkJS "ext-language_tools.js" }}
+{{ linkJS "theme-monokai.js" }}
+{{ linkJS "hspcmp.js" }}
+
+{{ linkJS "jquery.uploadbox.js" }}
+<script type="text/javascript">
+
+	var editor;
+	var thumbnail = "";
+	var attachments = new Array(0);
+
+	function compile(compileOnly) {
+		console.log("Compile:");
+
+		var fname = "source.hsp";
+
+		var code = editor.getValue();
+		var codeArray = Module.intArrayFromString(code);
+
+		var f = FS.open(fname, "w");
+		FS.write(f, codeArray, 0, codeArray.length, 0);
+		FS.close(f);
+
+		var fnameArray = Module.intArrayFromString(fname);
+		var fnamePtr = Module._malloc(fnameArray.length);
+		Module.writeArrayToMemory(fnameArray, fnamePtr);
+
+		Module.ccall('hsc_ini', 'number', ['number', 'number', 'number', 'number'],
+											[0, fnamePtr, 0, 0]);
+		console.log("Compiler Initialized");
+
+		var option = 4;
+		var stat = Module.ccall('hsc_comp', 'number', ['number', 'number', 'number', 'number'],
+													[0, option, 0, 0]);
+		console.log("Compiled with " + option);
+		console.log("Compile result: " + stat);
+
+		var mesPtr = Module._malloc(0x1000);
+		Module.ccall('hsc_getmes', 'number', ['number', 'number', 'number', 'number'],
+											[mesPtr, 0, 0, 0]);
+
+		var message = Module.Pointer_stringify(mesPtr);
+		var lines = message.split("\n");
+
+		// エラー行チェック
+		for (var i = 0; i < lines.length; i++) {
+			var err = lines[i].match(/\.hsp\(([0-9]+)\) : error /);
+			if (err && err[1]) {
+				var lineno = +err[1];
+				editor.gotoLine(lineno);
+				editor.session.clearAnnotations();
+				editor.session.setAnnotations([{
+					row:lineno - 1 ,column: 0,
+					text: lines[i], type:"error"}]); 
+			}
+		}
+
+		console.log(message);
+
+		Module._free(fnamePtr);
+		Module._free(mesPtr);
+
+		if (stat == 0) {
+			dismiss_error();
+
+			if (!compileOnly) {
+				runProgram();
+			}
+			assertBottom("success", "正常にコンパイルできました。");
+			return true;
+		} else {
+			$("#error_caption").html(message.replace(/\n/g, "<br />"));
+			$("#error").show(500);
+			assertBottom("error", "エラーが発生しています。");
+
+			return false;
+		}
+	}
+
+	function runProgram() {
+		var data = FS.readFile('source.ax');
+
+		$("#preview_dialog").modal({
+			keyboard: false,
+		});
+
+		var frame = $("#preview_frame")[0];
+
+		frame.onload = function() {
+			frame.contentWindow["runAX"](data, "5000", attachments);
+		};
+		frame.contentWindow.location.reload();
+	}
+
+	function dismiss_error() {
+		$("#error").hide(500);
+	}
+
+	function capture_thumb() {
+		var canvas   = $("#preview_frame").contents().find("#canvas")[0];
+		var imageUrl = canvas.toDataURL("image/png");
+
+		$("#thumb_box .upload_box_nofile").hide();
+		$("#thumb_box .upload_box_status").hide();
+		$("#thumb_box .upload_box_preview").attr("src", imageUrl).show();
+
+		thumbnail = imageUrl.split(',')[1];
+
+		assertBottom("success", "サムネイルとして設定しました。");
+	}
+
+	$(document).ready(function () {
+		ace.require("ace/ext/language_tools");
+
+		editor = ace.edit("editor");
+		editor.setOptions({
+			enableBasicAutocompletion: true,
+			highlightActiveLine: true,
+			highlightGutterLine: true,
+			animatedScroll: true,
+			showInvisibles: true,
+			showLineNumbers: true,
+			showGutter: true,
+			displayIndentGuides: true,
+			useSoftTabs: false,
+		});
+		editor.setTheme("ace/theme/monokai");
+		editor.getSession().setMode("ace/mode/hsp");
+
+		$("#attachments_box").uploadbox({
+			allowMultiFiles: true,
+			emptyText: "添付ファイルをドロップしてください。",
+			limitSize: 1024*1024*5
+		}).on("onupload", function(e, data, file) {
+			attachments.push({
+				"name":  file.name,
+				"value": data
+			});
+
+			updateAttachmentsProgress(1024*1024*5);
+		}).on("ondelete", function(e, fname) {
+			updateAttachmentsProgress(1024*1024*5);
+
+			var index = -1;
+	
+			$.each(attachments, function(i, attachment) {
+				if (attachment.name == fname) {
+					index = i;
+				}
+			});
+	
+			if (index < 0) {
+				return;
+			}
+	
+			attachments.splice(index, 1);
+
+		});
+		$("#thumb_box").uploadbox({
+			emptyText: "サムネイル画像をドロップしてください。",
+			emptyIconClass: "mdi-editor-insert-photo",
+			limitSize: 1024*1024*3
+		}).on("onupload", function(e, data) {
+			thumbnail = data;
+		});
+
+		$("#description").bind('input propertychange', function() {
+			updatePreview();
+
+			$("#description_count").text(String($(this).val().length) + " / 500 文字");
+
+			function updatePreview() {
+				$.ajax({
+					type: "GET",
+					url: "/api/markdown/",
+					dataType: "json",
+					data: { text: $("#description").val() },
+					success: function (json) {
+						$("#preview").html(json["Markdown"]);
+					}
+				});
+			}
+		});
+
+		$("#preview_dialog").on("hidden", function() {
+			var iframe = $("#preview_frame")[0];
+
+			var iframedoc = null;
+			if(iframe.contentDocument){
+				iframedoc = iframe.contentDocument; 
+			} else if(iframe.contentWindow){ 
+				iframedoc = iframe.contentWindow.document;
+			} else if(iframe.document){
+				iframedoc = iframe.document;
+			}
+			
+			if(iframedoc!=null){
+				iframedoc.open();
+				iframedoc.write("");
+				iframedoc.close();
+			}	
+		});
+
+		$("#edit_source").on("submit", function (e) {
+			e.preventDefault();
+
+			if (!compile(true)) {
+				return;
+			}
+
+			var startax = convertArrayBufferToBase64(FS.readFile("source.ax"));
+
+			var form = $(this).serializeArray();
+			form.push({
+				"name": "sourcecode",
+				"value": editor.getValue()
+			});
+			form.push({
+				"name":  "thumbnail",
+				"value": thumbnail
+			});
+			form.push({
+				"name":  "startax",
+				"value": startax
+			});
+			form.push({
+				"name":  "attachments",
+				"value": JSON.stringify(attachments)
+			});
+
+			$.ajax({
+				type: "POST",
+				url:  "/api/program/update/",
+				dataType: "json",
+				data: form
+			}).success(function (json) {
+				var response;
+				if (!json.responseJSON) {
+					response = json;
+				} else {
+					response = json.responseJSON;
+				}
+
+				assertBottom("success", response.Message);
+
+				location.href = "/program/view/?p={{ .Program.Id }}";
+			}).error(function (json) {
+				
+				var modal = $("#modal");
+				var modal_title = $("#modal_title");
+				var modal_text = $("#modal_text");
+	
+				modal_title.text("エラー");
+	
+				var message = "";
+				if (!json.responseJSON) {
+					message = json.Message;
+				} else {
+					message = json.responseJSON.Message;
+				}
+	
+				modal_text.text(message);
+				modal.modal();
+			});
+		});
+
+		$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.Id }}").show();
+
+		{{ range $i, $file := .Program.Attachments.Files }}
+			attachments.push({
+				"name":  "{{ $file.Name }}",
+				"value": "PASS",
+			});
+	
+			var del = $('<a class="badge" href="javascript:void();">X</a>');
+			del.on("click", function() {
+				attachments[{{ $i }}].value = "DELETE";
+				$("#attachments_box").deleteItemUploadbox("{{ $file.Name }}");
+			});
+			// TODO: SmallPreview。arraybufferを解析する必要があるかもしれない。
+			$("#attachments_box ul").show().append($('<li data-fname="{{ $file.Name }}" data-size="{{ len $file.Data }}">{{ $file.Name }} </li>').append(del));
+	
+			$("#attachments_box").data("totalSize", $("#attachments_box").data("totalSize") + {{ len $file.Data }})
+			$("#attachments_box").data("fileCount", $("#attachments_box").data("fileCount") + 1);
+		{{ end }}
+
+		updateAttachmentsProgress(1024*1024*5);
+
+		$("#description").trigger("propertychange");
+
+		function convertArrayBufferToBase64(buffer) {
+			var result = '';
+			var bytes = new Uint8Array(buffer);
+			var len = bytes.byteLength;
+			for (var i = 0; i < len; i++) {
+				result += String.fromCharCode(bytes[i]);
+			}
+			return window.btoa(result);
+		}
+
+		function updateAttachmentsProgress(limit) {
+			var total = $("#attachments_box").data("totalSize");
+	
+			$("#attachments_capacity").css({
+				"width": String((total / limit) * 100) + "%"
+			});
+		}
+
+	});
+</script>
+
 
 {{ end }}

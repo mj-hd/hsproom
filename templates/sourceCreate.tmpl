@@ -160,21 +160,32 @@
 	</div>
 </div>
 
+<div id="modal" class="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 id="modal_title" class="modal-title"></h4>
+			</div>
+			<div class="modal-body">
+				<p id="modal_text">One fine body…</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
 <script type="text/javascript">
 
 var Module = {
 	preRun: [],
 	postRun: [],
 	print: (function() {
-		/*var element = document.getElementById('output');
-		if (element) element.value = ''; // clear browser cache*/
 		return function(text) {
-			/*text = Array.prototype.slice.call(arguments).join(' ');
-			console.log(text);
-			if (element) {
-				element.value += text + "\n";
-				element.scrollTop = element.scrollHeight; // focus on bottom
-			}*/
 			console.log(text);
 		};
 	})(),
@@ -188,30 +199,10 @@ var Module = {
 	},
 	canvas: {},
 	setStatus: function(text) {
-		/*if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
-		if (text === Module.setStatus.text) return;
-		var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-		var now = Date.now();
-		if (m && now - Date.now() < 30) return; // if this is a progress update, skip it if too soon
-		if (m) {
-			text = m[1];
-			progressElement.value = parseInt(m[2])*100;
-			progressElement.max = parseInt(m[4])*100;
-			progressElement.hidden = false;
-			spinnerElement.hidden = false;
-		} else {
-			progressElement.value = null;
-			progressElement.max = null;
-			progressElement.hidden = true;
-			if (!text) spinnerElement.style.display = 'none';
-		}
-		statusElement.innerHTML = text;*/
 		console.log(text);
 	},
 	totalDependencies: 0,
 	monitorRunDependencies: function(left) {
-		/*this.totalDependencies = Math.max(this.totalDependencies, left);
-		Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');*/
 	},
 	filePackagePrefixURL: "/static/data/",
 };
@@ -230,7 +221,7 @@ var Module = {
 	var thumbnail = "";
 	var attachments = new Array(0);
 
-	function compile(validateOnly) {
+	function compile(compileOnly) {
 		console.log("Compile:");
 
 		var fname = "source.hsp";
@@ -251,7 +242,6 @@ var Module = {
 		console.log("Compiler Initialized");
 
 		var option = 4;
-		option |= validateOnly ? 2 : 0;
 		var stat = Module.ccall('hsc_comp', 'number', ['number', 'number', 'number', 'number'],
 													[0, option, 0, 0]);
 		console.log("Compiled with " + option);
@@ -285,14 +275,17 @@ var Module = {
 		if (stat == 0) {
 			dismiss_error();
 
-			if (!validateOnly) {
+			if (!compileOnly) {
 				runProgram();
 			}
 			assertBottom("success", "正常にコンパイルできました。");
+			return true;
 		} else {
 			$("#error_caption").html(message.replace(/\n/g, "<br />"));
 			$("#error").show(500);
 			assertBottom("error", "エラーが発生しています。");
+
+			return false;
 		}
 	}
 
@@ -419,6 +412,79 @@ var Module = {
 				iframedoc.close();
 			}	
 		});
+
+		$("#create_source").on("submit", function (e) {
+			e.preventDefault();
+
+			if (!compile(true)) {
+				return;
+			}
+
+			var startax = convertArrayBufferToBase64(FS.readFile("source.ax"));
+
+			var form = $(this).serializeArray();
+			form.push({
+				"name": "sourcecode",
+				"value": editor.getValue()
+			});
+			form.push({
+				"name":  "thumbnail",
+				"value": thumbnail
+			});
+			form.push({
+				"name":  "startax",
+				"value": startax
+			});
+			form.push({
+				"name":  "attachments",
+				"value": JSON.stringify(attachments)
+			});
+
+			$.ajax({
+				type: "POST",
+				url:  "/api/program/create/",
+				dataType: "json",
+				data: form
+			}).success(function (json) {
+				var response;
+				if (!json.responseJSON) {
+					response = json;
+				} else {
+					response = json.responseJSON;
+				}
+
+				assertBottom("success", response.Message);
+
+				location.href = "/program/view/?p="+response.Id;
+			}).error(function (json) {
+				
+				var modal = $("#modal");
+				var modal_title = $("#modal_title");
+				var modal_text = $("#modal_text");
+	
+				modal_title.text("エラー");
+	
+				var message = "";
+				if (!json.responseJSON) {
+					message = json.Message;
+				} else {
+					message = json.responseJSON.Message;
+				}
+	
+				modal_text.text(message);
+				modal.modal();
+			});
+		});
+
+		function convertArrayBufferToBase64(buffer) {
+			var result = '';
+			var bytes = new Uint8Array(buffer);
+			var len = bytes.byteLength;
+			for (var i = 0; i < len; i++) {
+				result += String.fromCharCode(bytes[i]);
+			}
+			return window.btoa(result);
+		}
 
 		function updateAttachmentsProgress(limit) {
 			var total = $("#attachments_box").data("totalSize");

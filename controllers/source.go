@@ -3,9 +3,10 @@ package controllers
 import (
 	"net/http"
 	"os"
+	"strconv"
 
 	"hsproom/config"
-//	"hsproom/models"
+	"hsproom/models"
 	"hsproom/templates"
 	"hsproom/utils/log"
 )
@@ -36,6 +37,7 @@ func sourceCreateHandler(document http.ResponseWriter, request *http.Request) {
 
 type sourceEditMember struct {
 	*templates.DefaultMember
+	Program *models.Program
 }
 
 func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
@@ -44,11 +46,34 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "sourceEdit.tmpl"
 
-	err := tmpl.Render(document, sourceEditMember{
+	rawProgramId := request.URL.Query().Get("p")
+	programId, err := strconv.Atoi(rawProgramId)
+
+	if err != nil {
+		log.Debug(os.Stdout, err)
+
+		showError(document, request, "プログラムが見つかりません。")
+
+		return
+	}
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+
+	if err != nil {
+		log.Debug(os.Stdout, err)
+
+		showError(document, request, "プログラムの読み込みに失敗しました。")
+
+		return
+	}
+
+	err = tmpl.Render(document, sourceEditMember{
 		DefaultMember: &templates.DefaultMember{
 			Title: "ソースコードの編集 - " + config.SiteTitle,
 			User: getSessionUser(request),
 		},
+		Program: program,
 	})
 
 	if err != nil {

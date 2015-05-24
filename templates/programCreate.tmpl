@@ -282,6 +282,10 @@ $(document).ready(function() {
 
 		var form = $(this).serializeArray();
 		form.push({
+			"name":  "sourcecode",
+			"value": ""
+		});
+		form.push({
 			"name":  "thumbnail",
 			"value": thumbnail
 		});
@@ -309,7 +313,7 @@ $(document).ready(function() {
 
 			assertBottom("success", response.Message);
 
-			location.href = "/program/view/?p="+response.Id
+			location.href = "/program/view/?p="+response.Id;
 		}).error(function (json) {
 			
 			var modal = $("#modal");
@@ -329,8 +333,6 @@ $(document).ready(function() {
 			modal.modal();
 
 		});
-
-
 	});
 
 	if ({{ .User }} == 0) {

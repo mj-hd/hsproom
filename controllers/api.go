@@ -215,7 +215,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps
+	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode
 
 	rawProgram.Id = request.FormValue("id")
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
@@ -224,9 +224,13 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.Startax = request.FormValue("startax")
 	rawProgram.Attachments = request.FormValue("attachments")
 	rawProgram.Steps = request.FormValue("steps")
+	rawProgram.Sourcecode = request.FormValue("sourcecode")
 
 	if rawProgram.Steps == "" {
 		targetFlags -= models.ProgramSteps
+	}
+	if rawProgram.Sourcecode == "" {
+		targetFlags -= models.ProgramSourcecode
 	}
 
 	err := rawProgram.Validate(targetFlags)
@@ -348,7 +352,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps
+	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode
 
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
@@ -356,9 +360,13 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.Startax = request.FormValue("startax")
 	rawProgram.Attachments = request.FormValue("attachments")
 	rawProgram.Steps = request.FormValue("steps")
+	rawProgram.Sourcecode = request.FormValue("sourcecode")
 
 	if rawProgram.Steps == "" {
 		targetFlags -= models.ProgramSteps
+	}
+	if rawProgram.Sourcecode == "" {
+		targetFlags -= models.ProgramSourcecode
 	}
 
 	userId := getSessionUser(request)

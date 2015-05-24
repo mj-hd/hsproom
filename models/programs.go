@@ -18,7 +18,7 @@ type Program struct {
 	Startax     []byte
 	Attachments *Attachments
 	Thumbnail   []byte
-	Sourcecode  []byte
+	Sourcecode  string
 }
 
 type ProgramInfo struct {
@@ -422,7 +422,7 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	if (flag & ProgramSourcecode) != 0 {
 
-		program.Sourcecode = []byte(this.Sourcecode)
+		program.Sourcecode = this.Sourcecode
 
 	}
 
