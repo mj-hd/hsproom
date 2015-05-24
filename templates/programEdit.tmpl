@@ -1,15 +1,9 @@
 {{ define "Header" }}
+{{ linkCSS "jquery.uploadbox.css"}}
 <style type="text/css">
 
 	#title {
 		width: 100%;
-	}
-	#thumb_box, #startax_box, #attachment_box {
-		width: 100%;
-
-		padding: 5px;
-
-		background: #eeeeee;
 	}
 	#preview {
 		width:  100%;
@@ -24,37 +18,6 @@
 
 		border-right: 5px dashed #eeeeee;
 	}
-	.progress {
-		margin-bottom: 0;
-	}
-	.box-label {
-		width: 100%;
-
-		color: #555555;
-
-		border-bottom: 1px solid #555555;
-	}
-	.upload {
-		margin-top: 15px;
-	}
-	.upload_box {
-		width: 100%;
-		height: 100%;
-
-		text-align: center;
-
-		padding: 50px;
-
-		color: #666666;
-	}
-	.upload_box i {
-		font-size: 2.5em;
-	}
-	.fileinput-button i {
-		font-size: 1.5em;
-
-		color: #666666;
-	}
 	.help_cap {
 		font-size: 0.9em;
 
@@ -68,31 +31,6 @@
 		padding: 100px;
 
 		color: #aaaaaa;
-	}
-	.small_preview {
-		width:  1em;
-		height: 1em;
-
-		overflow: hidden;
-	}
-	.fileinput_button {
-		position: relative;
-		overflow: hidden;
-	}
-	.fileinput_button input[type=file] {
-		position: absolute;
-		top: 0;
-		right: 0;
-		min-width: 100%;
-		min-height: 100%;
-		font-size: 100px;
-		text-align: right;
-		filter: alpha(opacity=0);
-		opacity: 0;
-		outline: none;
-		background: white;
-		cursor: inherit;
-		display: block;
 	}
 </style>
 {{ end }}
@@ -131,21 +69,7 @@
 						<div class="form-group row">
 							<label for="thumb_box" class="col-md-3 form-label text-right">2. サムネイル</label>
 							<div class="col-md-6">
-								<div id="thumb_box" class="well dropbox">
-									<div class="progress progress-striped active">
-										<div class="upload_progress progress-bar" style="width: 0%"></div>
-									</div>
-									<div class="upload_box">
-										<div class="upload_box_nofile">
-										</div>
-										<img class="preview" width=100% src="/api/program/thumbnail/?p={{ .Program.Id }}" />
-										<span class="status"></span>
-									</div>
-									<span class="btn btn-flat btn-default fileinput_button">
-										<i class="mdi-file-file-upload"></i> 
-										<input type="file" name="thumbnail[]" ></input>
-									</span>
-								</div>
+								<div id="thumb_box"></div>
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
@@ -161,24 +85,7 @@
 			
 							<div class="col-md-6">
 			
-								<div id="startax_box" class="well dropbox">
-									<div class="progress progress-striped active">
-										<div class="upload_progress progress-bar" style="width: 0%"></div>
-									</div>
-				
-									<div class="upload_box">
-										<div class="upload_box_nofile">
-											<i class="mdi-action-done"></i><br />
-										</div>
-										<span class="status">startax</span>
-									</div>
-				
-									<span class="btn btn-flat btn-default fileinput_button">
-										<i class="mdi-file-file-upload"></i> 
-										<input type="file" name="startax[]" ></input>
-									</span>
-				
-								</div>
+								<div id="startax_box"></div>
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
@@ -194,28 +101,9 @@
 							<div class="col-md-6">
 								<h5>全体のファイルサイズ</h5>
 								<div class="progress progress-default">
-									<div class="capacity progress-bar" style="width: 0%"></div>
+									<div id="attachments_capacity" class="capacity progress-bar" style="width: 0%"></div>
 								</div>
-			
-								<div id="attachment_box" class="well dropbox">
-									<div class="progress progress-striped active">
-										<div class="upload_progress progress-bar" style="width: 0%"></div>
-									</div>
-				
-									<div class="upload_box">
-										<div class="upload_box_nofile">
-											<i class="mdi-editor-attach-file"></i><br />
-										</div>
-										<ul class="list-unstyled" style="display: none;"></ul>
-										<span class="status">ファイルをドロップしてください。</span>
-									</div>
-				
-									<span class="btn btn-flat btn-default fileinput_button">
-										<i class="mdi-file-file-upload"></i> 
-										<input type="file" name="attachments[]" multiple ></input>
-									</span>
-				
-								</div>
+								<div id="attachments_box"></div>
 							</div>
 							<div class="help_cap col-md-3">
 								<p>
@@ -320,253 +208,62 @@
 	</div>
 </div>
 
+{{ linkJS "jquery.uploadbox.js" }}
 <script type="text/javascript">
 $(document).ready(function() {
 
 	var thumbnail = "";
 	var startax   = "";
 	var attachments = new Array(0);
-	var attachmentsSize = 0;
 
-	function updatePreview() {
-		$.ajax({
-			type: "GET",
-			url: "/api/markdown/",
-			dataType: "json",
-			data: { text: $("#description").val() },
-			success: function (json) {
-				$("#preview").html(json["Markdown"]);
-			}
+	$("#thumb_box").uploadbox({
+		emptyText:      "サムネイル画像をドロップしてください。",
+		emptyIconClass: "mdi-editor-insert-photo",
+		limitSize: 1024*1024*3
+	}).on("onupload", function(e, data) {
+		thumbnail = data;
+	});
+	$("#startax_box").uploadbox({
+		emptyText:      "startaxファイルをドロップしてください。",
+		limitSize: 1024*1024*1
+	}).on("onupload", function(e, data) {
+		startax = data;
+	});
+	$("#attachments_box").uploadbox({
+		allowMultiFiles: true,
+		emptyText:      "添付ファイルをドロップしてください。",
+		limitSize: 1024*1024*5
+	}).on("onupload", function(e, data, file) {
+		attachments.push({
+			"name" : file.name,
+			"value": data
 		});
-	}
 
-	function resetThumb() {
-		thumbnail = "";
-		var box = $("#thumb_box");
-
-		box.find(".status").text("サムネイル画像をドロップしてください。");
-		box.find(".upload_box img").hide();
-		box.find(".fileinput_button").show();
-		box.find(".upload_box_nofile").show();
-	}
-
-	function resetStartax() {
-		startax = "";
-		var box = $("#startax_box");
-
-		box.find(".status").text("startaxファイルをドロップしてください。");
-		box.find(".fileinput_button").show();
-		box.find(".upload_box_nofile").show();
-		box.find(".upload_box_nofile i").removeAttr("class").addClass("mdi-editor-insert-drive-file");
-	}
-
-	function deleteAttachment(fname) {
-		for(var i = 0; i< attachments.length; i++){
-
-			if(attachments[i] == fname){
-				attachments.splice(i, 1);
-			}
-		}
-
-		if (attachments.length == 0) {
-			$("#attachment_box .upload_box .upload_box_nofile").show();
-		}
-
-		$('#attachment_box ul li[data-fname="'+fname+'"]').remove();
-	}
-
-	function convertArrayBufferToBase64(buffer) {
-		var result = '';
-		var bytes = new Uint8Array(buffer);
-		var len = bytes.byteLength;
-		for (var i = 0; i < len; i++) {
-			result += String.fromCharCode(bytes[i]);
-		}
-		return window.btoa(result);
-	}
-
-	function updateProgress(total, current, elem) {
-		elem.css({
-			width: String((current / total) * 100) + "%",
-		});
-	}
-
-	function registFile(elem, file) {
-
-		var $this = elem;
-
-		var id = $this.attr("id");
-
-		if (id == "thumb_box") {
-
-			if (file.size > 1024*1024*3) {
-				assertBottom("error", "ファイルサイズが大きすぎます。");
-				return;
-			}
-
-			readerPreview = new FileReader();
-			readerPreview.onload = function(event) {
-				var preview = $this.find(".preview");
-				var box = $this.find(".upload_box");
-				var stat = $this.find(".upload_box .status");
-				var del = $('<a class="badge" href="javascript:void();">X</a>');
-
-				stat.text(file.name);
-				stat.append(del);
-
-				del.on("click", function() {
-					resetThumb();
-				});
-
-				preview.attr("src", event.target.result);
-
-				box.find(".upload_box_nofile").hide();
-				$this.find(".fileinput_button").hide();
-
-				preview.show();
-
-			}
-			readerPreview.readAsDataURL(file);
-
-			$this.find(".status").text(file.name+"を読み込み中です…");
-		}
-		if (id == "startax_box") {
-
-			if (file.size > 1024*1024*1) {
-				assertBottom("error", "ファイルサイズが大きすぎます。");
-				return;
-			}
-
-			var del = $('<a class="badge" href="javascript:void();">X</a>');
-
-			del.on("click", function() {
-				resetStartax();
-			});
-
-			$this.find(".upload_box_nofile i").removeAttr("class").addClass("mdi-action-done");
-			$this.find(".status").html(file.name + ' <span class="text-muted">' + file.size + ' B</span> ').append(del);
-
-		}
-		if (id == "attachment_box") {
-
-			var maxAttachmentsSize = 1024*1024*5;
-
-			if ($this.find('ul li[data-fname="'+file.name+'"]').length != 0) {
-				assertBottom("error", "同じ名前のファイルは登録できません。");
-				return;
-			}
-
-			if (attachmentsSize + file.size > maxAttachmentsSize) {
-				assertBottom("error", "ファイルサイズが大きすぎます。");
-				return;
-			}
-
-			attachmentsSize += file.size;
-			updateProgress(maxAttachmentsSize, attachmentsSize, $(".capacity"));
-
-			var del = $('<a class="badge" href="javascript:void();">X</a>');
-
-			del.on("click", function() {
-				deleteAttachment(file.name);
-				attachmentsSize -= file.size;
-				updateProgress(maxAttachmentsSize, attachmentsSize, $(".capacity"));
-			});
-
-			var previewSmall = '<img class="circle small_preview" />';
-			if (file.type.indexOf("image/") != 0) {
-				previewSmall = "";
-			}
-
-			$this.find(".upload_box_nofile").hide();
-			$this.find("ul").show().append($('<li data-fname="'+ file.name +'">'+previewSmall+file.name+' <span class="text-muted">'+Math.floor(file.size/1024)+'KB </span></li>').append(del));
-		}
-
-		var progress = $this.find(".progress");
-		var bar = progress.find(".upload_progress");
-
-		readerUpload = new FileReader();
-		readerUpload.onloadstart = function(event) {
-			progress.show();
-			bar.css({
-				width: "0%"
-			});
-		};
-		readerUpload.onprogress = function(event) {
-			bar.css({
-				width: String((event.loaded / event.total) *100) + "%"
-			});
-		};
-		readerUpload.loadend = function(event) {
-			progress.hide();
-		};
-		readerUpload.onload = function(event) {
-			switch(id) {
-				case "thumb_box":
-					thumbnail = convertArrayBufferToBase64(event.target.result);
-					break;
-				case "startax_box":
-					startax = convertArrayBufferToBase64(event.target.result);
-					break;
-				case "attachment_box":
-					var data = convertArrayBufferToBase64(event.target.result);
-					attachments.push({
-						"name":  file.name,
-						"value": data
-					});
-
-					if (file.type.indexOf("image/") == 0) {
-						$('#attachment_box ul li[data-fname="'+file.name+'"] img').attr({
-							"src": "data:"+file.type+";base64, "+data
-						});
-					}
-					break;
-			}
-		}
-
-		readerUpload.readAsArrayBuffer(file);
-
-	}
+		updateAttachmentsProgress(1024*1024*5);
+	}).on("ondelete", function(e) {
+		updateAttachmentsProgress(1024*1024*5);
+	});
 
 	$("#description").bind('input propertychange', function() {
 		updatePreview();
 
 		$("#description_count").text(String($(this).val().length) + " / 500 文字");
 
+		function updatePreview() {
+			$.ajax({
+				type: "GET",
+				url: "/api/markdown/",
+				dataType: "json",
+				data: { text: $("#description").val() },
+				success: function (json) {
+					$("#preview").html(json["Markdown"]);
+				}
+			});
+		}
 	});
 
 	$("#preview").css({
 		"height": $("#description").css("height")
-	});
-
-	$("#thumb_box .progress, #startax_box .progress, #attachment_box .progress").css({
-		"visibility": "hidden"
-	});
-
-	$(".dropbox").on("drop", function(e) {
-		e.preventDefault();
-
-		var files = e.originalEvent.dataTransfer.files;
-
-		var $this = this;
-
-		$.each(files, function () {
-			registFile($($this), this);
-		});
-
-	});
-
-	$("input[type=file]").on("change", function(e) {
-
-		var $this = this;
-
-		$.each(this.files, function() {
-			registFile($($this).parents("div[id$=_box]"), this);
-		});
-
-	});
-
-	$(".dropbox").on("dragover", function(e) {
-		e.preventDefault();
 	});
 
 	$("#update_program").on("submit", function (event) {
@@ -622,27 +319,42 @@ $(document).ready(function() {
 
 	});
 
-	$("#attachment_box .upload_box_nofile").hide();
-	{{ range $i, $file := .Program.Attachments.Files }}
-	attachments.push({
-		"name":  "{{ $file.Name }}",
-		"value": "PASS",
-	});
+	$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.Id }}").show();
 
-	var del = $('<a class="badge" href="javascript:void();">X</a>');
-	del.on("click", function() {
-		attachments[{{ $i }}].value = "DELETE";
-		$('#attachment_box ul li[data-fname="{{ $file.Name }}"]').remove();
-	});
-	// TODO: SmallPreview。arraybufferを解析する必要があるかもしれない。
-	$("#attachment_box ul").show().append($('<li data-fname="{{ $file.Name }}">{{ $file.Name }} </li>').append(del));
+	$("#startax_box .upload_box_status").text("startax");
+
+	{{ range $i, $file := .Program.Attachments.Files }}
+		attachments.push({
+			"name":  "{{ $file.Name }}",
+			"value": "PASS",
+		});
+
+		var del = $('<a class="badge" href="javascript:void();">X</a>');
+		del.on("click", function() {
+			attachments[{{ $i }}].value = "DELETE";
+			$("#attachments_box").deleteItemUploadbox("{{ $file.Name }}");
+		});
+		// TODO: SmallPreview。arraybufferを解析する必要があるかもしれない。
+		$("#attachments_box ul").show().append($('<li data-fname="{{ $file.Name }}" data-size="{{ len $file.Data }}">{{ $file.Name }} </li>').append(del));
+
+		$("#attachments_box").data("totalSize", $("#attachments_box").data("totalSize") + {{ len $file.Data }})
+		$("#attachments_box").data("fileCount", $("#attachments_box").data("fileCount") + 1);
 	{{ end }}
 
-	updatePreview();
-	$("#description_count").text(String($(this).val().length) + " / 500 文字");
+	updateAttachmentsProgress(1024*1024*5);
+
+	$("#description").trigger("propertychange");
 
 	if ({{ .User }} == 0) {
 		document.location.href = "/user/login/";
+	}
+
+	function updateAttachmentsProgress(limit) {
+		var total = $("#attachments_box").data("totalSize");
+
+		$("#attachments_capacity").css({
+			"width": String((total / limit) * 100) + "%"
+		});
 	}
 
 });
