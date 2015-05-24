@@ -204,11 +204,12 @@
 
 {{ linkJS "jquery.uploadbox.js" }}
 <script type="text/javascript">
-$(document).ready(function() {
 
-	var thumbnail = "";
-	var startax   = "";
-	var attachments = new Array(0);
+var thumbnail = "";
+var startax   = "";
+var attachments = new Array(0);
+
+$(document).ready(function() {
 
 	$("#thumb_box").uploadbox({
 		emptyText:      "サムネイル画像をドロップしてください。",
@@ -234,8 +235,24 @@ $(document).ready(function() {
 		});
 
 		updateAttachmentsProgress(1024*1024*5);
-	}).on("ondelete", function(e) {
+	}).on("ondelete", function(e, fname) {
+
 		updateAttachmentsProgress(1024*1024*5);
+
+		var index = -1;
+
+		$.each(attachments, function(i, attachment) {
+			if (attachment.name == fname) {
+				index = i;
+			}
+		});
+
+		if (index < 0) {
+			return;
+		}
+
+		attachments.splice(index, 1);
+
 	});
 
 	$("#description").bind('input propertychange', function() {
