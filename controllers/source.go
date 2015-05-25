@@ -57,6 +57,8 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	user := getSessionUser(request)
+
 	program := models.NewProgram()
 	err = program.Load(programId)
 
@@ -64,6 +66,14 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 		log.Debug(os.Stdout, err)
 
 		showError(document, request, "プログラムの読み込みに失敗しました。")
+
+		return
+	}
+
+	if program.User != user {
+		log.DebugStr(os.Stdout, "権限のない編集画面へのアクセス")
+
+		showError(document, request, "プログラムの編集権限がありません。")
 
 		return
 	}

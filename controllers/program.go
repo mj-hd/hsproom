@@ -282,6 +282,14 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if program.User != user {
+		log.DebugStr(os.Stdout, "権限のない編集画面へのアクセス")
+
+		showError(document, request, "プログラムの編集権限がありません。")
+
+		return
+	}
+
 	if program.Sourcecode != "" {
 		from := request.URL.Query().Get("f")
 
