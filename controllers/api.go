@@ -298,6 +298,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	prevProgInfo.Title = program.Title
 	prevProgInfo.Description = program.Description
 	prevProgInfo.Steps = program.Steps
+	prevProgInfo.Runtime = program.Runtime
 
 	// 以前のプログラムと合成する
 	program.ProgramInfo = &prevProgInfo

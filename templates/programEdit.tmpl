@@ -61,7 +61,7 @@
 			<div class="panel-heading">
 				<div class="row with_accessory">
 					<h2 class="col-md-6">プログラムの編集</h2>
-					<div class="col-md-6 accessory_frame"><a href="/source/create/" class="accessory btn btn-default btn-flat pull-right"><i class="mdi-content-create"></i> ソースコードを編集する <i class="mdi-navigation-arrow-forward"></i></a></div>
+					<div class="col-md-6 accessory_frame"><a href="/source/edit/?p={{ .Program.Id }}" class="accessory btn btn-default btn-flat pull-right"><i class="mdi-content-create"></i> ソースコードを編集する <i class="mdi-navigation-arrow-forward"></i></a></div>
 				</div>
 			</div>
 			<div class="panel-body">
@@ -112,8 +112,8 @@
 
 					<div class="form-group row">
 						<label for="runtime" class="col-md-3 form-label text-right">4. ランタイム</label>
-						<div class="col-md-6">
-							<div id="runtime" class="radio radio-primary">
+						<div class="col-md-6" id="runtime">
+							<div class="radio radio-primary">
 								<label>
 									<input name="runtime" value="HSP3Dish" type="radio" />
 									HSP3Dish(デフォルト)
@@ -311,7 +311,7 @@ $(document).ready(function() {
 		var form = $(this).serializeArray();
 		form.push({
 			"name":  "sourcecode",
-			"value": ""
+			"value": "{{ .Program.Sourcecode }}"
 		});
 		form.push({
 			"name":  "thumbnail",
@@ -367,7 +367,7 @@ $(document).ready(function() {
 
 	$("#startax_box .upload_box_status").text("startax");
 
-	$("#runtime input[value='{{ .Program.Runtime }}']").attr("checked", "");
+	$("#runtime input[value='{{ .Program.Runtime }}']")[0].checked = true;
 
 	{{ range $i, $file := .Program.Attachments.Files }}
 		attachments.push({

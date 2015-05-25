@@ -489,7 +489,7 @@ var Module = {
 			}
 		});
 
-		$("#preview_dialog").on("hidden", function() {
+		$("#preview_dialog").on("hidden.bs.modal", function() {
 			var iframe = $("#preview_frame")[0];
 
 			var iframedoc = null;
