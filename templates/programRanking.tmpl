@@ -168,8 +168,8 @@ $(document).ready(function() {
 	var nextButton = $("#next_button");
 	var iLimit = 0;
 
-	iLimit = {{ .CurPage }}+1 >= 5 ? 3 : 5;
-	for (var i = 1; (i <= iLimit) && (i <= {{ .MaxPage }}); i++) {
+	iLimit = {{ .CurPage }}+1 >= 5 ? 2 : 5;
+	for (var i = 1; (i <= iLimit) && (i-1 <= {{ .MaxPage }}); i++) {
 		var li = $("<li />").append('<a href="'+location.path+'?p=' + (i-1) + '">' +  i + "</a>");
 		if (i == {{ .CurPage }} +1) {
 			li.addClass("active");
@@ -193,7 +193,7 @@ $(document).ready(function() {
 	
 	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
 
-	iLimit = {{ .CurPage }} > {{ .MaxPage }} -4 ? 5 : 2;
+	iLimit = {{ .CurPage }} >= {{ .MaxPage }} -4 ? 5 : 2;
 	for (var i = iLimit; (i > 0) && ({{ .MaxPage }} + 2 -i) > 0; i--) {
 		var li = $("<li />").append('<a href="'+location.path+'?p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
 		if ({{ .MaxPage }} +1 -i == {{ .CurPage }}) {

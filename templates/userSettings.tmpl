@@ -203,8 +203,8 @@ function updatePagination(baseElem, changeFunc, curPage, maxPage) {
 
 	baseElem.find(".pagination li[data-type!='primary']").remove();
 
-	iLimit = curPage+1 >= 5 ? 3 : 5;
-	for (var i = 1; (i <= iLimit) && (i <= maxPage); i++) {
+	iLimit = curPage+1 >= 5 ? 2 : 5;
+	for (var i = 1; (i-1 <= iLimit) && (i <= maxPage); i++) {
 		var li = $("<li />").append('<a href="javascript:'+changeFunc+'('+(i-1)+');">' +  i + "</a>");
 		if (i == curPage +1) {
 			li.addClass("active");
@@ -228,7 +228,7 @@ function updatePagination(baseElem, changeFunc, curPage, maxPage) {
 	
 	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
 
-	iLimit = curPage > maxPage -4 ? 5 : 2;
+	iLimit = curPage >= maxPage -4 ? 5 : 2;
 	for (var i = iLimit; (i > 0) && (maxPage + 2 -i) > 0; i--) {
 		var li = $("<li />").append('<a href="javascript:'+changeFunc+'(' + (maxPage - i +1) + ');">' + (maxPage +2 - i) + "</a>");
 		if (maxPage +1 -i == curPage) {
