@@ -403,6 +403,12 @@ var Module = {
 	}
 
 	$(document).ready(function () {
+		$(document).on("keydown", function(e) {
+			if ((e.which || e.keyCode) == 116) {
+				e.preventDefault();
+			}
+		});
+
 		ace.require("ace/ext/language_tools");
 
 		editor = ace.edit("editor");
@@ -419,6 +425,35 @@ var Module = {
 		});
 		editor.setTheme("ace/theme/monokai");
 		editor.getSession().setMode("ace/mode/hsp");
+		
+		editor.commands.addCommand({
+			name: "hspLintShortcut",
+			bindKey: {win: "F6", mac: "F6"},
+			exec: function() {
+				compile(true);
+			}
+		});
+		editor.commands.addCommand({
+			name: "hspDebugShortcut",
+			bindKey: {win: "F5", mac: "F5"},
+			exec: function() {
+				compile(false);
+			}
+		});
+		editor.commands.addCommand({
+			name: "hspHelpShortcut",
+			bindKey: {win: "F1", mac: "F1"},
+			exec: function() {
+				// TODO: open ohdl
+			}
+		});
+		editor.commands.addCommand({
+			name: "hspSaveSourcecode",
+			bindKey: {win: "Ctrl-S", mac: "Command-S"},
+			exec: function() {
+				download_source();
+			}
+		});
 
 		$("#attachments_box").uploadbox({
 			allowMultiFiles: true,
