@@ -19,7 +19,7 @@
 </head>
 <body>
 
-	<canvas id="canvas" width=640 height=480></canvas>
+	<canvas id="canvas" width=640 height=480 oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
 
 <script type="text/javascript">
 var Module = {
@@ -77,6 +77,7 @@ Module["preRun"].push(function() {
 			FS.close(attachment);
 		});
 	//	Module.callMain(["start.ax"]);
+		Module['canvas'].focus();
 		Module['removeRunDependency']('hsp start.ax');
 
 		function convertBase64ToArrayBuffer(base64) {
