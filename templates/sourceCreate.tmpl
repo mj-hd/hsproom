@@ -508,6 +508,10 @@ var Module = {
 			});
 		});
 
+		if ({{ .User }} == 0) {
+			document.location.href = "/user/login/";
+		}
+
 		function convertArrayBufferToBase64(buffer) {
 			var result = '';
 			var bytes = new Uint8Array(buffer);
