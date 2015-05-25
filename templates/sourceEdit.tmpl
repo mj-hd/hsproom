@@ -333,6 +333,29 @@ var Module = {
 		}
 	}
 
+	function download_source() {
+		var text = editor.getValue();
+		download("source.hsp", text, "text/plain");
+	}
+
+	function download_ax() {
+		if (compile(true)) {
+			var data = FS.readFile("source.ax");
+			download("start.ax", data, "application/octet-stream");
+		}
+	}
+
+	function download(fname, data, mime) {
+		var blob = new Blob([data], {type: mime});
+
+		var a = document.createElement("a");
+		a.download = fname;
+		a.href = window.URL.createObjectURL(blob);
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	}
+
 	$(document).ready(function () {
 		ace.require("ace/ext/language_tools");
 
