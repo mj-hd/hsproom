@@ -32,6 +32,24 @@
 
 		color: #666666;
 	}
+	.with_accessory {
+		position: relative;
+		height: 63px;
+	}
+	.accessory_frame {
+		position: absolute;
+		
+		bottom: 0;
+		right:  0;
+	}
+	.accessory {
+		margin-top: auto;
+		margin-bottom: 0;
+		padding-left: 5px;
+		padding-right: 5px;
+
+		color: rgba(255, 255, 255, 0.84) !important;
+	}
 </style>
 
 {{ end }}
@@ -43,7 +61,10 @@
 	<div class="col-md-8 col-md-offset-2">
 		<div class="panel panel-primary">
 			<div class="panel-heading">
-				<h2>新規作成</h2>
+				<div class="row with_accessory">
+					<h2 class="col-md-6">新規作成</h2>
+					<div class="col-md-6 accessory_frame"><a href="/program/create/" class="accessory btn btn-default btn-flat pull-right"><i class="mdi-editor-insert-drive-file"></i> AXファイルを投稿する <i class="mdi-navigation-arrow-forward"></i></a></div>
+				</div>
 			</div>
 			<div class="panel-body">
 				<div class="form_group">
@@ -66,8 +87,7 @@
 						<button type="button" class="btn btn-default btn-flat" onclick="void;"><i class="mdi-action-help"></i>ヘルプ</button>
 					</div>
 				</div>
-				<pre id="editor">
-#include "hsp3dish.as"
+				<pre id="editor">#include "hsp3dish.as"
 #cmpopt varname 1
 
 	x2=320:y2=480
@@ -83,8 +103,7 @@
 	redraw 1
 	await 33
 
-	goto *main
-				</pre>
+	goto *main</pre>
 				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
 					<button type="button" class="close" onclick="dismiss_error();">×</button>
 					<div id="error_caption">

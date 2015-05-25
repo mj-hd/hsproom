@@ -282,6 +282,15 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if program.Sourcecode != "" {
+		from := request.URL.Query().Get("f")
+
+		if (from != "source") {
+			http.Redirect(document, request, "/source/edit/?p="+strconv.Itoa(program.Id), 303)
+			return
+		}
+	}
+
 	// 表示
 	err = tmpl.Render(document, programEditMember{
 		DefaultMember: &templates.DefaultMember{

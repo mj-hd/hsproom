@@ -32,187 +32,186 @@
 
 		color: #aaaaaa;
 	}
+	.with_accessory {
+		position: relative;
+		height: 63px;
+	}
+	.accessory_frame {
+		position: absolute;
+		
+		bottom: 0;
+		right:  0;
+	}
+	.accessory {
+		margin-top: auto;
+		margin-bottom: 0;
+		padding-left: 5px;
+		padding-right: 5px;
+
+		color: rgba(255, 255, 255, 0.84) !important;
+	}
 </style>
 {{ end }}
 
 {{ define "Content" }}
 
-<div class="row">
-	<div class="col-md-8 col-md-offset-2">
-		<h1>プログラムの編集</h1>
-	</div>
-</div>
-
 <form id="update_program" role="form" class="form-horizonal" action="/api/program/update/" method="POST" enctype="multipart/form-data">
-	<div class="row">
-		<div class="col-md-8 col-md-offset-2">
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					プログラムの情報
-				</div>
-				<div class="panel-body">
-					<fieldset>
-	
-						<input type="hidden" name="id" value="{{ .Program.Id }}" />
-						
-						<div class="form-group row">
-							<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
-							<div class="col-md-6">
-								<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力してください..." name="title" value="{{ .Program.Title }}" />
-							</div>
-							<div class="help_cap col-md-3">
-								<p>
-								</p>
-							</div>
-						</div>
-	
-						<div class="form-group row">
-							<label for="thumb_box" class="col-md-3 form-label text-right">2. サムネイル</label>
-							<div class="col-md-6">
-								<div id="thumb_box"></div>
-							</div>
-							<div class="help_cap col-md-3">
-								<p>
-									png, gif, jpg, bmpに対応しています。<strong>3MBまで</strong>のファイルが使用できます。
-								</p>
-	
-							</div>
-			
-						</div>
-			
-						<div class="form-group row">
-							<label for="startax_box" class="col-md-3 form-label text-right">3. プログラム</label>
-			
-							<div class="col-md-6">
-			
-								<div id="startax_box"></div>
-							</div>
-							<div class="help_cap col-md-3">
-								<p>
-									HSP3に付属の、「HSP3Dish Helper」で「hsp3dish.js」用に変換した際に出力される、「(ファイル名).ax」ファイルをドロップしてください。<strong>1MBまで</strong>対応しています。
-								</p>
-							</div>
-			
-			
-						</div>
-
-						<div class="form-group row">
-							<label for="runtime" class="col-md-3 form-label text-right">4. ランタイム</label>
-							<div class="col-md-6">
-								<div class="radio radio-primary">
-									<label>
-										<input name="runtime" value="HSP3Dish" type="radio" />
-										HSP3Dish(デフォルト)
-									</label>
-								</div>
-								<div class="radio radio-primary">
-									<label>
-										<input name="runtime" value="HGIMG4" type="radio" />
-										HGIMG4
-									</label>
-								</div>
-							</div>
-							<div class="help_cap col-md-3">
-								<p>
-									プログラムで使用するランタイム名を指定してください。通常はHSP3Dishが使用されます。
-								</p>
-							</div>
-						</div>
-			
-		
-						<div class="form-group row">
-							<label for="attachment_box" class="col-md-3 form-label text-right">5. 添付するファイル</label>
-							<div class="col-md-6">
-								<h5>全体のファイルサイズ</h5>
-								<div class="progress progress-default">
-									<div id="attachments_capacity" class="capacity progress-bar" style="width: 0%"></div>
-								</div>
-								<div id="attachments_box"></div>
-							</div>
-							<div class="help_cap col-md-3">
-								<p>
-									プログラム中で使用するファイル(画像, 音楽など)を選択してください。<strong>5MBまで</strong>対応しています。複数可。
-								</p>
-							</div>
-			
-						</div>
-					</fieldset>
-	
+	<div class="col-md-8 col-md-offset-2">
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<div class="row with_accessory">
+					<h2 class="col-md-6">プログラムの編集</h2>
+					<div class="col-md-6 accessory_frame"><a href="/source/create/" class="accessory btn btn-default btn-flat pull-right"><i class="mdi-content-create"></i> ソースコードを編集する <i class="mdi-navigation-arrow-forward"></i></a></div>
 				</div>
 			</div>
-		</div>
-	</div>
+			<div class="panel-body">
+				<fieldset>
 	
-	<div class="row">
-		<div class="col-md-8 col-md-offset-2">
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<b>6. 説明 </b><span class="small text-muted" id="description_count">    0 / 500 文字</span>
-				</div>
-				<div class="panel-body">
-					<div class="row">
+					<input type="hidden" name="id" value="{{ .Program.Id }}" />
+					
+					<div class="form-group row">
+						<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
 						<div class="col-md-6">
-							<div class="form-group">
-								<textarea id="description" name="description" rows="12" class="form-control floating-label form-control" placeholder="プログラムの説明文を入力しましょう。">{{ .Program.Description }}</textarea>
+							<input type="text" id="title" class="form-control floating-label" placeholder="プログラムのタイトルを入力してください..." name="title" value="{{ .Program.Title }}" />
+						</div>
+						<div class="help_cap col-md-3">
+							<p>
+							</p>
+						</div>
+					</div>
+	
+					<div class="form-group row">
+						<label for="thumb_box" class="col-md-3 form-label text-right">2. サムネイル</label>
+						<div class="col-md-6">
+							<div id="thumb_box"></div>
+						</div>
+						<div class="help_cap col-md-3">
+							<p>
+								png, gif, jpg, bmpに対応しています。<strong>3MBまで</strong>のファイルが使用できます。
+							</p>
+	
+						</div>
+		
+					</div>
+		
+					<div class="form-group row">
+						<label for="startax_box" class="col-md-3 form-label text-right">3. プログラム</label>
+		
+						<div class="col-md-6">
+		
+							<div id="startax_box"></div>
+						</div>
+						<div class="help_cap col-md-3">
+							<p>
+								HSP3に付属の、「HSP3Dish Helper」で「hsp3dish.js」用に変換した際に出力される、「(ファイル名).ax」ファイルをドロップしてください。<strong>1MBまで</strong>対応しています。
+							</p>
+						</div>
+		
+		
+					</div>
+
+					<div class="form-group row">
+						<label for="runtime" class="col-md-3 form-label text-right">4. ランタイム</label>
+						<div class="col-md-6">
+							<div id="runtime" class="radio radio-primary">
+								<label>
+									<input name="runtime" value="HSP3Dish" type="radio" />
+									HSP3Dish(デフォルト)
+								</label>
+							</div>
+							<div class="radio radio-primary">
+								<label>
+									<input name="runtime" value="HGIMG4" type="radio" />
+									HGIMG4
+								</label>
 							</div>
 						</div>
+						<div class="help_cap col-md-3">
+							<p>
+								プログラムで使用するランタイム名を指定してください。通常はHSP3Dishが使用されます。
+							</p>
+						</div>
+					</div>
+		
+		
+					<div class="form-group row">
+						<label for="attachment_box" class="col-md-3 form-label text-right">5. 添付するファイル</label>
 						<div class="col-md-6">
-							<div id="preview" class="markdown">
-								<div class="preview_nomarkdown">
-									<span>プレビュー</span>
-								</div>
+							<h5>全体のファイルサイズ</h5>
+							<div class="progress progress-default">
+								<div id="attachments_capacity" class="capacity progress-bar" style="width: 0%"></div>
+							</div>
+							<div id="attachments_box"></div>
+						</div>
+						<div class="help_cap col-md-3">
+							<p>
+								プログラム中で使用するファイル(画像, 音楽など)を選択してください。<strong>5MBまで</strong>対応しています。複数可。
+							</p>
+						</div>
+		
+					</div>
+				</fieldset>
+	
+			</div>
+		</div>
+	
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<b>6. 説明 </b><span class="small text-muted" id="description_count">    0 / 500 文字</span>
+			</div>
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-group">
+							<textarea id="description" name="description" rows="12" class="form-control floating-label form-control" placeholder="プログラムの説明文を入力しましょう。">{{ .Program.Description }}</textarea>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div id="preview" class="markdown">
+							<div class="preview_nomarkdown">
+								<span>プレビュー</span>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="row">
-		<div class="col-md-8 col-md-offset-2">
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<b>高度な設定</b><span class="small text-warning"> 投稿したプログラムがうまく動作しない際に設定してください。</span>
-				</div>
-				<div class="panel-body">
-					<fieldset>
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<b>高度な設定</b><span class="small text-warning"> 投稿したプログラムがうまく動作しない際に設定してください。</span>
+			</div>
+			<div class="panel-body">
+				<fieldset>
 	
-						<div class="form-group row">
-							<label for="steps" class="col-md-3 form-label text-right">7. ステップ数の上限</label>
-							<div class="col-md-6">
-								<input type="text" id="steps" class="form-control floating-label" placeholder="デフォルト:5000" data-hint="最大値は30000です" name="steps" value="{{ .Program.Steps }}" />
-							</div>
-							<div class="help_cap col-md-3">
-								<p>
-									描画した部分がしばらくすると消えてしまう、画面がちらつく、などの問題が現れた場合に値を増やしてください。<strong>ただし、値の増加に伴いCPU使用率も上昇します。</strong>
-								</p>
-							</div>
+					<div class="form-group row">
+						<label for="steps" class="col-md-3 form-label text-right">7. ステップ数の上限</label>
+						<div class="col-md-6">
+							<input type="text" id="steps" class="form-control floating-label" placeholder="デフォルト:5000" data-hint="最大値は30000です" name="steps" value="{{ .Program.Steps }}" />
 						</div>
+						<div class="help_cap col-md-3">
+							<p>
+								描画した部分がしばらくすると消えてしまう、画面がちらつく、などの問題が現れた場合に値を増やしてください。<strong>ただし、値の増加に伴いCPU使用率も上昇します。</strong>
+							</p>
+						</div>
+					</div>
 	
-					</fieldset>
+				</fieldset>
 
-				</div>
+			</div>
+		</div>
+	
+		<div class="col-md-6">
+			<div class="form-group">
+				<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</a>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="form-group">
+				<button class="btn btn-success btn-raised btn-block form-control" type="submit">更新</a>
 			</div>
 		</div>
 	</div>
-
-	
-	<div class="row">
-		<div class="col-md-8 col-md-offset-2">
-			<div class="col-md-6">
-				<div class="form-group">
-					<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</a>
-				</div>
-			</div>
-			<div class="col-md-6">
-				<div class="form-group">
-					<button class="btn btn-success btn-raised btn-block form-control" type="submit">更新</a>
-				</div>
-			</div>
-		</div>
-	</div>
-	
 </form>
 
 <div id="modal" class="modal">
@@ -363,11 +362,12 @@ $(document).ready(function() {
 
 	});
 
+	$("#thumb_box .upload_box_nofile").hide();
 	$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.Id }}").show();
 
 	$("#startax_box .upload_box_status").text("startax");
 
-	$("#runtime input[value='{{ .Program.Runtime }}']").checked = true;
+	$("#runtime input[value='{{ .Program.Runtime }}']").attr("checked", "");
 
 	{{ range $i, $file := .Program.Attachments.Files }}
 		attachments.push({

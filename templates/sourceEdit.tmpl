@@ -32,6 +32,24 @@
 
 		color: #666666;
 	}
+	.with_accessory {
+		position: relative;
+		height: 63px;
+	}
+	.accessory_frame {
+		position: absolute;
+		
+		bottom: 0;
+		right:  0;
+	}
+	.accessory {
+		margin-top: auto;
+		margin-bottom: 0;
+		padding-left: 5px;
+		padding-right: 5px;
+
+		color: rgba(255, 255, 255, 0.84) !important;
+	}
 </style>
 
 {{ end }}
@@ -45,7 +63,10 @@
 	<div class="col-md-8 col-md-offset-2">
 		<div class="panel panel-primary">
 			<div class="panel-heading">
-				<h2>新規作成</h2>
+				<div class="row with_accessory">
+					<h2 class="col-md-6">新規作成</h2>
+					<div class="col-md-6 accessory_frame"><a href="/program/edit/?p={{ .Program.Id }}&f=source" class="accessory btn btn-default btn-flat pull-right"><i class="mdi-editor-insert-drive-file"></i> AXファイルを投稿する <i class="mdi-navigation-arrow-forward"></i></a></div>
+				</div>
 			</div>
 			<div class="panel-body">
 				<div class="form_group">
@@ -515,6 +536,7 @@ var Module = {
 			});
 		});
 
+		$("#thumb_box .upload_box_nofile").hide();
 		$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.Id }}").show();
 
 		{{ range $i, $file := .Program.Attachments.Files }}
