@@ -69,6 +69,7 @@
 				<li id="header_top"><a href="/">トップ</a></li>
 				<li id="header_find"><a href="/program/">プログラムを探す</a></li>
 				<li id="header_post"><a href="/program/create/">プログラムを投稿する</a></li>
+				<li id="header_source"><a href="/source/create/">プログラムを作成する</a></li>
 				<li class="dropdown">
 					<a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">その他... <b class="caret"></b></a>
 					<ul class="dropdown-menu">
@@ -185,6 +186,9 @@
 		}
 		if (location.pathname.indexOf("/program/create/") == 0) {
 			$("#header_post").addClass("active");
+		}
+		if (location.pathname.indexOf("/source/create") == 0) {
+			$("#header_source").addClass("active");
 		}
 		if (location.pathname == "/") {
 			$("#header_top").addClass("active");
