@@ -172,6 +172,12 @@
 				<iframe id="preview_frame" width=640 height=480 border="0" scrolling="no" tabindex="1"></iframe>
 			</div>
 			<div class="modal-footer">
+				<div class="togglebutton pull-left">
+					<label>
+						ログ
+						<input id="output_toggle" type="checkbox" onclick="toggle_output();" />
+					</label>
+				</div>
 				<button class="btn btn-default" onclick="capture_thumb();">サムネイルを撮る</button>
 				<button class="btn btn-default" data-dismiss="modal">閉じる</button>
 			</div>
@@ -389,6 +395,25 @@ var Module = {
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
+	}
+
+	function toggle_output() {
+		var iframe = $("#preview_frame")[0];
+
+		var iframedoc = null;
+		if(iframe.contentDocument){
+			iframedoc = iframe.contentDocument; 
+		} else if(iframe.contentWindow){ 
+			iframedoc = iframe.contentWindow.document;
+		} else if(iframe.document){
+			iframedoc = iframe.document;
+		}
+
+		if ($("#output_toggle")[0].checked) {
+			$(iframedoc).find("canvas").hide();
+		} else {
+			$(iframedoc).find("canvas").show();
+		}
 	}
 
 	$(document).ready(function () {

@@ -15,10 +15,25 @@
 			left:   0;
 			right:  0;
 		}
+		#message {
+			position: absolute;
+			top:    0;
+			bottom: 0;
+			left:   0;
+			right:  0;
+		}
+
+		.error {
+			color: #ff0000;
+		}
+		.debug {
+			color: #000000;
+		}
 	</style>
 </head>
 <body>
 
+	<div id="message"></div>
 	<canvas id="canvas" width=640 height=480 oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
 
 <script type="text/javascript">
@@ -28,6 +43,7 @@ var Module = {
 	print: (function() {
 		return function(text) {
 			console.log(text);
+			$("#message").append($("<span class='debug' />").text(text).append("<br />"));
 		};
 	})(),
 	printErr: function(text) {
@@ -36,6 +52,7 @@ var Module = {
 			dump(text + '\n'); // fast, straight to the real console
 		} else {
 			console.error(text);
+			$("#message").append($("<span class='error' />").text(text).append("<br />"));
 		}
 	},
 	canvas: document.getElementById('canvas'),
