@@ -215,7 +215,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode
+	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
 	rawProgram.Id = request.FormValue("id")
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
@@ -225,6 +225,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.Attachments = request.FormValue("attachments")
 	rawProgram.Steps = request.FormValue("steps")
 	rawProgram.Sourcecode = request.FormValue("sourcecode")
+	rawProgram.Runtime = request.FormValue("runtime")
 
 	if rawProgram.Steps == "" {
 		targetFlags -= models.ProgramSteps
@@ -352,7 +353,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode
+	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
@@ -361,6 +362,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.Attachments = request.FormValue("attachments")
 	rawProgram.Steps = request.FormValue("steps")
 	rawProgram.Sourcecode = request.FormValue("sourcecode")
+	rawProgram.Runtime = request.FormValue("runtime")
 
 	if rawProgram.Steps == "" {
 		targetFlags -= models.ProgramSteps

@@ -429,7 +429,17 @@
 	var pid   = {{ .ProgramInfo.Id }};
 	var steps = "{{ .ProgramInfo.Steps }}";
 
-	{{ plugin "loadProgram" }}
+	{{ if eq .ProgramInfo.Runtime "HSP3Dish" }}
+
+		{{ plugin "loadProgramHSP3Dish" }}
+
+	{{ else }}
+		{{ if eq .ProgramInfo.Runtime "HGIMG4" }}
+			{{ plugin "loadProgramHGIMG4"}}
+		{{ else }}
+			$("#errors").append("ランタイムの読み込みに失敗しました。管理人へ問い合わせてください。").show();
+		{{ end }}
+	{{ end }}
 
 </script>
 {{ end }}

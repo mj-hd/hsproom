@@ -46,8 +46,11 @@ CREATE TABLE `programs` (
   `startax` longblob NOT NULL,
   `attachments` longblob,
   `steps` int(10) unsigned NOT NULL DEFAULT '5000',
+  `sourcecode` mediumtext CHARACTER SET cp932 NOT NULL,
+  `runtime` varchar(64) NOT NULL DEFAULT 'hsp3dish',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
@@ -62,4 +65,4 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
--- 2015-04-07 10:29:15
+-- 2015-05-25 02:31:13

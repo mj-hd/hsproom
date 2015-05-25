@@ -32,6 +32,7 @@ type ProgramInfo struct {
 	Play        int
 	Description string
 	Steps       int
+	Runtime     string
 }
 
 type Attachments struct {
@@ -57,8 +58,8 @@ func (this *Program) Load(id int) error {
 
 	var rawAttachments []byte
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, attachments, steps, sourcecode FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &rawAttachments, &this.Steps, &this.Sourcecode)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, attachments, steps, sourcecode, runtime FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &rawAttachments, &this.Steps, &this.Sourcecode, &this.Runtime)
 
 	if err != nil {
 		return err
@@ -92,8 +93,8 @@ func (this *Program) Update() error {
 		return err
 	}
 
-	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, attachments = ?, steps = ?, sourcecode = ? WHERE id = ?",
-		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode, this.Id)
+	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, attachments = ?, steps = ?, sourcecode = ?, runtime = ? WHERE id = ?",
+		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode, this.Runtime, this.Id)
 
 	if err != nil {
 		return err
@@ -114,7 +115,7 @@ func (this *Program) Create() (int, error) {
 
 	this.Created = this.Created.Local()
 
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments, steps, sourcecode ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode)
+	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments, steps, sourcecode, runtime ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode, this.Runtime)
 	if err != nil {
 		return -1, err
 	}
@@ -136,8 +137,8 @@ func (this *Program) Remove() error {
 
 func (this *ProgramInfo) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, description, steps FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Description, &this.Steps)
+	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, description, steps, runtime FROM programs WHERE id = ?", id)
+	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Description, &this.Steps, &this.Runtime)
 
 	if err != nil {
 		return err
@@ -158,8 +159,8 @@ func (this *ProgramInfo) Update() error {
 		this.Modified.Time = this.Modified.Time.Local()
 	}
 
-	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, description = ?, steps = ? WHERE id = ?",
-		time.Now(), this.Title, this.Description, this.Steps, this.Id)
+	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, description = ?, steps = ?, runtime = ? WHERE id = ?",
+		time.Now(), this.Title, this.Description, this.Steps, this.Runtime, this.Id)
 
 	if err != nil {
 		return err
@@ -195,6 +196,7 @@ type RawProgram struct {
 	Attachments string
 	Steps       string
 	Sourcecode  string
+	Runtime     string
 }
 
 const (
@@ -209,6 +211,7 @@ const (
 	ProgramAttachments
 	ProgramSteps
 	ProgramSourcecode
+	ProgramRuntime
 )
 
 func (this *RawProgram) Validate(flag uint) error {
@@ -294,6 +297,15 @@ func (this *RawProgram) Validate(flag uint) error {
 	
 		// TODO: implement
 
+	}
+
+	if (flag & ProgramRuntime) != 0 {
+		switch this.Runtime {
+			case "HSP3Dish":
+			case "HGIMG4":
+			default:
+				return errors.New("ランタイム名が不正です。")
+		}
 	}
 
 	return nil
@@ -488,6 +500,10 @@ func (this *RawProgram) ToProgramInfo(flag uint) (ProgramInfo, error) {
 		program.Steps = steps
 	}
 
+	if (flag & ProgramRuntime) != 0 {
+		program.Runtime = this.Runtime
+	}
+
 	return program, nil
 }
 
@@ -507,6 +523,7 @@ const (
 	ProgramColThumbnail
 	ProgramColSteps
 	ProgramColSourcecode
+	ProgramColRuntime
 )
 
 func (this *ProgramColumn) String() string {
@@ -537,6 +554,8 @@ func (this *ProgramColumn) String() string {
 		return "steps"
 	case ProgramColSourcecode:
 		return "sourcecode"
+	case ProgramColRuntime:
+		return "runtime"
 	}
 
 	return ""

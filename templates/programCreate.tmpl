@@ -87,12 +87,33 @@
 									HSP3に付属の、「HSP3Dish Helper」で「hsp3dish.js」用に変換した際に出力される、「(ファイル名).ax」ファイルをドロップしてください。<strong>1MBまで</strong>対応しています。
 								</p>
 							</div>
-			
-			
+						</div>
+
+						<div class="form-group row">
+							<label for="runtime" class="col-md-3 form-label text-right">4. ランタイム</label>
+							<div class="col-md-6">
+								<div class="radio radio-primary">
+									<label>
+										<input name="runtime" value="HSP3Dish" type="radio" checked="" />
+										HSP3Dish(デフォルト)
+									</label>
+								</div>
+								<div class="radio radio-primary">
+									<label>
+										<input name="runtime" value="HGIMG4" type="radio" />
+										HGIMG4
+									</label>
+								</div>
+							</div>
+							<div class="help_cap col-md-3">
+								<p>
+									プログラムで使用するランタイム名を指定してください。通常はHSP3Dishが使用されます。
+								</p>
+							</div>
 						</div>
 			
 						<div class="form-group row">
-							<label for="attachments_box" class="col-md-3 form-label text-right">4. 添付するファイル</label>
+							<label for="attachments_box" class="col-md-3 form-label text-right">5. 添付するファイル</label>
 							<div class="col-md-6">
 								<h5>全体のファイルサイズ</h5>
 								<div class="progress progress-default">
@@ -118,7 +139,7 @@
 		<div class="col-md-8 col-md-offset-2">
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<b>5. 説明 </b><span class="small text-muted" id="description_count">    0 / 500 文字</span>
+					<b>6. 説明 </b><span class="small text-muted" id="description_count">    0 / 500 文字</span>
 				</div>
 				<div class="panel-body">
 					<div class="row">
@@ -150,7 +171,7 @@
 					<fieldset>
 	
 						<div class="form-group row">
-							<label for="steps" class="col-md-3 form-label text-right">6. ステップ数の上限</label>
+							<label for="steps" class="col-md-3 form-label text-right">7. ステップ数の上限</label>
 							<div class="col-md-6">
 								<input type="text" id="steps" class="form-control floating-label" placeholder="デフォルト:5000" data-hint="最大値は30000です" name="steps" />
 							</div>

@@ -134,7 +134,7 @@
 				<h4 class="modal-title">プレビュー</h4>
 			</div>
 			<div class="modal-body">
-				<iframe id="preview_frame" src="/static/preview.html" width=640 height=480 border="0" scrolling="no"></iframe>
+				<iframe id="preview_frame" width=640 height=480 border="0" scrolling="no"></iframe>
 			</div>
 			<div class="modal-footer">
 				<button class="btn btn-default" onclick="capture_thumb();">サムネイルを撮る</button>
@@ -208,6 +208,17 @@ var Module = {
 	function compile(compileOnly) {
 		console.log("Compile:");
 
+		var runtime = detect_runtime();
+
+		if (runtime === "undefined") {
+			$("#error_caption").html("ランタイム名を判定できませんでした。<br />#include \"hsp3dish.as\"や#include \"hgimg4.as\"などの記述が足りない可能性があります。");
+			$("#error").show(500);
+
+			assertBottom("error", "エラーが発生しています。");
+
+			return false;
+		}
+
 		var fname = "source.hsp";
 
 		var code = editor.getValue();
@@ -260,7 +271,7 @@ var Module = {
 			dismiss_error();
 
 			if (!compileOnly) {
-				runProgram();
+				runProgram(runtime);
 			}
 			assertBottom("success", "正常にコンパイルできました。");
 			return true;
@@ -273,7 +284,7 @@ var Module = {
 		}
 	}
 
-	function runProgram() {
+	function runProgram(runtime) {
 		var data = FS.readFile('source.ax');
 
 		$("#preview_dialog").modal({
@@ -285,7 +296,7 @@ var Module = {
 		frame.onload = function() {
 			frame.contentWindow["runAX"](data, "5000", attachments);
 		};
-		frame.contentWindow.location.reload();
+		frame.contentWindow.location.href = "/static/preview"+runtime+".html";
 	}
 
 	function dismiss_error() {
@@ -303,6 +314,23 @@ var Module = {
 		thumbnail = imageUrl.split(',')[1];
 
 		assertBottom("success", "サムネイルとして設定しました。");
+	}
+
+	function detect_runtime() {
+		var text = editor.getValue();
+
+		if (text.match(/^\s*\#include\s+"hsp3dish.as"/g)) {
+			console.log("HSP3Dish runtime detected");
+
+			return "HSP3Dish";
+		}
+		if (text.match(/^\s*\#include\s+"hgimg4.as"/g)) {
+			console.log("HGIMG4 runtime detected");
+
+			return "HGIMG4";
+		} else {
+			return "undefined";
+		}
 	}
 
 	$(document).ready(function () {
@@ -422,6 +450,10 @@ var Module = {
 			form.push({
 				"name":  "attachments",
 				"value": JSON.stringify(attachments)
+			});
+			form.push({
+				"name":  "runtime",
+				"value": detect_runtime()
 			});
 
 			$.ajax({
