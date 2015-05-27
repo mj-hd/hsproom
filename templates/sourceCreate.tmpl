@@ -84,7 +84,7 @@
 					<div class="btn-group btn-group-sm" role="group">
 						<button type="button" class="btn btn-default btn-flat" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i>実行</button>
 						<button type="button" class="btn btn-default btn-flat" onclick="compile(true);" ><i class="mdi-action-done"></i>文法チェック</button>
-						<button type="button" class="btn btn-default btn-flat" onclick="void;"><i class="mdi-action-help"></i>ヘルプ</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="search_help();"><i class="mdi-action-help"></i>ヘルプ</button>
 					</div>
 				</div>
 				<pre id="editor">#include "hsp3dish.as"
@@ -416,6 +416,13 @@ var Module = {
 		}
 	}
 
+	function search_help() {
+		editor.selection.selectWord();
+		var keyword = editor.getSelectedText();
+
+		window.open("http://ohdl.hsproom.me/?q="+keyword, "OHDL", "width=800,height=500,menubar=no,status=no,");
+	}
+
 	$(document).ready(function () {
 		$(document).on("keydown", function(e) {
 			if ((e.which || e.keyCode) == 116) {
@@ -458,7 +465,7 @@ var Module = {
 			name: "hspHelpShortcut",
 			bindKey: {win: "F1", mac: "F1"},
 			exec: function() {
-				// TODO: open ohdl
+				search_help();
 			}
 		});
 		editor.commands.addCommand({
