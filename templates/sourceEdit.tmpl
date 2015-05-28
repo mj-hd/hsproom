@@ -609,7 +609,7 @@ var Module = {
 		{{ range $i, $file := .Program.Attachments.Files }}
 			attachments.push({
 				"name":  "{{ $file.Name }}",
-				"value": "PASS",
+				"value": "{{ $file.ToBase64 }}",
 			});
 	
 			var del = $('<a class="badge" href="javascript:void();">X</a>');

@@ -44,6 +44,10 @@ type File struct {
 	Data []byte
 }
 
+func (this *File) ToBase64() string {
+	return base64.StdEncoding.EncodeToString(this.Data)
+}
+
 func NewProgram() *Program {
 	return &Program{
 		ProgramInfo: &ProgramInfo{},
