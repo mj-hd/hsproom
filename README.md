@@ -1,3 +1,5 @@
+[![Build Status](https://drone.io/github.com/mjhd-devlion/hsproom/status.png)](https://drone.io/github.com/mjhd-devlion/hsproom/latest)
+
 # HSP部屋
 HSP製のプログラムを、hsp3dish.jsを使って手軽に実行できるWebサイト。
 重い開発の最中にあります。
