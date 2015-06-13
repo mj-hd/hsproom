@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"os"
 
-	"hsproom/config"
-	"hsproom/templates"
-	"hsproom/utils/log"
+	"../config"
+	"../templates"
+	"../utils/log"
 )
 
 func aboutHandler(document http.ResponseWriter, request *http.Request) {

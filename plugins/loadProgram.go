@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"hsproom/config"
+	"../config"
 	"html/template"
 )
 

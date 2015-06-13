@@ -7,8 +7,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"hsproom/config"
-	"hsproom/utils/log"
+	"../config"
+	"../utils/log"
 )
 
 var DB *sql.DB

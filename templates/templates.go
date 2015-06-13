@@ -10,9 +10,9 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 
-	"hsproom/config"
-	"hsproom/plugins"
-	"hsproom/utils/log"
+	"../config"
+	"../plugins"
+	"../utils/log"
 )
 
 type Template struct {

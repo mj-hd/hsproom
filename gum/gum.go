@@ -6,13 +6,13 @@ import (
 	"os"
 	"syscall"
 
-	"hsproom/config"
-	"hsproom/controllers"
-	"hsproom/models"
-	"hsproom/plugins"
-	"hsproom/templates"
-	"hsproom/bot"
-	"hsproom/utils/log"
+	"../config"
+	"../controllers"
+	"../models"
+	"../plugins"
+	"../templates"
+	"../bot"
+	"../utils/log"
 
 	"github.com/gorilla/context"
 )

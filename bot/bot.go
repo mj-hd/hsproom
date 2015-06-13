@@ -5,10 +5,10 @@ import (
 	"time"
 	"os"
 
-	"hsproom/config"
-	"hsproom/utils/twitter"
-	"hsproom/utils/log"
-	"hsproom/models"
+	"../config"
+	"../utils/twitter"
+	"../utils/log"
+	"../models"
 
 	"github.com/mrjones/oauth"
 )

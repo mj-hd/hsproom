@@ -5,10 +5,10 @@ import (
 	"os"
 	"strconv"
 
-	"hsproom/config"
-	"hsproom/models"
-	"hsproom/templates"
-	"hsproom/utils/log"
+	"../config"
+	"../models"
+	"../templates"
+	"../utils/log"
 )
 
 type sourceCreateMember struct {

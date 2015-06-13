@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"hsproom/gum"
-	"hsproom/utils/log"
+	"./gum"
+	"./utils/log"
 )
 
 func main() {

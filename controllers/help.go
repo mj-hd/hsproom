@@ -5,9 +5,9 @@ import (
 	"os"
 	"html/template"
 
-	"hsproom/config"
-	"hsproom/templates"
-	"hsproom/utils/log"
+	"../config"
+	"../templates"
+	"../utils/log"
 )
 
 type helpMember struct {

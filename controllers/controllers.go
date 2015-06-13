@@ -5,8 +5,8 @@ import (
 
 	"github.com/gorilla/sessions"
 
-	"hsproom/config"
-	"hsproom/templates"
+	"../config"
+	"../templates"
 )
 
 var Router Routes

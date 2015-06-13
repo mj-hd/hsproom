@@ -1,6 +1,6 @@
 package config
 
-import "hsproom/utils/log"
+import "../utils/log"
 
 const (
 	RootPath               string = "/path/to/your/site"

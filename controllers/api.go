@@ -8,12 +8,12 @@ import (
 	"regexp"
 	"strconv"
 
-	"hsproom/config"
-	"hsproom/models"
-	"hsproom/bot"
-	"hsproom/utils/log"
-	"hsproom/utils/twitter"
-	"hsproom/utils/google"
+	"../config"
+	"../models"
+	"../bot"
+	"../utils/log"
+	"../utils/twitter"
+	"../utils/google"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"

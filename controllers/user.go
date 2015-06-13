@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"hsproom/config"
-	"hsproom/models"
-	"hsproom/templates"
-	"hsproom/utils/log"
+	"../config"
+	"../models"
+	"../templates"
+	"../utils/log"
 	"net/http"
 	"os"
 	"strconv"
