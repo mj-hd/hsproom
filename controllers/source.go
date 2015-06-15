@@ -23,8 +23,8 @@ func sourceCreateHandler(document http.ResponseWriter, request *http.Request) {
 
 	err := tmpl.Render(document, sourceCreateMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "ソースコードの作成 - " + config.SiteTitle,
-			User: getSessionUser(request),
+			Title:  "ソースコードの作成 - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 	})
 
@@ -70,7 +70,7 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if program.User != user {
+	if program.UserID != user {
 		log.DebugStr(os.Stdout, "権限のない編集画面へのアクセス")
 
 		showError(document, request, "プログラムの編集権限がありません。")
@@ -80,8 +80,8 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, sourceEditMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "ソースコードの編集 - " + config.SiteTitle,
-			User: getSessionUser(request),
+			Title:  "ソースコードの編集 - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Program: program,
 	})

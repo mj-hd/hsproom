@@ -28,9 +28,9 @@
 	<div class="options_collapse collapse in">
 		<span class="">並び順</span>
 		<div class="btn-group-vertical options">
-			<a id="options_created" href="/user/programs/?s=c&u={{ .User }}" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
-			<a id="options_good" href="/user/programs/?s=g&u={{ .User }}" class="btn btn-default"><i class="mdi-social-mood"></i> いいねの数</a>
-			<a id="options_name" href="/user/programs/?s=n&u={{ .User }}" class="btn btn-default"><i class="mdi-action-translate"></i> 名前の順</a>
+			<a id="options_created" href="/user/programs/?s=c&u={{ .UserID }}" class="btn btn-default"><i class="mdi-action-query-builder"></i> 作成日</a>
+			<a id="options_good" href="/user/programs/?s=g&u={{ .UserID }}" class="btn btn-default"><i class="mdi-social-mood"></i> いいねの数</a>
+			<a id="options_name" href="/user/programs/?s=n&u={{ .UserID }}" class="btn btn-default"><i class="mdi-action-translate"></i> 名前の順</a>
 		</div>
 
 		<span>人気ランキング</span>
@@ -47,7 +47,7 @@
 <div class="col-md-7 col-xs-12">
 	<div class="panel panel-default">
 		<div class="panel-heading">
-				<b>{{ .UserName }} のプログラム</b>
+				<b>{{ .GetUserName }} のプログラム</b>
 			<span id="sort_display" class="small"></span>
 		</div>
 		<div class="panel-body">
@@ -63,17 +63,17 @@
 					{{ else }}
 					<div class="program_list_item">
 						<div class="program_picture">
-							<img src="/api/program/thumbnail/?p={{ .Id }}" />
+							<img src="/api/program/thumbnail/?p={{ .ID }}" />
 						</div>
 						<div class="program_content">
 							<div class="program_item_heading">
-								<span class="h2"><a href="/program/view/?p={{ .Id }}">{{ .Title }}</a></span>
-								<span class="small">by <a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
+								<span class="h2"><a href="/program/view/?p={{ .ID }}">{{ .Title }}</a></span>
+								<span class="small">by <a href="/user/view/?u={{ .UserID }}">{{ .GetUserName }}</a></span>
 							</div>
 							<div class="program_item_accessory">
 								<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
 								<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
-								<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+								<div class="date text-right">{{ .CreatedAt.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 
 							</div>
 							<p class="program_item_text">{{ markdown (subString .Description 0 300) }}</p>
@@ -100,12 +100,12 @@
 
 function nextPage() {
 	if ({{ .CurPage }} == {{ .MaxPage }}) { return; }
-	location.href = location.path + "?s={{ .Sort }}&u={{ .User }}&p=" + ({{ .CurPage }} + 1);
+	location.href = location.path + "?s={{ .Sort }}&u={{ .UserID }}&p=" + ({{ .CurPage }} + 1);
 }
 
 function prevPage() {
 	if ({{ .CurPage }} == 0) { return; }
-	location.href = location.path + "?s={{ .Sort }}&u={{ .User }}&p=" + ({{ .CurPage }} - 1);
+	location.href = location.path + "?s={{ .Sort }}&u={{ .UserID }}&p=" + ({{ .CurPage }} - 1);
 }
 
 $(document).ready(function() {
@@ -141,7 +141,7 @@ $(document).ready(function() {
 
 	iLimit = {{ .CurPage }}+1 >= 5 ? 2 : 5;
 	for (var i = 1; (i <= iLimit) && (i-1 <= {{ .MaxPage }}); i++) {
-		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .User }}&p=' + (i-1) + '">' +  i + "</a>");
+		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .UserID }}&p=' + (i-1) + '">' +  i + "</a>");
 		if (i == {{ .CurPage }} +1) {
 			li.addClass("active");
 		}
@@ -154,7 +154,7 @@ $(document).ready(function() {
 
 	iLimit = ({{ .CurPage }}+1 >= 5) && ({{ .CurPage }} <= {{ .MaxPage }} -5) ? 5 : 0;
 	for (var i = 1;i <= iLimit; i++) {
-		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .User }}&p=' + ({{ .CurPage }} -3 + i)  + '">' + ({{ .CurPage }} -2 + i) + "</a>");
+		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .UserID }}&p=' + ({{ .CurPage }} -3 + i)  + '">' + ({{ .CurPage }} -2 + i) + "</a>");
 		if (i == 3) {
 			li.addClass("active");
 		}
@@ -166,7 +166,7 @@ $(document).ready(function() {
 
 	iLimit = {{ .CurPage }} >= {{ .MaxPage }} -4 ? 5 : 2;
 	for (var i = iLimit; (i > 0) && ({{ .MaxPage }} + 2 - i) > 0; i--) {
-		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .User }}&p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
+		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .UserID }}&p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
 		if ({{ .MaxPage }} +1 -i == {{ .CurPage }}) {
 			li.addClass("active");
 		}

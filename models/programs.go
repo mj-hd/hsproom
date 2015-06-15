@@ -1,199 +1,127 @@
 package models
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
+	//"os"
 
-	"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/lestrrat/go-ngram"
+
+	//"../utils/log"
 )
 
+func initPrograms() {
+	DB.AutoMigrate(&Program{})
+	DB.AutoMigrate(&Attachment{})
+}
+
 type Program struct {
-	*ProgramInfo
-	Startax     []byte
-	Attachments *Attachments
-	Thumbnail   []byte
-	Sourcecode  string
+	ID          int        `gorm:"primary_key"`
+	CreatedAt   time.Time  ``
+	UpdatedAt   time.Time  ``
+	DeletedAt   *time.Time ``
+	Title       string     `sql:"size:100;not null"`
+	UserID      int        `sql:"not null;index"`
+	Good        int        `sql:"default:0"`
+	Play        int        `sql:"default:0"`
+	Description string     `sql:"size:500"`
+	Steps       int        `sql:"default:5000"`
+	Runtime     string     `sql:"size:10;default:'HSP3Dish'"`
+
+	Startax     Attachment   ``
+	Attachments []Attachment ``
+	Thumbnail   Attachment   ``
+	Sourcecode  string       `sql:"type:text"`
 }
 
-type ProgramInfo struct {
-	Id          int
-	Created     time.Time
-	Modified    mysql.NullTime
-	Title       string
-	User        int
-	UserName    string
-	Good        int
-	Play        int
-	Description string
-	Steps       int
-	Runtime     string
+type Attachment struct {
+	ID        int `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+	ProgramID int    `sql:"index"`
+	Name      string `sql:"size:100;not null"`
+	Data      []byte `sql:"type:longblob;not null"`
 }
 
-type Attachments struct {
-	Files []File
-}
-
-type File struct {
-	Name string
-	Data []byte
-}
-
-func (this *File) ToBase64() string {
+func (this *Attachment) ToBase64() string {
 	return base64.StdEncoding.EncodeToString(this.Data)
 }
 
 func NewProgram() *Program {
 	return &Program{
-		ProgramInfo: &ProgramInfo{},
-		Startax:     make([]byte, 0),
-		Attachments: &Attachments{
-			Files: make([]File, 0),
+		Startax: Attachment{
+			Name: "STARTAX",
+			Data: make([]byte, 0),
+		},
+		Thumbnail: Attachment{
+			Name: "THUMBNAIL",
+			Data: make([]byte, 0),
 		},
 	}
 }
 
 func (this *Program) Load(id int) error {
 
-	var rawAttachments []byte
-
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, thumbnail, description, startax, attachments, steps, sourcecode, runtime FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Thumbnail, &this.Description, &this.Startax, &rawAttachments, &this.Steps, &this.Sourcecode, &this.Runtime)
-
-	if err != nil {
-		return err
-	}
-
-	if rawAttachments == nil {
-		return nil
-	}
-
-	buffer := bytes.NewBuffer(rawAttachments)
-	decoder := gob.NewDecoder(buffer)
-
-	err = decoder.Decode(&this.Attachments)
-
-	if err != nil {
-		return err
-	}
-
-	this.UserName, err = GetUserName(this.User)
+	err := DB.First(this, id).Error
 
 	return err
 }
 
 func (this *Program) Update() error {
 
-	buffer := new(bytes.Buffer)
-	encoder := gob.NewEncoder(buffer)
+	err := DB.Save(this).Error
 
-	err := encoder.Encode(this.Attachments)
-	if err != nil {
-		return err
-	}
-
-	_, err = DB.Exec("UPDATE programs SET modified = ?, title = ?, thumbnail = ?, description = ?, startax = ?, attachments = ?, steps = ?, sourcecode = ?, runtime = ? WHERE id = ?",
-		time.Now(), this.Title, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode, this.Runtime, this.Id)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (this *Program) Create() (int, error) {
 
-	buffer := new(bytes.Buffer)
-	encoder := gob.NewEncoder(buffer)
+	err := DB.Create(this).Error
 
-	err := encoder.Encode(this.Attachments)
-	if err != nil {
-		return 0, err
-	}
-
-	this.Created = this.Created.Local()
-
-	result, err := DB.Exec("INSERT INTO programs ( created, title, user, thumbnail, description, startax, attachments, steps, sourcecode, runtime ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )", time.Now(), this.Title, this.User, this.Thumbnail, this.Description, this.Startax, buffer.Bytes(), this.Steps, this.Sourcecode, this.Runtime)
-	if err != nil {
-		return -1, err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return -1, err
-	}
-
-	return int(id), nil
+	return this.ID, err
 }
 
 func (this *Program) Remove() error {
 
-	_, err := DB.Exec("DELETE FROM programs WHERE id = ?", this.Id)
+	err := DB.Delete(this).Error
 
 	return err
 }
 
-func (this *ProgramInfo) Load(id int) error {
-
-	row := DB.QueryRow("SELECT id, created, modified, title, user, good, play, description, steps, runtime FROM programs WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Created, &this.Modified, &this.Title, &this.User, &this.Good, &this.Play, &this.Description, &this.Steps, &this.Runtime)
-
-	if err != nil {
-		return err
+func (this *Program) FindAttachment(name string) (*Attachment, error) {
+	for i, att := range this.Attachments {
+		if att.Name == name {
+			return &this.Attachments[i], nil
+		}
 	}
 
-	this.UserName, err = GetUserName(this.User)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return nil, errors.New("ファイル" + name + "が見つかりませんでした。")
 }
 
-func (this *ProgramInfo) Update() error {
+func (this Program) GetScreenName() string {
 
-	this.Created = this.Created.Local()
-	if this.Modified.Valid {
-		this.Modified.Time = this.Modified.Time.Local()
-	}
+	name, _ := GetUserScreenName(this.UserID)
 
-	_, err := DB.Exec("UPDATE programs SET modified = ?, title = ?, description = ?, steps = ?, runtime = ? WHERE id = ?",
-		time.Now(), this.Title, this.Description, this.Steps, this.Runtime, this.Id)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return name
 }
 
-func (this *ProgramInfo) Remove() error {
+func (this Program) GetUserName() string {
 
-	_, err := DB.Exec("DELETE FROM programs WHERE id = ?", this.Id)
-
-	return err
-}
-
-func (this ProgramInfo) GetScreenName() string {
-
-	name, _ := GetUserScreenName(this.Id)
+	name, _ := GetUserName(this.UserID)
 
 	return name
 }
 
 type RawProgram struct {
-	Id          string
-	Created     string
-	Modified    string
+	ID          string
 	Title       string
-	User        string
-	UserId      string
+	UserID      string
 	Thumbnail   string
 	Description string
 	Startax     string
@@ -204,11 +132,9 @@ type RawProgram struct {
 }
 
 const (
-	ProgramId uint = 1 << iota
-	ProgramCreated
-	ProgramModified
+	ProgramID uint = 1 << iota
 	ProgramTitle
-	ProgramUser
+	ProgramUserID
 	ProgramThumbnail
 	ProgramDescription
 	ProgramStartax
@@ -220,28 +146,16 @@ const (
 
 func (this *RawProgram) Validate(flag uint) error {
 
-	if (flag & ProgramId) != 0 {
+	if (flag & ProgramID) != 0 {
 
-		programId, err := strconv.Atoi(this.Id)
+		programID, err := strconv.Atoi(this.ID)
 		if err != nil {
 			return errors.New("プログラムIDが不正です。")
 		}
 
-		if programId < 0 {
+		if programID < 0 {
 			return errors.New("プログラムIDが不正です。")
 		}
-
-	}
-
-	if (flag & ProgramCreated) != 0 {
-
-		// TODO: implement
-
-	}
-
-	if (flag & ProgramModified) != 0 {
-
-		// TODO: implement
 
 	}
 
@@ -253,7 +167,7 @@ func (this *RawProgram) Validate(flag uint) error {
 
 	}
 
-	if (flag & ProgramUser) != 0 {
+	if (flag & ProgramUserID) != 0 {
 
 		// TOO: implement
 
@@ -267,7 +181,7 @@ func (this *RawProgram) Validate(flag uint) error {
 
 	if (flag & ProgramDescription) != 0 {
 
-		if len(this.Description) <= 0 {
+		if len(this.Description) <= 0 || len(this.Description) > 500 {
 			return errors.New("説明文の文字数が範囲外です。")
 		}
 
@@ -292,23 +206,24 @@ func (this *RawProgram) Validate(flag uint) error {
 			return errors.New("ステップ上限数が正常な値ではありません。")
 		}
 
-		if 0 <= steps && steps <= 30000 { } else {
+		if 0 <= steps && steps <= 30000 {
+		} else {
 			return errors.New("ステップ上限数が範囲外です。")
 		}
 	}
 
 	if (flag & ProgramSourcecode) != 0 {
-	
+
 		// TODO: implement
 
 	}
 
 	if (flag & ProgramRuntime) != 0 {
 		switch this.Runtime {
-			case "HSP3Dish":
-			case "HGIMG4":
-			default:
-				return errors.New("ランタイム名が不正です。")
+		case "HSP3Dish":
+		case "HGIMG4":
+		default:
+			return errors.New("ランタイム名が不正です。")
 		}
 	}
 
@@ -320,12 +235,52 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 	program := NewProgram()
 	oldProgram := NewProgram()
 
-	programInfo, err := this.ToProgramInfo(flag)
-	if err != nil {
-		return program, err
+	if (flag & ProgramID) != 0 {
+
+		programId, err := strconv.Atoi(this.ID)
+		if err != nil {
+			return program, err
+		}
+
+		program.ID = programId
+
 	}
 
-	program.ProgramInfo = &programInfo
+	if (flag & ProgramTitle) != 0 {
+
+		program.Title = this.Title
+
+	}
+
+	if (flag & ProgramUserID) != 0 {
+
+		userId, err := strconv.Atoi(this.UserID)
+		if err != nil {
+			return program, err
+		}
+		program.UserID = userId
+
+	}
+
+	if (flag & ProgramDescription) != 0 {
+
+		program.Description = this.Description
+
+	}
+
+	if (flag & ProgramSteps) != 0 {
+
+		steps, err := strconv.Atoi(this.Steps)
+		if err != nil {
+			return program, err
+		}
+
+		program.Steps = steps
+	}
+
+	if (flag & ProgramRuntime) != 0 {
+		program.Runtime = this.Runtime
+	}
 
 	if (flag & ProgramStartax) != 0 {
 
@@ -335,22 +290,22 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		if len(data) == 0 {
-			if program.Id == 0 {
+			if program.ID == 0 {
 				return program, errors.New("Startaxファイルの内容が空です。")
 			}
 
-			if oldProgram.Id == 0 {
-				err = oldProgram.Load(program.Id)
+			if oldProgram.ID == 0 {
+				err = oldProgram.Load(program.ID)
 
 				if err != nil {
 					return program, errors.New("内部エラーが発生しました。")
 				}
 			}
 
-			data = oldProgram.Startax
+			data = oldProgram.Startax.Data
 		}
 
-		program.Startax = data
+		program.Startax.Data = data
 
 	}
 
@@ -371,28 +326,42 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 			var data []byte
 
-			if pair.Value == "PASS" {
+			switch pair.Value {
 
-				if oldProgram.Id == 0 {
-					err = oldProgram.Load(program.Id)
+			case "PASS":
+				if oldProgram.ID == 0 {
+					err = oldProgram.Load(program.ID)
 
 					if err != nil {
 						return program, errors.New("内部エラーが発生しました。")
 					}
 				}
 
-				var file File
+				att, err := oldProgram.FindAttachment(pair.Name)
+				if err != nil {
+					return program, errors.New("内部エラーが発生しました。")
+				}
 
-				for _, file = range oldProgram.Attachments.Files {
-					if pair.Name == file.Name {
-						break
+				program.Attachments = append(program.Attachments, *att)
+
+			case "DELETE":
+
+				if oldProgram.ID == 0 {
+					err = oldProgram.Load(program.ID)
+
+					if err != nil {
+						return program, errors.New("内部エラーが発生しました。")
 					}
 				}
 
-				program.Attachments.Files = append(program.Attachments.Files, file)
+				att, err := oldProgram.FindAttachment(pair.Name)
+				if err != nil {
+					return program, errors.New("内部エラーが発生しました。")
+				}
 
-			} else if pair.Value == "DELETE" {
-			} else {
+				DB.Delete(att)
+
+			default:
 
 				data, err = base64.StdEncoding.DecodeString(pair.Value)
 
@@ -400,7 +369,7 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 					return program, err
 				}
 
-				program.Attachments.Files = append(program.Attachments.Files, File{
+				program.Attachments = append(program.Attachments, Attachment{
 					Name: pair.Name,
 					Data: data,
 				})
@@ -418,94 +387,28 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		if len(data) == 0 {
-			if program.Id == 0 {
+			if program.ID == 0 {
 				return program, errors.New("サムネイルの内容が空です。")
 			}
 
-			if oldProgram.Id == 0 {
-				err = oldProgram.Load(program.Id)
+			if oldProgram.ID == 0 {
+				err = oldProgram.Load(program.ID)
 
 				if err != nil {
 					return program, errors.New("内部エラーが発生しました。")
 				}
 			}
 
-			data = oldProgram.Thumbnail
+			data = oldProgram.Thumbnail.Data
 		}
 
-		program.Thumbnail = data
+		program.Thumbnail.Data = data
 	}
 
 	if (flag & ProgramSourcecode) != 0 {
 
 		program.Sourcecode = this.Sourcecode
 
-	}
-
-	return program, nil
-}
-
-func (this *RawProgram) ToProgramInfo(flag uint) (ProgramInfo, error) {
-
-	var program ProgramInfo
-
-	if (flag & ProgramId) != 0 {
-
-		programId, err := strconv.Atoi(this.Id)
-		if err != nil {
-			return program, err
-		}
-
-		program.Id = programId
-
-	}
-
-	if (flag & ProgramCreated) != 0 {
-
-		// TODO: implement
-
-	}
-
-	if (flag & ProgramModified) != 0 {
-
-		// TODO: implement
-
-	}
-
-	if (flag & ProgramTitle) != 0 {
-
-		program.Title = this.Title
-
-	}
-
-	if (flag & ProgramUser) != 0 {
-
-		userId, err := strconv.Atoi(this.User)
-		if err != nil {
-			return program, err
-		}
-		program.User = userId
-
-	}
-
-	if (flag & ProgramDescription) != 0 {
-
-		program.Description = this.Description
-
-	}
-
-	if (flag & ProgramSteps) != 0 {
-		
-		steps, err := strconv.Atoi(this.Steps)
-		if err != nil {
-			return program, err
-		}
-
-		program.Steps = steps
-	}
-
-	if (flag & ProgramRuntime) != 0 {
-		program.Runtime = this.Runtime
 	}
 
 	return program, nil
@@ -520,8 +423,8 @@ const (
 	ProgramColDescription
 	ProgramColStartax
 	ProgramColAttachments
-	ProgramColCreated
-	ProgramColModified
+	ProgramColCreatedAt
+	ProgramColUpdatedAt
 	ProgramColGood
 	ProgramColPlay
 	ProgramColThumbnail
@@ -544,10 +447,10 @@ func (this *ProgramColumn) String() string {
 		return "startax"
 	case ProgramColAttachments:
 		return "attachments"
-	case ProgramColCreated:
-		return "created"
-	case ProgramColModified:
-		return "modified"
+	case ProgramColCreatedAt:
+		return "created_at"
+	case ProgramColUpdatedAt:
+		return "updated_at"
 	case ProgramColGood:
 		return "good"
 	case ProgramColPlay:
@@ -565,7 +468,7 @@ func (this *ProgramColumn) String() string {
 	return ""
 }
 
-func GetProgramRankingForDay(out *[]ProgramInfo, from int, number int) (int, error) {
+func GetProgramRankingForDay(out *[]Program, from int, number int) (int, error) {
 
 	now := time.Now()
 	todayBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
@@ -573,7 +476,7 @@ func GetProgramRankingForDay(out *[]ProgramInfo, from int, number int) (int, err
 	return getProgramRankingSince(todayBegin, out, from, number)
 }
 
-func GetProgramRankingForWeek(out *[]ProgramInfo, from int, number int) (int, error) {
+func GetProgramRankingForWeek(out *[]Program, from int, number int) (int, error) {
 
 	now := time.Now()
 	thisWeekBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -7)
@@ -581,7 +484,7 @@ func GetProgramRankingForWeek(out *[]ProgramInfo, from int, number int) (int, er
 	return getProgramRankingSince(thisWeekBegin, out, from, number)
 }
 
-func GetProgramRankingForMonth(out *[]ProgramInfo, from int, number int) (int, error) {
+func GetProgramRankingForMonth(out *[]Program, from int, number int) (int, error) {
 
 	now := time.Now()
 	thisMonthBegin := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, -1, 0)
@@ -589,59 +492,35 @@ func GetProgramRankingForMonth(out *[]ProgramInfo, from int, number int) (int, e
 	return getProgramRankingSince(thisMonthBegin, out, from, number)
 }
 
-func getProgramRankingSince(since time.Time, out *[]ProgramInfo, from int, number int) (int, error) {
+func getProgramRankingSince(since time.Time, out *[]Program, from int, number int) (int, error) {
+	var err error
 
 	// キャパシティチェック
 	if cap(*out) < number {
-		*out = make([]ProgramInfo, number)
+		*out = make([]Program, number)
 	}
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM programs WHERE created >= ?", since.Format("2006-1-2")).Scan(&rowCount)
-
+	err = DB.Model(Program{}).Where("created_at >= ?", since.Format("2006-1-2")).Count(&rowCount).Error
 	if err != nil {
 		return 0, err
 	}
 
-	rows, err := DB.Query("SELECT id FROM programs WHERE created >= ? ORDER BY good DESC, play DESC LIMIT ?, ?", since.Format("2006-1-2"), from, number)
-
-	if err != nil {
-		return rowCount, err
-	}
-	defer rows.Close()
-
-	i := 0
-	for rows.Next() {
-		var id int
-		err := rows.Scan(&id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		i++
-	}
-
-	return rowCount, nil
-
+	err = DB.Model(Program{}).Where("created_at >= ?", since.Format("2006-1-2")).Order("good desc, play desc").Limit(from).Offset(number).Find(out).Error
+	return rowCount, err
 }
 
-func GetProgramRankingForAllTime(out *[]ProgramInfo, from int, number int) (int, error) {
+func GetProgramRankingForAllTime(out *[]Program, from int, number int) (int, error) {
 
 	return GetProgramListBy(ProgramColGood, out, true, from, number)
 }
 
-func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, from int, number int) (int, error) {
+func GetProgramListBy(keyColumn ProgramColumn, out *[]Program, isDesc bool, from int, number int) (int, error) {
+	var err error
 
 	// キャパシティチェック
 	if cap(*out) < number {
-		*out = make([]ProgramInfo, number)
+		*out = make([]Program, number)
 	}
 
 	// 並び順
@@ -653,39 +532,23 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]ProgramInfo, isDesc bool, 
 		order = "ASC"
 	}
 
-	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", from, number)
+	var rowCount int
+	err = DB.Table("programs").Count(&rowCount).Error
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
 
-	// outへ格納
-	i := 0
-	for rows.Next() {
-		var id int
-		err := rows.Scan(&id)
+	// クエリを発行
+	err = DB.Model(Program{}).Order(keyColumn.String() + " " + order).Limit(number).Offset(from).Find(out).Error
 
-		if err != nil {
-			return i, err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return i, err
-		}
-
-		i++
-	}
-
-	return i, nil
+	return rowCount, err
 }
 
-func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramColumn, isDesc bool, number int, offset int) (int, error) {
+func GetProgramListByQuery(out *[]Program, query string, keyColumn ProgramColumn, isDesc bool, number int, offset int) (int, error) {
+	var err error
 
 	if cap(*out) < number {
-		*out = make([]ProgramInfo, number)
+		*out = make([]Program, number)
 	}
 
 	// 並び順
@@ -699,48 +562,24 @@ func GetProgramListByQuery(out *[]ProgramInfo, query string, keyColumn ProgramCo
 
 	queryMod := "%" + query + "%"
 
-	rowCount := 0
-
-	err := DB.QueryRow("SELECT count(*) FROM programs WHERE title LIKE ?", queryMod).Scan(&rowCount)
-
+	var rowCount int
+	err = DB.Model(Program{}).Where("title LIKE ?", queryMod).Count(&rowCount).Error
 	if err != nil {
-		return rowCount, err
+		return 0, err
 	}
 
 	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE ? ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", queryMod, offset, number)
-	if err != nil {
-		return rowCount, err
-	}
-	defer rows.Close()
+	err = DB.Model(Program{}).Where("title LIKE ?", queryMod).Order(keyColumn.String() + " " + order).Limit(number).Offset(offset).Find(out).Error
 
-	// outへ格納
-	i := 0
-	for rows.Next() {
-		var id int
-		err := rows.Scan(&id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		i++
-	}
-
-	return rowCount, nil
+	return int(rowCount), err
 
 }
 
-func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, user int, isDesc bool, from int, number int) (int, error) {
+func GetProgramListByUser(keyColumn ProgramColumn, out *[]Program, user int, isDesc bool, from int, number int) (int, error) {
+	var err error
 
 	if cap(*out) < number {
-		*out = make([]ProgramInfo, number)
+		*out = make([]Program, number)
 	}
 
 	// 並び順
@@ -753,120 +592,60 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]ProgramInfo, user int,
 	}
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM programs WHERE user = ?", user).Scan(&rowCount)
-
+	err = DB.Model(Program{}).Where("user_id = ?", user).Count(&rowCount).Error
 	if err != nil {
 		return 0, err
 	}
 
-	// クエリを発行
-	rows, err := DB.Query("SELECT id FROM programs WHERE user = ? ORDER BY "+keyColumn.String()+" "+order+" LIMIT ?, ?", user, from, number)
-	if err != nil {
-		return rowCount, err
-	}
-	defer rows.Close()
+	err = DB.Model(Program{}).Where("user_id = ?", user).Order(keyColumn.String() + " " + order).Limit(number).Offset(from).Find(out).Error
 
-	// outへ格納
-	i := 0
-	for rows.Next() {
-		var id int
-		err := rows.Scan(&id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		i++
-	}
-
-	return rowCount, nil
+	return rowCount, err
 }
 
-func GetProgramListRelatedTo(out *[]ProgramInfo, title string, number int) error {
+func GetProgramListRelatedTo(out *[]Program, title string, number int) error {
+	var err error
 
 	if cap(*out) < number {
-		*out = make([]ProgramInfo, number)
+		*out = make([]Program, number)
 	}
 
 	token := ngram.NewTokenize(3, title)
 
-	var maxCount int
-	var maxQuery string
-	var err error
-	for _, t := range token.Tokens() {
-		var result int
-		err = DB.QueryRow("SELECT count(id) FROM programs WHERE title LIKE `%"+t.String()+"%` AND title <> ?", title).Scan(&result)
-
-		if err != nil {
-			continue
+	var condition string
+	for i, t := range token.Tokens() {
+		if i != 0 {
+			condition += " OR "
 		}
 
-		if result > maxCount {
-			maxCount = result
-			maxQuery = t.String()
-		}
+		condition += "title LIKE `%" + t.String() + "%`"
 	}
 
-	if maxCount == 0 {
+	var rowCount int
+	err = DB.Model(Program{}).Where("("+condition+") AND title <> ?", title).Count(&rowCount).Error
+
+	if (err != nil) || (rowCount == 0) {
 		return errors.New("関連プログラムが見つかりませんでした。")
 	}
 
-	rows, err := DB.Query("SELECT id FROM programs WHERE title LIKE `%"+maxQuery+"%` AND title <> ? LIMIT ?", title, number)
-
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	i := 0
-	for rows.Next() {
-
-		var id int
-		err = rows.Scan(&id)
-
-		if err != nil {
-			return err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return err
-		}
-
-		if (*out)[i].Title == title {
-			(*out)[i] = ProgramInfo{}
-		}
-	}
-
-	return nil
+	err = DB.Model(Program{}).Where("("+condition+") AND title <> ?", title).Find(out).Error
+	return err
 }
 
 func ExistsProgram(id int) bool {
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM programs WHERE id = ?", id).Scan(&rowCount)
+	err := DB.Model(Program{}).Where("id = ?", id).Count(&rowCount).Error
 
 	if err != nil {
 		return false
 	}
 
-	if rowCount < 1 {
-		return false
-	}
-
-	return true
+	return rowCount > 0
 }
 
 func PlayProgram(id int) error {
 
-	_, err := DB.Exec("UPDATE programs SET play = play + 1 WHERE id = ?", id)
+	err := DB.Model(Program{}).Where("id = ?", id).Update("play", gorm.Expr("play + 1")).Error
 
 	return err
 }

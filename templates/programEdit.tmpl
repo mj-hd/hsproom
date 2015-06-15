@@ -61,13 +61,13 @@
 			<div class="panel-heading">
 				<div class="row with_accessory">
 					<h2 class="col-md-6">プログラムの編集</h2>
-					<div class="col-md-6 accessory_frame"><a href="/source/edit/?p={{ .Program.Id }}" class="accessory btn btn-default btn-flat pull-right">または ソースコードを編集する <i class="mdi-navigation-arrow-forward"></i></a></div>
+					<div class="col-md-6 accessory_frame"><a href="/source/edit/?p={{ .Program.ID }}" class="accessory btn btn-default btn-flat pull-right">または ソースコードを編集する <i class="mdi-navigation-arrow-forward"></i></a></div>
 				</div>
 			</div>
 			<div class="panel-body">
 				<fieldset>
 	
-					<input type="hidden" name="id" value="{{ .Program.Id }}" />
+					<input type="hidden" name="id" value="{{ .Program.ID }}" />
 					
 					<div class="form-group row">
 						<label for="title" class="col-md-3 form-label text-right">1. タイトル</label>
@@ -363,7 +363,7 @@ $(document).ready(function() {
 	});
 
 	$("#thumb_box .upload_box_nofile").hide();
-	$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.Id }}").show();
+	$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.ID }}").show();
 
 	$("#startax_box .upload_box_status").text("startax");
 
@@ -391,7 +391,7 @@ $(document).ready(function() {
 
 	$("#description").trigger("propertychange");
 
-	if ({{ .User }} == 0) {
+	if ({{ .UserID }} == 0) {
 		document.location.href = "/user/login/";
 	}
 

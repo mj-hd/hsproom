@@ -1,19 +1,20 @@
 package controllers
 
 import (
+	"net/http"
+	"os"
+	"strconv"
+
 	"../config"
 	"../models"
 	"../templates"
 	"../utils/log"
-	"net/http"
-	"os"
-	"strconv"
 )
 
 type userViewMember struct {
 	*templates.DefaultMember
 	UserInfo     *models.User
-	UserPrograms *[]models.ProgramInfo
+	UserPrograms *[]models.Program
 }
 
 func userViewHandler(document http.ResponseWriter, request *http.Request) {
@@ -44,9 +45,9 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
-	_, err = models.GetProgramListByUser(models.ProgramColCreated, &programs, user.Id, true, 0, 4)
+	_, err = models.GetProgramListByUser(models.ProgramColCreatedAt, &programs, user.ID, true, 0, 4)
 
 	if err != nil {
 		log.Fatal(os.Stdout, err)
@@ -57,8 +58,8 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, userViewMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: user.Name + " のプロフィール - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  user.Name + " のプロフィール - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		UserInfo:     &user,
 		UserPrograms: &programs,
@@ -80,10 +81,9 @@ func userLoginHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "userLogin.tmpl"
 
-
 	err := tmpl.Render(document, templates.DefaultMember{
-		Title: "ログイン",
-		User: getSessionUser(request),
+		Title:  "ログイン",
+		UserID: getSessionUser(request),
 	})
 
 	if err != nil {
@@ -102,8 +102,8 @@ func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 	removeSession(document, request)
 
 	err := tmpl.Render(document, templates.DefaultMember{
-		Title: "ログアウト中です...",
-		User:  0,
+		Title:  "ログアウト中です...",
+		UserID: 0,
 	})
 	if err != nil {
 		log.Fatal(os.Stdout, err)
@@ -118,7 +118,7 @@ func userEditHandler(document http.ResponseWriter, request *http.Request) {
 
 type userProgramsMember struct {
 	*templates.DefaultMember
-	Programs     []models.ProgramInfo
+	Programs     []models.Program
 	ProgramCount int
 	CurPage      int
 	MaxPage      int
@@ -147,13 +147,13 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	var sortKey models.ProgramColumn
 	switch sort {
 	case "c":
-		sortKey = models.ProgramColCreated
+		sortKey = models.ProgramColCreatedAt
 	case "g":
 		sortKey = models.ProgramColGood
 	case "n":
 		sortKey = models.ProgramColTitle
 	default:
-		sortKey = models.ProgramColCreated
+		sortKey = models.ProgramColCreatedAt
 	}
 
 	page, err := strconv.Atoi(request.URL.Query().Get("p"))
@@ -168,7 +168,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 	i, err := models.GetProgramListByUser(sortKey, &programs, userId, true, page*10, 10)
 
 	if err != nil {
@@ -194,8 +194,8 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, userProgramsMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: userName + " - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  userName + " - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Programs:     programs,
 		ProgramCount: i,
@@ -240,8 +240,8 @@ func userSettingsHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, userSettingsMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "管理画面 - " + config.SiteTitle,
-			User:  userId,
+			Title:  "管理画面 - " + config.SiteTitle,
+			UserID: userId,
 		},
 		UserInfo: user,
 	})

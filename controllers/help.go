@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"html/template"
 	"net/http"
 	"os"
-	"html/template"
 
 	"../config"
 	"../templates"
@@ -23,8 +23,8 @@ func helpHandler(document http.ResponseWriter, request *http.Request) {
 
 	err := tmpl.Render(document, helpMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "ヘルプ - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  "ヘルプ - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 	})
 

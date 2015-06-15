@@ -178,8 +178,8 @@ func flashHandler(document http.ResponseWriter, request *http.Request) {
 
 	tmpl.Render(document, flashMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: message,
-			User:  getSessionUser(request),
+			Title:  message,
+			UserID: getSessionUser(request),
 		},
 		Messages: flashes,
 		Referer:  request.Referer(),

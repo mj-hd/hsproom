@@ -51,18 +51,18 @@
 				{{ else }}
 				<div class="program_list_item">
 					<div class="program_picture thumbnail">
-						<img src="/api/program/thumbnail/?p={{ .Id }}" />
+						<img src="/api/program/thumbnail/?p={{ .ID }}" />
 						<br />
 					</div>
 					<div class="program_content">
 						<div class="program_item_heading">
-							<span class="h2"><a href="/program/view/?p={{ .Id }}">{{ .Title }}</a></span>
-							<span class="small">by <a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
+							<span class="h2"><a href="/program/view/?p={{ .ID }}">{{ .Title }}</a></span>
+							<span class="small">by <a href="/user/view/?u={{ .UserID }}">{{ .GetUserName }}</a></span>
 						</div>
 						<div class="program_item_accessory">
 							<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 
 							<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
-							<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+							<div class="date text-right">{{ .CreatedAt.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 
 						</div>
 						<p class="program_item_text">{{ markdown (subString .Description 0 150) }}</p>

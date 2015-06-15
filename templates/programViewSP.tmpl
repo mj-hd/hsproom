@@ -182,17 +182,17 @@
 			<a href="javascript:history.back();"><i class="mdi-navigation-arrow-back"></i></a>
 		</li>
 		<li class="col-xs-10 nav_center">
-			{{ subString .ProgramInfo.Title 0 20 }}
+			{{ subString .Program.Title 0 20 }}
 		</li>
 	</ul>
 
 </nav>
 
 <div class="information">
-	<small>by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a>, at {{ .ProgramInfo.Created.Format "2006年1月_2日" }}</small>
+	<small>by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日" }}</small>
 </div>
 <div class="indicators">
-	<i class="mdi-av-play-circle-outline"></i>{{ .ProgramInfo.Play }}
+	<i class="mdi-av-play-circle-outline"></i>{{ .Program.Play }}
 	<a href="javascript:good();" class="btn btn-default btn-raised" ><i class="mdi-social-mood"></i> <span id="good"></span></a> 
 </div>
 
@@ -249,7 +249,7 @@
 </div>
 
 <div class="description markdown">
-	{{ markdown .ProgramInfo.Description }}
+	{{ markdown .Program.Description }}
 	<br />
 	<div class="share_box">
 		<a href="javascript:openTwitter();" class="btn btn-default btn-raised">Twitterでコメントする</a>
@@ -263,9 +263,9 @@
 				<img id="profile_icon" class="circle" alt="icon">
 			</div>
 			<div class="row-content">
-				<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a></h4>
+				<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a></h4>
 				<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
-				<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.User }}">詳しく...</a>
+				<a class="user_detail_link" href="/user/view/?u={{ .Program.UserID }}">詳しく...</a>
 			</div>
 		</div>
 	</div>
@@ -280,7 +280,7 @@
 			dataType: "json",
 			cache: false,
 			data: {
-				"u": "{{ .ProgramInfo.User }}"
+				"u": "{{ .Program.UserID }}"
 			},
 		}).success(function (data, status) {
 			$("#profile").text(data.Profile.substring(0, 50) + "...");
@@ -296,7 +296,7 @@
 			dataType: "json",
 			url: "/api/program/good/count/",
 			data: {
-				"p": {{ .ProgramInfo.Id }}
+				"p": {{ .Program.ID }}
 			}
 		}).success(function (data) {
 			$("#good").text(data.GoodCount);
@@ -311,7 +311,7 @@
 			url:  "/api/program/good/",
 			dataType: "json",
 			data: {
-				"p": "{{ .ProgramInfo.Id }}"
+				"p": "{{ .Program.ID }}"
 			}
 		}).success(function(data) {
 			$(".good_button").attr("href", "#").addClass("disabled");
@@ -327,8 +327,8 @@
 
 	function openTwitter() {
 
-		var title = encodeURIComponent("{{ .ProgramInfo.Title }}");
-		var hashtags = encodeURIComponent(("hsproom #"+"{{ .ProgramInfo.Title }}").replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
+		var title = encodeURIComponent("{{ .Program.Title }}");
+		var hashtags = encodeURIComponent(("hsproom #"+"{{ .Program.Title }}").replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
 		var url   = encodeURIComponent(location.href);
 
 		// ユーザ名の取得は後で統一も要検討
@@ -337,7 +337,7 @@
 			type: "GET",
 			dataType: "json",
 			data: {
-				"u": "{{ .ProgramInfo.User }}"
+				"u": "{{ .Program.UserID }}"
 			}
 		}).success(function (data, status) {
 			var user = data.ScreenName;
@@ -423,15 +423,15 @@
 	
 	});
 
-	var pid = {{ .ProgramInfo.Id }};
-	var steps = "{{ .ProgramInfo.Steps }}";
+	var pid = {{ .Program.ID }};
+	var steps = "{{ .Program.Steps }}";
 
-	{{ if eq .ProgramInfo.Runtime "HSP3Dish" }}
+	{{ if eq .Program.Runtime "HSP3Dish" }}
 
 		{{ plugin "loadProgramHSP3Dish" }}
 
 	{{ else }}
-		{{ if eq .ProgramInfo.Runtime "HGIMG4" }}
+		{{ if eq .Program.Runtime "HGIMG4" }}
 			{{ plugin "loadProgramHGIMG4"}}
 		{{ else }}
 			$("#errors").append("ランタイムの読み込みに失敗しました。管理人へ問い合わせてください。").show();

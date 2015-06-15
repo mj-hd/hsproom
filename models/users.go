@@ -1,68 +1,55 @@
 package models
 
+import "time"
+
+func initUsers() {
+	DB.AutoMigrate(&User{})
+}
+
 type User struct {
-	Id       int
-	Name     string
-	ScreenName string
-	Profile  string
-	IconURL  string
-	Website  string
-	Location string
+	ID         int        `gorm:"primary_key"`
+	CreatedAt  time.Time  ``
+	UpdatedAt  time.Time  ``
+	DeletedAt  *time.Time ``
+	Name       string     `sql:"size:50;not null;"`
+	ScreenName string     `sql:"size:50;not null;"`
+	Profile    string     `sql:"size:300;default:''"`
+	IconURL    string     `sql:"size:140;default:''"`
+	Website    string     `sql:"size:300;default:''"`
+	Location   string     `sql:"size:50;default:''"`
 }
 
 func (this *User) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, website, location FROM users WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Website, &this.Location)
+	err := DB.First(this, id).Error
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (this *User) LoadFromScreenName(screenname string) error {
-	row := DB.QueryRow("SELECT id, name, screenname, profile, icon_url, website, location FROM users WHERE screenname = ?", screenname)
-	err := row.Scan(&this.Id, &this.Name, &this.ScreenName, &this.Profile, &this.IconURL, &this.Website, &this.Location)
 
-	if err != nil {
-		return err
-	}
+	err := DB.Where("screen_name = ?", screenname).First(this).Error
 
-	return nil
+	return err
 }
 
 func (this *User) Update() error {
 
-	_, err := DB.Exec("UPDATE users SET name = ?, screenname = ?, profile = ?, icon_url = ?, website = ?, location = ? WHERE id = ?",
-		this.Name, this.ScreenName, this.Profile, this.IconURL, this.Website, this.Location, this.Id)
+	err := DB.Save(this).Error
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (this *User) Create() (int, error) {
 
-	result, err := DB.Exec("INSERT INTO users ( name, screenname, profile, icon_url, website, location) VALUES ( ?, ?, ?, ?, ?, ? )", this.Name, this.ScreenName, this.Profile, this.IconURL, this.Website, this.Location)
-	if err != nil {
-		return -1, err
-	}
+	err := DB.Create(this).Error
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return -1, err
-	}
-
-	return int(id), nil
+	return this.ID, err
 }
 
 func (this *User) Remove() error {
 
-	_, err := DB.Exec("DELETE FROM users WHERE id = ?", this.Id)
+	err := DB.Delete(this).Error
 
 	return err
 }
@@ -70,7 +57,7 @@ func (this *User) Remove() error {
 func ExistsUserScreenName(screenname string) bool {
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM users WHERE screenname = ?", screenname).Scan(&rowCount)
+	err := DB.Model(User{}).Where("screen_name = ?", screenname).Count(&rowCount).Error
 
 	if err != nil {
 		return false
@@ -86,7 +73,7 @@ func ExistsUserScreenName(screenname string) bool {
 func ExistsUser(id int) bool {
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM users WHERE id = ?", id).Scan(&rowCount)
+	err := DB.Model(User{}).Where("id = ?", id).Count(&rowCount).Error
 
 	if err != nil {
 		return false
@@ -103,40 +90,25 @@ func GetUserName(id int) (string, error) {
 
 	var name string
 
-	row := DB.QueryRow("SELECT name FROM users WHERE id = ?", id)
-	err := row.Scan(&name)
+	err := DB.Model(User{}).Where("id = ?", id).Select("name").Scan(&name).Error
 
-	if err != nil {
-		return "", err
-	}
-
-	return name, nil
+	return name, err
 }
 
 func GetUserScreenName(id int) (string, error) {
 
 	var name string
 
-	row := DB.QueryRow("SELECT screenname FROM users WHERE id = ?", id)
-	err := row.Scan(&name)
+	err := DB.Model(User{}).Where("id = ?", id).Select("screen_name").Scan(&name).Error
 
-	if err != nil {
-		return "", err
-	}
-
-	return name, nil
+	return name, err
 }
 
 func GetUserIdFromScreenName(screenname string) (int, error) {
 
 	var id int
 
-	row := DB.QueryRow("SELECT id FROM users WHERE screenname = ?", screenname)
-	err := row.Scan(&id)
+	err := DB.Model(User{}).Where("screen_name = ?", screenname).Select("id").Scan(&id).Error
 
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
+	return id, err
 }

@@ -83,14 +83,14 @@
 				<input id="header_search" type="text" class="form-control col-lg-8" placeholder="プログラム名を検索...">
 			</form>
 			<ul class="nav navbar-nav navbar-right">
-				{{ if eq .User 0 }}
+				{{ if eq .UserID 0 }}
 					<li id="login"><a href="/user/login/">ログイン</a></li>
 				{{ else }}
-				<li><img id="header_user_icon" class="img-circle" width=60 alt="{{ .User }}" /></li>
+				<li><img id="header_user_icon" class="img-circle" width=60 alt="{{ .UserID }}" /></li>
 				<li id="header_user" class="dropdown">
 					<a id="header_username" href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">ユーザ名 <b class="caret"></b></a>
 					<ul class="dropdown-menu">
-						<li><a href="/user/view/?u={{ .User }}"><i class="glyphicon mdi-action-account-child"></i> プロフィール</a></li>
+						<li><a href="/user/view/?u={{ .UserID }}"><i class="glyphicon mdi-action-account-child"></i> プロフィール</a></li>
 						<li><a href="/user/settings/"><i class="glyphicon mdi-action-settings"></i> 管理画面</a></li>
 						<li class="divider"></li>
 						<li><a href="/user/logout/">ログアウト</a></li>
@@ -194,13 +194,13 @@
 			$("#header_top").addClass("active");
 		}
 
-		if ("{{ .User }}" != "0") {
+		if ("{{ .UserID }}" != "0") {
 			$.ajax({
 				type: "GET",
 				url: "/api/user/info/",
 				dataType: "json",
 				data: {
-					"u": "{{ .User }}"
+					"u": "{{ .UserID }}"
 				}
 			}).success(function(data, status) {
 				$("#header_username").text(data.Name).append(' <b class="caret"></b>');

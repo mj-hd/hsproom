@@ -16,8 +16,8 @@ import (
 
 type programMember struct {
 	*templates.DefaultMember
-	GoodPrograms   []models.ProgramInfo
-	RecentPrograms []models.ProgramInfo
+	GoodPrograms   []models.Program
+	RecentPrograms []models.Program
 }
 
 func programHandler(document http.ResponseWriter, request *http.Request) {
@@ -26,8 +26,8 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "program.tmpl"
 
-	var goodPrograms []models.ProgramInfo
-	var recentPrograms []models.ProgramInfo
+	var goodPrograms []models.Program
+	var recentPrograms []models.Program
 
 	i, err := models.GetProgramRankingForAllTime(&goodPrograms, 0, 4)
 
@@ -40,7 +40,7 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	_, err = models.GetProgramListBy(models.ProgramColCreated, &recentPrograms, true, 0, 4)
+	_, err = models.GetProgramListBy(models.ProgramColCreatedAt, &recentPrograms, true, 0, 4)
 
 	if err != nil {
 
@@ -53,8 +53,8 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, programMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		GoodPrograms:   goodPrograms,
 		RecentPrograms: recentPrograms,
@@ -71,7 +71,7 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 
 type programListMember struct {
 	*templates.DefaultMember
-	Programs []models.ProgramInfo
+	Programs []models.Program
 }
 
 func programListHandler(document http.ResponseWriter, request *http.Request) {
@@ -85,7 +85,7 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Template = "programList.tmpl"
 
 	// プログラムの一覧を取得
-	var programs []models.ProgramInfo
+	var programs []models.Program
 	var err error
 	isDesc := (order == "d")
 
@@ -93,11 +93,11 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 	var keyColumn models.ProgramColumn
 	switch sortKey {
 	case "c": // Created
-		keyColumn = models.ProgramColCreated
+		keyColumn = models.ProgramColCreatedAt
 	case "g": // Good
 		keyColumn = models.ProgramColGood
 	default:
-		keyColumn = models.ProgramColCreated
+		keyColumn = models.ProgramColCreatedAt
 	}
 
 	_, err = models.GetProgramListBy(keyColumn, &programs, isDesc, 0, 10)
@@ -110,8 +110,8 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, programListMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "プログラム一覧",
-			User:  getSessionUser(request),
+			Title:  "プログラム一覧",
+			UserID: getSessionUser(request),
 		},
 		Programs: programs,
 	})
@@ -125,8 +125,8 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 
 type programViewMember struct {
 	*templates.DefaultMember
-	ProgramInfo     models.ProgramInfo
-	RelatedPrograms []models.ProgramInfo
+	Program         models.Program
+	RelatedPrograms []models.Program
 }
 
 func programViewHandler(document http.ResponseWriter, request *http.Request) {
@@ -134,13 +134,13 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 	var tmpl templates.Template
 
 	// スマホ
-	if	strings.Contains(request.UserAgent(), "iPod") ||
+	if strings.Contains(request.UserAgent(), "iPod") ||
 		strings.Contains(request.UserAgent(), "iPhone") ||
 		strings.Contains(request.UserAgent(), "Android") {
 
-		tmpl.Layout   = "empty.tmpl"
+		tmpl.Layout = "empty.tmpl"
 		tmpl.Template = "programViewSP.tmpl"
-		
+
 	} else {
 
 		tmpl.Layout = "default.tmpl"
@@ -163,7 +163,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 	}
 
 	// プログラムを取得
-	var program models.ProgramInfo
+	var program models.Program
 
 	err = program.Load(programId)
 	if err != nil {
@@ -176,7 +176,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = models.PlayProgram(program.Id)
+	err = models.PlayProgram(program.ID)
 
 	if err != nil {
 		log.Fatal(os.Stdout, err)
@@ -185,19 +185,19 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var related []models.ProgramInfo
+	var related []models.Program
 	err = models.GetProgramListRelatedTo(&related, program.Title, 10)
 
 	if err != nil {
-		related = make([]models.ProgramInfo, 0)
+		related = make([]models.Program, 0)
 	}
 
 	err = tmpl.Render(document, programViewMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: program.Title + " - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  program.Title + " - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
-		ProgramInfo:     program,
+		Program:         program,
 		RelatedPrograms: related,
 	})
 	if err != nil {
@@ -226,8 +226,8 @@ func programPostHandler(document http.ResponseWriter, request *http.Request) {
 
 	err := tmpl.Render(document, programPostMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "プログラムの投稿 - " + config.SiteTitle,
-			User:  user,
+			Title:  "プログラムの投稿 - " + config.SiteTitle,
+			UserID: user,
 		},
 	})
 	if err != nil {
@@ -282,7 +282,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if program.User != user {
+	if program.UserID != user {
 		log.DebugStr(os.Stdout, "権限のない編集画面へのアクセス")
 
 		showError(document, request, "プログラムの編集権限がありません。")
@@ -293,8 +293,8 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 	if program.Sourcecode != "" {
 		from := request.URL.Query().Get("f")
 
-		if (from != "source") {
-			http.Redirect(document, request, "/source/edit/?p="+strconv.Itoa(program.Id), 303)
+		if from != "source" {
+			http.Redirect(document, request, "/source/edit/?p="+strconv.Itoa(program.ID), 303)
 			return
 		}
 	}
@@ -302,8 +302,8 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 	// 表示
 	err = tmpl.Render(document, programEditMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: program.Title + " - " + config.SiteTitle,
-			User:  user,
+			Title:  program.Title + " - " + config.SiteTitle,
+			UserID: user,
 		},
 		Program: program,
 	})
@@ -326,8 +326,8 @@ func programCreateHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Template = "programCreate.tmpl"
 
 	err := tmpl.Render(document, &templates.DefaultMember{
-		Title: "新規プログラム - " + config.SiteTitle,
-		User:  getSessionUser(request),
+		Title:  "新規プログラム - " + config.SiteTitle,
+		UserID: getSessionUser(request),
 	})
 
 	if err != nil {
@@ -344,7 +344,7 @@ type programSearchMember struct {
 	Sort         string
 	CurPage      int
 	MaxPage      int
-	Programs     []models.ProgramInfo
+	Programs     []models.Program
 	ProgramCount int
 }
 
@@ -354,7 +354,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "programSearch.tmpl"
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 	var sortKey models.ProgramColumn
 
 	queryWord := bluemonday.UGCPolicy().Sanitize(request.URL.Query().Get("q"))
@@ -370,13 +370,13 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 
 	switch rawSortKey {
 	case "c":
-		sortKey = models.ProgramColCreated
+		sortKey = models.ProgramColCreatedAt
 	case "m":
-		sortKey = models.ProgramColModified
+		sortKey = models.ProgramColUpdatedAt
 	case "g":
 		sortKey = models.ProgramColGood
 	default:
-		sortKey = models.ProgramColCreated
+		sortKey = models.ProgramColCreatedAt
 	}
 
 	i, err := models.GetProgramListByQuery(&programs, queryWord, sortKey, true, 10, page*10)
@@ -399,8 +399,8 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 
 	err = tmpl.Render(document, programSearchMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "プログラムの検索 - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  "プログラムの検索 - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Query:        queryWord,
 		Sort:         rawSortKey,
@@ -419,7 +419,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 
 type programRankingMember struct {
 	*templates.DefaultMember
-	Programs     []models.ProgramInfo
+	Programs     []models.Program
 	CurPage      int
 	MaxPage      int
 	ProgramCount int
@@ -438,7 +438,7 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 		page = 0
 	}
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	i, err := models.GetProgramRankingForDay(&programs, page*10, 10)
 
@@ -456,8 +456,8 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 
 	err = tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "日間ランキング - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  "日間ランキング - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Programs:     programs,
 		CurPage:      page,
@@ -486,7 +486,7 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 		page = 0
 	}
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	i, err := models.GetProgramRankingForMonth(&programs, page*10, 10)
 
@@ -504,8 +504,8 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 
 	err = tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "月間ランキング - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  "月間ランキング - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Programs:     programs,
 		CurPage:      page,
@@ -535,7 +535,7 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 		page = 0
 	}
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	i, err := models.GetProgramRankingForWeek(&programs, page*10, 10)
 
@@ -553,8 +553,8 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 
 	err = tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "週間ランキング - " + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  "週間ランキング - " + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Programs:     programs,
 		CurPage:      page,
@@ -584,7 +584,7 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 		page = 0
 	}
 
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	i, err := models.GetProgramRankingForAllTime(&programs, page*10, 10)
 
@@ -602,8 +602,8 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 
 	err = tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
-			Title: "総合ランキング" + config.SiteTitle,
-			User:  getSessionUser(request),
+			Title:  "総合ランキング" + config.SiteTitle,
+			UserID: getSessionUser(request),
 		},
 		Programs:     programs,
 		CurPage:      page,

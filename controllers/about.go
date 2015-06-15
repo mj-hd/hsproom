@@ -16,8 +16,8 @@ func aboutHandler(document http.ResponseWriter, request *http.Request) {
 	tmpl.Template = "about.tmpl"
 
 	err := tmpl.Render(document, &templates.DefaultMember{
-		Title: "このサイトについて - " + config.SiteTitle,
-		User:  getSessionUser(request),
+		Title:  "このサイトについて - " + config.SiteTitle,
+		UserID: getSessionUser(request),
 	})
 
 	if err != nil {

@@ -1,162 +1,102 @@
 package models
 
+import (
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func initGoods() {
+	DB.AutoMigrate(&Good{})
+}
+
 type Good struct {
-	Id      int
-	User    int
-	Program int
+	ID        int `gorm:"primary_key"`
+	UserID    int `sql:"index"`
+	ProgramID int `sql:"index"`
 }
 
 func (this *Good) Load(id int) error {
 
-	row := DB.QueryRow("SELECT id, user, program FROM goods WHERE id = ?", id)
-	err := row.Scan(&this.Id, &this.User, &this.Program)
+	err := DB.Model(Good{}).First(this, id).Error
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (this *Good) LoadByUserAndProgram(userId int, programId int) error {
 
-	row := DB.QueryRow("SELECT id, user, program FROM goods WHERE user = ? AND program = ?", userId, programId)
-	err := row.Scan(&this.Id, &this.User, &this.Program)
+	err := DB.Model(Good{}).Where("user_id = ? AND program_id", userId, programId).First(this).Error
 
 	return err
 }
 
 func (this *Good) Create() (int, error) {
 
-	result, err := DB.Exec("INSERT INTO goods ( user, program ) VALUES ( ?, ? )", this.User, this.Program)
+	err := DB.Create(this).Error
 
-	if err != nil {
-		return -1, err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return -1, err
-	}
-
-	// TODO: int64をintにダウンキャスト。大丈夫だろうか
-	//       users.goにも同様の記述あり
-	return int(id), nil
+	return this.ID, err
 }
 
 func (this *Good) Remove() error {
 
-	_, err := DB.Exec("DELETE FROM goods WHERE id = ?", this.Id)
+	err := DB.Delete(this).Error
 
 	return err
 }
 
 func GetGoodListByUser(out *[]Good, userId int, from int, number int) (int, error) {
+	var err error
 
 	if cap(*out) < number {
 		*out = make([]Good, number)
 	}
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM goods WHERE user = ?", userId).Scan(&rowCount)
+	err = DB.Model(Good{}).Where("user_id = ?", userId).Count(&rowCount).Error
 
 	if err != nil {
 		return 0, err
 	}
 
-	rows, err := DB.Query("SELECT id FROM goods WHERE user = ? LIMIT ?,?", userId, from, number)
+	err = DB.Where("user_id = ?", userId).Limit(number).Offset(from).Find(out).Error
 
-	if err != nil {
-		return rowCount, err
-	}
-	defer rows.Close()
-
-	i := 0
-	for rows.Next() {
-
-		var id int
-		err = rows.Scan(&id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		i++
-	}
-
-	return rowCount, nil
+	return rowCount, err
 }
 
 func GetGoodListByProgram(out *[]Good, programId int, from int, number int) (int, error) {
+	var err error
 
 	if cap(*out) < number {
 		*out = make([]Good, number)
 	}
 
 	var rowCount int
-	err := DB.QueryRow("SELECT count(id) FROM goods WHERE program = ?", programId).Scan(&rowCount)
+	err = DB.Model(Good{}).Where("program_id = ?", programId).Count(&rowCount).Error
 
 	if err != nil {
 		return 0, err
 	}
 
-	rows, err := DB.Query("SELECT id FROM goods WHERE program = ? LIMIT ?,?", programId, from, number)
+	err = DB.Where("program_id = ?", programId).Limit(number).Offset(from).Find(out).Error
 
-	if err != nil {
-		return rowCount, err
-	}
-	defer rows.Close()
-
-	i := 0
-	for rows.Next() {
-
-		var id int
-		err = rows.Scan(&id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		err = (*out)[i].Load(id)
-
-		if err != nil {
-			return rowCount, err
-		}
-
-		i++
-	}
-
-	return rowCount, nil
+	return rowCount, err
 }
 
 func CanGoodProgram(userId int, programId int) bool {
 
 	var rowCount int
 
-	err := DB.QueryRow("SELECT count(id) FROM goods WHERE user = ? AND program = ?", userId, programId).Scan(&rowCount)
+	err := DB.Model(Good{}).Where("user_id = ? AND program_id = ?", userId, programId).Count(&rowCount).Error
 
 	if err != nil {
 		return false
 	}
 
-	if rowCount > 0 {
-		return false
-	}
-
-	return true
+	return rowCount < 1
 }
 
 func GetGoodCountByProgram(programId int) int {
 
 	var rowCount int
-
-	err := DB.QueryRow("SELECT count(id) FROM goods WHERE program = ?", programId).Scan(&rowCount)
+	err := DB.Model(Good{}).Where("program_id = ?", programId).Count(&rowCount).Error
 
 	if err != nil {
 		return 0

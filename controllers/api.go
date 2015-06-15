@@ -8,12 +8,12 @@ import (
 	"regexp"
 	"strconv"
 
+	"../bot"
 	"../config"
 	"../models"
-	"../bot"
+	"../utils/google"
 	"../utils/log"
 	"../utils/twitter"
-	"../utils/google"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
@@ -167,8 +167,8 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 	}
 
 	var good models.Good
-	good.User = user
-	good.Program = programId
+	good.UserID = user
+	good.ProgramID = programId
 
 	_, err = good.Create()
 	if err != nil {
@@ -215,9 +215,9 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramId | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
+	targetFlags := models.ProgramID | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
-	rawProgram.Id = request.FormValue("id")
+	rawProgram.ID = request.FormValue("id")
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
 	rawProgram.Description = request.FormValue("description")
@@ -264,9 +264,9 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	// プログラムの確認
-	var prevProgInfo models.ProgramInfo
+	var prevProg models.Program
 
-	err = prevProgInfo.Load(program.Id)
+	err = prevProg.Load(program.ID)
 	if err != nil {
 		log.Debug(os.Stdout, err)
 
@@ -281,7 +281,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	// ユーザのチェック
-	if getSessionUser(request) != prevProgInfo.User {
+	if getSessionUser(request) != prevProg.UserID {
 		log.DebugStr(os.Stdout, "プログラムの権限のない変更")
 
 		writeStruct(document, apiProgramUpdateMember{
@@ -294,14 +294,10 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	// 適用
-	prevProgInfo.Title = program.Title
-	prevProgInfo.Description = program.Description
-	prevProgInfo.Steps = program.Steps
-	prevProgInfo.Runtime = program.Runtime
-
 	// 以前のプログラムと合成する
-	program.ProgramInfo = &prevProgInfo
+	program.UserID = prevProg.UserID
+	program.Good = prevProg.Good
+	program.Play = prevProg.Play
 
 	err = program.Update()
 	if err != nil {
@@ -417,7 +413,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	program.User = userId
+	program.UserID = userId
 
 	id, err := program.Create()
 	if err != nil {
@@ -441,7 +437,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 		Id: id,
 	}, 200)
 
-	bot.UpdateTweet("新しいプログラムが投稿されました! #hsproom\n\n "+ program.Title + " by "+program.UserName + " " +config.SiteURL+"/program/view/?p="+strconv.Itoa(id))
+	bot.UpdateTweet("新しいプログラムが投稿されました! #hsproom\n\n " + program.Title + " by " + program.GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(id))
 }
 
 type apiProgramDataListMember struct {
@@ -500,8 +496,8 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 
 	var names []string
 
-	for _, file := range program.Attachments.Files {
-		names = append(names, file.Name)
+	for _, att := range program.Attachments {
+		names = append(names, att.Name)
 	}
 
 	writeStruct(document, apiProgramDataListMember{
@@ -565,18 +561,18 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	if fileName == "start.ax" {
 
 		document.WriteHeader(200)
-		document.Write(program.Startax)
+		document.Write(program.Startax.Data)
 
 		return
 	}
 
 	// ファイルを検索する
 
-	for _, file := range program.Attachments.Files {
-		if file.Name == fileName {
+	for _, att := range program.Attachments {
+		if att.Name == fileName {
 
 			document.WriteHeader(200)
-			document.Write(file.Data)
+			document.Write(att.Data)
 
 			return
 		}
@@ -626,7 +622,7 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	document.Write(program.Thumbnail)
+	document.Write(program.Thumbnail.Data)
 }
 
 type apiMarkdownMember struct {
@@ -870,8 +866,8 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 		}
 	} else {
 
-		id = oldUser.Id
-		dbUser.Id = oldUser.Id
+		id = oldUser.ID
+		dbUser.ID = oldUser.ID
 
 		err = dbUser.Update()
 
@@ -912,7 +908,7 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
-				Status: "error",
+				Status:  "error",
 				Message: "GETを使用してください。",
 			},
 		}, 403)
@@ -1004,11 +1000,11 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 
 	var dbUser models.User
 	dbUser.ScreenName = userinfo.IdString
-	dbUser.Name       = userinfo.Name
-	dbUser.Profile    = ""
-	dbUser.IconURL    = userinfo.Picture
-	dbUser.Location   = userinfo.Locale
-	dbUser.Website    = userinfo.Link
+	dbUser.Name = userinfo.Name
+	dbUser.Profile = ""
+	dbUser.IconURL = userinfo.Picture
+	dbUser.Location = userinfo.Locale
+	dbUser.Website = userinfo.Link
 
 	var id int
 
@@ -1026,9 +1022,9 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 			return
 		}
 	} else {
-	
-		id = oldUser.Id
-		dbUser.Id = oldUser.Id
+
+		id = oldUser.ID
+		dbUser.ID = oldUser.ID
 
 		err = dbUser.Update()
 
@@ -1121,7 +1117,7 @@ func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) {
 
 type apiUserProgramListMember struct {
 	*apiMember
-	Programs     []models.ProgramInfo
+	Programs     []models.Program
 	ProgramCount int
 }
 
@@ -1181,8 +1177,8 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 		}, 403)
 	}
 
-	var programs []models.ProgramInfo
-	i, err := models.GetProgramListByUser(models.ProgramColCreated, &programs, userId, true, offset, number)
+	var programs []models.Program
+	i, err := models.GetProgramListByUser(models.ProgramColCreatedAt, &programs, userId, true, offset, number)
 
 	if err != nil {
 		log.Fatal(os.Stdout, err)
@@ -1208,7 +1204,7 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 
 type apiUserGoodsMember struct {
 	*apiMember
-	Programs     []models.ProgramInfo
+	Programs     []models.Program
 	ProgramCount int
 }
 
@@ -1296,12 +1292,12 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	programs := make([]models.ProgramInfo, number)
+	programs := make([]models.Program, number)
 
 	for i, good := range goods {
 
-		if good.Program > 0 {
-			err = programs[i].Load(good.Program)
+		if good.ProgramID > 0 {
+			err = programs[i].Load(good.ProgramID)
 
 			if err != nil {
 			}
@@ -1420,7 +1416,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	var program models.ProgramInfo
+	var program models.Program
 	err = program.Load(programId)
 
 	if err != nil {
@@ -1435,7 +1431,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
-	if program.User != userId {
+	if program.UserID != userId {
 		log.DebugStr(os.Stdout, "権限のないProgramRemoveリクエスト")
 
 		writeStruct(document, apiProgramRemoveMember{

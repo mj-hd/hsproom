@@ -157,11 +157,11 @@
 			<div class="panel-heading">
 				<div class="title_heading row">
 					<div class="title col-md-6">
-						<h1>{{ .ProgramInfo.Title }}</h1>
-						<span class="cap"> by <a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a>, at {{ .ProgramInfo.Created.Format "2006年1月_2日 15:04:05" }}</span>
+						<h1>{{ .Program.Title }}</h1>
+						<span class="cap"> by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日 15:04:05" }}</span>
 					</div>
 					<div class="share_buttons col-md-6">
-						<span class="share_played_number"><i class="mdi-av-play-circle-outline"></i>{{ .ProgramInfo.Play }}</span> 
+						<span class="share_played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Program.Play }}</span> 
 						<span class="share_good_number">
 							<a href="javascript:good();" class="good_button" ><i class="mdi-social-mood"></i></a>
 							<span id="good"></span>
@@ -194,7 +194,7 @@
 			</div>
 			<div class="panel-body">
 				<div class="description pull-left markdown">
-					{{ markdown .ProgramInfo.Description }}
+					{{ markdown .Program.Description }}
 				</div>
 				<div class="user_box pull-right">
 					<span class="user_title"><i class="mdi-action-face-unlock"></i>作成者</span>
@@ -205,9 +205,9 @@
 									<img id="profile_icon" class="circle" alt="icon">
 								</div>
 								<div class="row-content">
-									<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .ProgramInfo.User }}">{{ .ProgramInfo.UserName }}</a></h4>
+									<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a></h4>
 									<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
-									<a class="user_detail_link" href="/user/view/?u={{ .ProgramInfo.User }}">詳しく...</a>
+									<a class="user_detail_link" href="/user/view/?u={{ .Program.UserID }}">詳しく...</a>
 								</div>
 							</div>
 						</div>
@@ -231,17 +231,17 @@
 						{{ else }}
 						<div class="gallery-cell program_list_item">
 							<div class="program_picture thumbnail">
-								<img src="/api/program/thumbnail/?p={{ .Id }}" />
+								<img src="/api/program/thumbnail/?p={{ .ID }}" />
 							</div>
 							<div class="program_content">
 								<div class="program_item_heading">
-									<span class="h2"><a href="/program/view/?p={{ .Id }}">{{ .Title }}</a></span>
-									<span class="small"><a href="/user/view/?u={{ .User }}">{{ .UserName }}</a></span>
+									<span class="h2"><a href="/program/view/?p={{ .ID }}">{{ .Title }}</a></span>
+									<span class="small"><a href="/user/view/?u={{ .UserID }}">{{ .GetUserName }}</a></span>
 								</div>
 								<div class="program_item_accessory">
 									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span>
 									<span class="good_number"><i class="mdi-social-mood"></i>{{ .Good }}</span>
-									<div class="date text-right">{{ .Created.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
+									<div class="date text-right">{{ .CreatedAt.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 								</div>
 							</div>
 						</div>
@@ -273,7 +273,7 @@
 			url:  "/api/program/good/",
 			dataType: "json",
 			data: {
-				"p": "{{ .ProgramInfo.Id }}"
+				"p": "{{ .Program.ID }}"
 			}
 		}).success(function(data) {
 			$(".good_button").attr("href", "#");
@@ -322,7 +322,7 @@
 			dataType: "json",
 			cache: false,
 			data: {
-				"pn": "{{ .ProgramInfo.Title }}",
+				"pn": "{{ .Program.Title }}",
 				"n": 10,
 				"o": max_id
 			}
@@ -359,7 +359,7 @@
 			dataType: "json",
 			cache: false,
 			data: {
-				"u": "{{ .ProgramInfo.User }}"
+				"u": "{{ .Program.UserID }}"
 			},
 		}).success(function (data, status) {
 			$("#profile").text(data.Profile.substring(0, 50) + "...");
@@ -370,8 +370,8 @@
 
 	function openTwitter() {
 
-		var title = encodeURIComponent("{{ .ProgramInfo.Title }}");
-		var hashtags = encodeURIComponent("hsproom #"+"{{ .ProgramInfo.Title }}".replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
+		var title = encodeURIComponent("{{ .Program.Title }}");
+		var hashtags = encodeURIComponent("hsproom #"+"{{ .Program.Title }}".replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
 		var url   = encodeURIComponent(location.href);
 
 		// ユーザ名の取得は後で統一も要検討
@@ -380,7 +380,7 @@
 			type: "GET",
 			dataType: "json",
 			data: {
-				"u": "{{ .ProgramInfo.User }}"
+				"u": "{{ .Program.UserID }}"
 			}
 		}).success(function (data, status) {
 			var user = data.ScreenName;
@@ -400,7 +400,7 @@
 			dataType: "json",
 			url: "/api/program/good/count/",
 			data: {
-				"p": {{ .ProgramInfo.Id }}
+				"p": {{ .Program.ID }}
 			}
 		}).success(function (data) {
 			$("#good").text(data.GoodCount);
@@ -426,15 +426,15 @@
 		$("#errors").hide();
 	});
 
-	var pid   = {{ .ProgramInfo.Id }};
-	var steps = "{{ .ProgramInfo.Steps }}";
+	var pid   = {{ .Program.ID }};
+	var steps = "{{ .Program.Steps }}";
 
-	{{ if eq .ProgramInfo.Runtime "HSP3Dish" }}
+	{{ if eq .Program.Runtime "HSP3Dish" }}
 
 		{{ plugin "loadProgramHSP3Dish" }}
 
 	{{ else }}
-		{{ if eq .ProgramInfo.Runtime "HGIMG4" }}
+		{{ if eq .Program.Runtime "HGIMG4" }}
 			{{ plugin "loadProgramHGIMG4"}}
 		{{ else }}
 			$("#errors").append("ランタイムの読み込みに失敗しました。管理人へ問い合わせてください。").show();

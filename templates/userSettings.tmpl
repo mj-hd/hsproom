@@ -93,24 +93,24 @@ var currentGoodPage = 0;
 function userProgramListItem(programInfo) {
 	return $('<div class="list-group-item" />').append(
 		$('<div class="row-picture" />').append(
-			$('<img src="/api/program/thumbnail/?p='+programInfo.Id+'" class="circle" />')
+			$('<img src="/api/program/thumbnail/?p='+programInfo.ID+'" class="circle" />')
 		)
 	).append(
 		$('<div class="row-content" />').append(
 			$('<div class="least-content" />').append(
-				$('<a href="/program/edit/?p='+programInfo.Id+'" class="text-primary"><i class="mdi-editor-mode-edit"></i>編集</a> ')
+				$('<a href="/program/edit/?p='+programInfo.ID+'" class="text-primary"><i class="mdi-editor-mode-edit"></i>編集</a> ')
 			).append(
-				$('<a href="javascript:removeProgram('+programInfo.Id+');" class="text-warning"> <i class="mdi-navigation-close"></i>削除</a>')
+				$('<a href="javascript:removeProgram('+programInfo.ID+');" class="text-warning"> <i class="mdi-navigation-close"></i>削除</a>')
 			)
 		).append(
 			$('<h4 class="list-group-item-heading" />').append(
-				$('<a href="/program/view/?p='+programInfo.Id+'" />').text(programInfo.Title)
+				$('<a href="/program/view/?p='+programInfo.ID+'" />').text(programInfo.Title)
 			)
 		).append(
 			$('<p class="list-group-item-text" />').append(
-				$('<div class="" />').text("最終更新:"+(programInfo.Modified.Valid ? programInfo.Modified.Time : "-"))
+				$('<div class="" />').text("最終更新:"+(programInfo.UpdatedAt.Valid ? programInfo.UpdatedAt.Time : "-"))
 			).append(
-				$('<div class="" />').text("作成日:  "+programInfo.Created)
+				$('<div class="" />').text("作成日:  "+programInfo.CreatedAt)
 			)
 		)
 	).append(
@@ -121,17 +121,17 @@ function userProgramListItem(programInfo) {
 function userGoodListItem(programInfo) {
 	return $('<div class="list-group-item" />').append(
 		$('<div class="row-picture" />').append(
-			$('<img src="/api/program/thumbnail/?p='+programInfo.Id+'" class="circle" />')
+			$('<img src="/api/program/thumbnail/?p='+programInfo.ID+'" class="circle" />')
 		)
 	).append(
 		$('<div class="row-content" />').append(
 			$('<div class="least-content" />').append(
-				$('<a href="javascript:removeGood('+programInfo.Id+');" class="text-warning"><i class="mdi-navigation-close"></i>取り消し</a>')
+				$('<a href="javascript:removeGood('+programInfo.ID+');" class="text-warning"><i class="mdi-navigation-close"></i>取り消し</a>')
 			)
 		).append(
 			$('<h4 class="list-group-item-heading" />').append(
-				$('<a href="/program/view/?p='+programInfo.Id+'" />').text(programInfo.Title)
-			).append('<span class="small"> by <a href="/user/view/?u='+programInfo.User+'">'+programInfo.UserName+"</a></span>")
+				$('<a href="/program/view/?p='+programInfo.ID+'" />').text(programInfo.Title)
+			).append('<span class="small"> by <a href="/user/view/?u='+programInfo.UserID+'">'+programInfo.GetUserName+"</a></span>")
 
 		).append(
 			$('<p class="list-group-item-text" />').append(
@@ -247,7 +247,7 @@ function updateUserPrograms(page) {
 		url: "/api/user/programs/",
 		dataType: "json",
 		data: {
-			"u": {{ .UserInfo.Id }},
+			"u": {{ .UserInfo.ID }},
 			"n": 5,
 			"o": page*5
 		}
@@ -290,7 +290,7 @@ function updateGoodPrograms(page) {
 		url: "/api/user/goods/",
 		dataType: "json",
 		data: {
-			"u": {{ .UserInfo.Id }},
+			"u": {{ .UserInfo.ID }},
 			"n": 5,
 			"o": page*5
 		}
@@ -373,7 +373,7 @@ function removeGood(programId) {
 $(document).ready(function() {
 	home();
 
-	if ({{ .User }} == 0) {
+	if ({{ .UserID }} == 0) {
 		document.location.href = "/user/login/";
 	}
 });

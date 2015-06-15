@@ -1,20 +1,20 @@
 package bot
 
 import (
+	"os"
 	"strconv"
 	"time"
-	"os"
 
 	"../config"
-	"../utils/twitter"
-	"../utils/log"
 	"../models"
+	"../utils/log"
+	"../utils/twitter"
 
 	"github.com/mrjones/oauth"
 )
 
 var client *twitter.OAuthClient
-var token  *oauth.AccessToken
+var token *oauth.AccessToken
 
 func init() {
 
@@ -25,7 +25,7 @@ func init() {
 	}
 
 	token = new(oauth.AccessToken)
-	token.Token  = config.TwitterBotAccessKey
+	token.Token = config.TwitterBotAccessKey
 	token.Secret = config.TwitterBotAccessSecret
 
 	go func() {
@@ -70,7 +70,7 @@ func UpdateTweet(message string) error {
 }
 
 func UpdateRankingForWeek() error {
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	count, err := models.GetProgramRankingForWeek(&programs, 0, 3)
 	if err != nil {
@@ -85,16 +85,16 @@ func UpdateRankingForWeek() error {
 
 	for i := 0; i < count; i++ {
 		message += "\n"
-		message += strconv.Itoa(i+1)+"位: "
+		message += strconv.Itoa(i+1) + "位: "
 		message += programs[i].Title + " "
-		message += "by " + programs[i].UserName + " "+ config.SiteURL +"/program/view/?p="+ strconv.Itoa(programs[i].Id)
+		message += "by " + programs[i].GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
 	}
 
 	return UpdateTweet(message)
 }
 
 func UpdateRankingForMonth() error {
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	count, err := models.GetProgramRankingForMonth(&programs, 0, 3)
 	if err != nil {
@@ -109,16 +109,16 @@ func UpdateRankingForMonth() error {
 
 	for i := 0; i < count; i++ {
 		message += "\n"
-		message += strconv.Itoa(i+1)+"位: "
+		message += strconv.Itoa(i+1) + "位: "
 		message += programs[i].Title + " "
-		message += "by " + programs[i].UserName + " "+ config.SiteURL +"/program/view/?p="+ strconv.Itoa(programs[i].Id)
+		message += "by " + programs[i].GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
 	}
 
 	return UpdateTweet(message)
 }
 
 func UpdateRankingForDay() error {
-	var programs []models.ProgramInfo
+	var programs []models.Program
 
 	count, err := models.GetProgramRankingForDay(&programs, 0, 3)
 	if err != nil {
@@ -133,11 +133,10 @@ func UpdateRankingForDay() error {
 
 	for i := 0; i < count; i++ {
 		message += "\n"
-		message += strconv.Itoa(i+1)+"位: "
+		message += strconv.Itoa(i+1) + "位: "
 		message += programs[i].Title + " "
-		message += "by " + programs[i].UserName + " "+ config.SiteURL +"/program/view/?p="+ strconv.Itoa(programs[i].Id)
+		message += "by " + programs[i].GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
 	}
 
 	return UpdateTweet(message)
 }
-

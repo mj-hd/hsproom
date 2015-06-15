@@ -339,7 +339,7 @@ $(document).ready(function() {
 
 			assertBottom("success", response.Message);
 
-			location.href = "/program/view/?p="+response.Id;
+			location.href = "/program/view/?p="+response.ID;
 		}).error(function (json) {
 			
 			var modal = $("#modal");
@@ -361,7 +361,7 @@ $(document).ready(function() {
 		});
 	});
 
-	if ({{ .User }} == 0) {
+	if ({{ .UserID }} == 0) {
 		document.location.href = "/user/login/";
 	}
 

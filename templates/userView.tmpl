@@ -61,11 +61,11 @@
 							{{ else }}
 							<div class="list-group-item">
 								<div class="row-picture">
-									<img src="/api/program/thumbnail/?p={{ .Id }}" class="circle" />
+									<img src="/api/program/thumbnail/?p={{ .ID }}" class="circle" />
 								</div>
 								<div class="row-content">
 									<div class="least-content good_number">{{ .Good }}いいね!</div>
-									<h4 class="list-group-item-heading"><a href="/program/view/?p={{ .Id }}">{{ .Title }}</a></h4>
+									<h4 class="list-group-item-heading"><a href="/program/view/?p={{ .ID }}">{{ .Title }}</a></h4>
 									<p class="list-group-item-text">{{ markdown (subString .Description 0 100) }}</p>
 								</div>
 								<div class="list-group-separator"></div>
@@ -73,7 +73,7 @@
 							{{ end }}
 						{{ end }}
 					</div>
-					<a href="/user/programs/?s=c&u={{ .UserInfo.Id }}" class="btn btn-default btn-raised btn-block">続きを見る</a>
+					<a href="/user/programs/?s=c&u={{ .UserInfo.ID }}" class="btn btn-default btn-raised btn-block">続きを見る</a>
 				</div>
 
 			</div>

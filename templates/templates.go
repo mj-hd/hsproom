@@ -3,8 +3,8 @@ package templates
 import (
 	"html/template"
 	"io"
-	"os"
 	"io/ioutil"
+	"os"
 	"unicode/utf8"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -21,8 +21,8 @@ type Template struct {
 }
 
 type DefaultMember struct {
-	Title string
-	User  int
+	Title  string
+	UserID int
 }
 
 func init() {
@@ -33,13 +33,13 @@ func Del() {
 func (this *Template) Render(w io.Writer, member interface{}) error {
 
 	return template.Must(template.New(this.Layout).Funcs(map[string]interface{}{
-		"linkCSS":    linkCSS,
-		"embedImage": embedImage,
-		"linkJS":     linkJS,
-		"plugin":     plugin,
-		"markdown":   markdown,
+		"linkCSS":      linkCSS,
+		"embedImage":   embedImage,
+		"linkJS":       linkJS,
+		"plugin":       plugin,
+		"markdown":     markdown,
 		"markdownFile": markdownFile,
-		"subString":  subString,
+		"subString":    subString,
 	}).ParseFiles(config.LayoutsPath+this.Layout, config.TemplatesPath+this.Template)).Execute(w, member)
 }
 
