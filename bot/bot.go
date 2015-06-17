@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"time"
@@ -17,8 +18,12 @@ var client *twitter.OAuthClient
 var token *oauth.AccessToken
 
 func init() {
-
 	var err error
+
+	if !config.TwitterBotEnabled {
+		return
+	}
+
 	client, err = twitter.NewOAuthClient(config.TwitterBotKey, config.TwitterBotSecret)
 	if err != nil {
 		panic(err)
@@ -66,6 +71,9 @@ func Del() {
 }
 
 func UpdateTweet(message string) error {
+	if !config.TwitterBotEnabled {
+		return errors.New("Twitter Bot is disabled by option.")
+	}
 	return client.UpdateTweet(token, message)
 }
 

@@ -19,6 +19,7 @@ const (
 	SessionKey             string = "sessionkey"
 	TwitterKey             string = "Twitter's consumer key"
 	TwitterSecret          string = "Twitter's consumer secret"
+	TwitterBotEnabled      bool   = false
 	TwitterBotKey          string = "Twitter's consumer key for bot"
 	TwitterBotSecret       string = "Twitter's consumer secret for bot"
 	TwitterBotAccessKey    string = "Twitter's access key for bot"
