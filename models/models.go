@@ -22,6 +22,8 @@ func init() {
 		panic(err.Error())
 	}
 
+	DB.LogMode(true)
+
 	// 以下にテーブルの初期化処理を書く
 	// 新しいテーブルを作成するときは、以下に初期化処理を追記する
 	initPrograms()

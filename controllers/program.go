@@ -299,6 +299,26 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	err = program.LoadThumbnail()
+
+	if err != nil {
+		log.DebugStr(os.Stdout, "サムネイル画像の読み込みに失敗しました。")
+
+		showError(document, request, "サムネイル画像の読み込みに失敗しました。")
+
+		return
+	}
+
+	err = program.LoadAttachments()
+
+	if err != nil {
+		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗しました")
+
+		showError(document, request, "添付ファイルの読み込みに失敗しました")
+
+		return
+	}
+
 	// 表示
 	err = tmpl.Render(document, programEditMember{
 		DefaultMember: &templates.DefaultMember{

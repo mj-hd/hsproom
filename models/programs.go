@@ -18,10 +18,12 @@ import (
 func initPrograms() {
 	DB.AutoMigrate(&Program{})
 	DB.AutoMigrate(&Attachment{})
+	DB.AutoMigrate(&Thumbnail{})
+	DB.AutoMigrate(&Startax{})
 }
 
 type Program struct {
-	ID          int        `gorm:"primary_key"`
+	ID          int
 	CreatedAt   time.Time  ``
 	UpdatedAt   time.Time  ``
 	DeletedAt   *time.Time ``
@@ -33,37 +35,67 @@ type Program struct {
 	Steps       int        `sql:"default:5000"`
 	Runtime     string     `sql:"size:10;default:'HSP3Dish'"`
 
-	Startax     Attachment   ``
+	Startax     Startax      ``
 	Attachments []Attachment ``
-	Thumbnail   Attachment   ``
+	Thumbnail   Thumbnail    ``
 	Sourcecode  string       `sql:"type:text"`
+	Goods       []Good
 }
 
-type Attachment struct {
-	ID        int `gorm:"primary_key"`
+type Thumbnail struct {
+	ID        int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
-	ProgramID int    `sql:"index"`
-	Name      string `sql:"size:100;not null"`
-	Data      []byte `sql:"type:longblob;not null"`
+	ProgramID int `sql:"index"`
+
+	Data []byte `sql:"size:3145728"`
+}
+
+type Startax struct {
+	ID         int
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  *time.Time
+	ProgramID  int        `sql:"index"`
+	Attachment Attachment `gorm:"polymorphic:Owner;"`
+
+	Data []byte `sql:"size:1048576"`
+}
+
+type Attachment struct {
+	ID        int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+	ProgramID int `sql:"index"`
+
+	Name string `sql:"size:100;not null"`
+	Data []byte `sql:"type:longblob;not null"`
 }
 
 func (this *Attachment) ToBase64() string {
 	return base64.StdEncoding.EncodeToString(this.Data)
 }
 
+func (this *Attachment) Load(id int) error {
+	return DB.First(this, id).Error
+}
+
+func (this *Attachment) Update() error {
+	return DB.Save(this).Error
+}
+
+func (this *Attachment) Create() error {
+	return DB.Create(this).Error
+}
+
+func (this *Attachment) Remove() error {
+	return DB.Delete(this).Error
+}
+
 func NewProgram() *Program {
-	return &Program{
-		Startax: Attachment{
-			Name: "STARTAX",
-			Data: make([]byte, 0),
-		},
-		Thumbnail: Attachment{
-			Name: "THUMBNAIL",
-			Data: make([]byte, 0),
-		},
-	}
+	return &Program{}
 }
 
 func (this *Program) Load(id int) error {
@@ -71,6 +103,18 @@ func (this *Program) Load(id int) error {
 	err := DB.First(this, id).Error
 
 	return err
+}
+
+func (this *Program) LoadAttachments() error {
+	return DB.Model(this).Related(&this.Attachments).Error
+}
+
+func (this *Program) LoadThumbnail() error {
+	return DB.Model(this).Related(&this.Thumbnail).Error
+}
+
+func (this *Program) LoadStartax() error {
+	return DB.Model(this).Related(&this.Startax).Error
 }
 
 func (this *Program) Update() error {
@@ -88,8 +132,29 @@ func (this *Program) Create() (int, error) {
 }
 
 func (this *Program) Remove() error {
+	var err error
 
-	err := DB.Delete(this).Error
+	err = DB.Model(this).Related(&this.Attachments).Delete(&this.Attachments).Error
+	if err != nil && (err != gorm.RecordNotFound) {
+		return err
+	}
+
+	err = DB.Model(this).Related(&this.Thumbnail).Delete(&this.Thumbnail).Error
+	if err != nil && (err != gorm.RecordNotFound) {
+		return err
+	}
+
+	err = DB.Model(this).Related(&this.Startax).Delete(&this.Startax).Error
+	if err != nil && (err != gorm.RecordNotFound) {
+		return err
+	}
+
+	err = DB.Model(this).Related(&this.Goods).Delete(&this.Goods).Error
+	if err != nil && (err != gorm.RecordNotFound) {
+		return err
+	}
+
+	err = DB.Delete(this).Error
 
 	return err
 }
@@ -233,7 +298,6 @@ func (this *RawProgram) Validate(flag uint) error {
 func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	program := NewProgram()
-	oldProgram := NewProgram()
 
 	if (flag & ProgramID) != 0 {
 
@@ -290,19 +354,7 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		if len(data) == 0 {
-			if program.ID == 0 {
-				return program, errors.New("Startaxファイルの内容が空です。")
-			}
-
-			if oldProgram.ID == 0 {
-				err = oldProgram.Load(program.ID)
-
-				if err != nil {
-					return program, errors.New("内部エラーが発生しました。")
-				}
-			}
-
-			data = oldProgram.Startax.Data
+			return program, errors.New("Startaxファイルの内容が空です。")
 		}
 
 		program.Startax.Data = data
@@ -326,80 +378,35 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 			var data []byte
 
-			switch pair.Value {
-
-			case "PASS":
-				if oldProgram.ID == 0 {
-					err = oldProgram.Load(program.ID)
-
-					if err != nil {
-						return program, errors.New("内部エラーが発生しました。")
-					}
-				}
-
-				att, err := oldProgram.FindAttachment(pair.Name)
-				if err != nil {
-					return program, errors.New("内部エラーが発生しました。")
-				}
-
-				program.Attachments = append(program.Attachments, *att)
-
-			case "DELETE":
-
-				if oldProgram.ID == 0 {
-					err = oldProgram.Load(program.ID)
-
-					if err != nil {
-						return program, errors.New("内部エラーが発生しました。")
-					}
-				}
-
-				att, err := oldProgram.FindAttachment(pair.Name)
-				if err != nil {
-					return program, errors.New("内部エラーが発生しました。")
-				}
-
-				DB.Delete(att)
-
-			default:
-
-				data, err = base64.StdEncoding.DecodeString(pair.Value)
-
-				if err != nil {
-					return program, err
-				}
-
-				program.Attachments = append(program.Attachments, Attachment{
-					Name: pair.Name,
-					Data: data,
-				})
-
+			if len(pair.Value) == 0 {
+				return program, errors.New("空のファイルが送信されました。")
 			}
+
+			data, err = base64.StdEncoding.DecodeString(pair.Value)
+
+			if err != nil {
+				return program, err
+			}
+
+			program.Attachments = append(program.Attachments, Attachment{
+				Name: pair.Name,
+				Data: data,
+			})
+
 		}
 
 	}
 
 	if (flag & ProgramThumbnail) != 0 {
 
+			attachments[{{ $i }}].value = "DELETE";
 		data, err := base64.StdEncoding.DecodeString(this.Thumbnail)
 		if err != nil {
 			return program, err
 		}
 
 		if len(data) == 0 {
-			if program.ID == 0 {
-				return program, errors.New("サムネイルの内容が空です。")
-			}
-
-			if oldProgram.ID == 0 {
-				err = oldProgram.Load(program.ID)
-
-				if err != nil {
-					return program, errors.New("内部エラーが発生しました。")
-				}
-			}
-
-			data = oldProgram.Thumbnail.Data
+			return program, errors.New("サムネイルの内容が空です。")
 		}
 
 		program.Thumbnail.Data = data
@@ -495,11 +502,6 @@ func GetProgramRankingForMonth(out *[]Program, from int, number int) (int, error
 func getProgramRankingSince(since time.Time, out *[]Program, from int, number int) (int, error) {
 	var err error
 
-	// キャパシティチェック
-	if cap(*out) < number {
-		*out = make([]Program, number)
-	}
-
 	var rowCount int
 	err = DB.Model(Program{}).Where("created_at >= ?", since.Format("2006-1-2")).Count(&rowCount).Error
 	if err != nil {
@@ -517,11 +519,6 @@ func GetProgramRankingForAllTime(out *[]Program, from int, number int) (int, err
 
 func GetProgramListBy(keyColumn ProgramColumn, out *[]Program, isDesc bool, from int, number int) (int, error) {
 	var err error
-
-	// キャパシティチェック
-	if cap(*out) < number {
-		*out = make([]Program, number)
-	}
 
 	// 並び順
 	var order string
@@ -546,10 +543,6 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]Program, isDesc bool, from
 
 func GetProgramListByQuery(out *[]Program, query string, keyColumn ProgramColumn, isDesc bool, number int, offset int) (int, error) {
 	var err error
-
-	if cap(*out) < number {
-		*out = make([]Program, number)
-	}
 
 	// 並び順
 	var order string
@@ -578,10 +571,6 @@ func GetProgramListByQuery(out *[]Program, query string, keyColumn ProgramColumn
 func GetProgramListByUser(keyColumn ProgramColumn, out *[]Program, user int, isDesc bool, from int, number int) (int, error) {
 	var err error
 
-	if cap(*out) < number {
-		*out = make([]Program, number)
-	}
-
 	// 並び順
 	var order string
 
@@ -604,10 +593,6 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]Program, user int, isD
 
 func GetProgramListRelatedTo(out *[]Program, title string, number int) error {
 	var err error
-
-	if cap(*out) < number {
-		*out = make([]Program, number)
-	}
 
 	token := ngram.NewTokenize(3, title)
 

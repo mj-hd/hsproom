@@ -233,6 +233,12 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	if rawProgram.Sourcecode == "" {
 		targetFlags -= models.ProgramSourcecode
 	}
+	if rawProgram.Thumbnail == "" {
+		targetFlags -= models.ProgramThumbnail
+	}
+	if rawProgram.Startax == "" {
+		targetFlags -= models.ProgramStartax
+	}
 
 	err := rawProgram.Validate(targetFlags)
 	if err != nil {
@@ -294,10 +300,40 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 		return
 	}
 
+	// TODO: エラー処理
+	prevProg.LoadThumbnail()
+	prevProg.LoadStartax()
+	prevProg.LoadAttachments()
+
 	// 以前のプログラムと合成する
 	program.UserID = prevProg.UserID
 	program.Good = prevProg.Good
 	program.Play = prevProg.Play
+
+	if (targetFlags & models.ProgramThumbnail) != 0 {
+		prevProg.Thumbnail.Data = program.Thumbnail.Data
+	}
+	program.Thumbnail = prevProg.Thumbnail
+	if (targetFlags & models.ProgramStartax) != 0 {
+		prevProg.Startax.Data = program.Startax.Data
+	}
+	program.Startax = prevProg.Startax
+
+	for _, att := range prevProg.Attachments {
+		for i := 0; i < len(program.Attachments); i++ {
+			if att.Name == program.Attachments[i].Name {
+				att.Data = program.Attachments[i].Data
+				program.Attachments[i] = att
+
+				goto Found
+			}
+		}
+
+		// NotFound
+		att.Remove()
+
+	Found:
+	}
 
 	err = program.Update()
 	if err != nil {
@@ -494,6 +530,22 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	err = program.LoadAttachments()
+
+	if err != nil {
+
+		log.Debug(os.Stdout, err)
+
+		writeStruct(document, apiProgramDataListMember{
+			apiMember: &apiMember{
+				Status:  "error",
+				Message: "添付ファイルの取得に失敗しました。",
+			},
+		}, 400)
+
+		return
+	}
+
 	var names []string
 
 	for _, att := range program.Attachments {
@@ -560,6 +612,8 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 	if fileName == "start.ax" {
 
+		program.LoadStartax()
+
 		document.WriteHeader(200)
 		document.Write(program.Startax.Data)
 
@@ -567,6 +621,16 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	}
 
 	// ファイルを検索する
+	err = program.LoadAttachments()
+
+	if err != nil {
+
+		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗")
+
+		document.WriteHeader(400)
+
+		return
+	}
 
 	for _, att := range program.Attachments {
 		if att.Name == fileName {
@@ -618,6 +682,17 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 		log.Debug(os.Stdout, err)
 
 		document.WriteHeader(404)
+
+		return
+	}
+
+	err = program.LoadThumbnail()
+
+	if err != nil {
+
+		log.Debug(os.Stdout, err)
+
+		document.WriteHeader(400)
 
 		return
 	}

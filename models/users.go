@@ -7,7 +7,7 @@ func initUsers() {
 }
 
 type User struct {
-	ID         int        `gorm:"primary_key"`
+	ID         int
 	CreatedAt  time.Time  ``
 	UpdatedAt  time.Time  ``
 	DeletedAt  *time.Time ``
@@ -17,6 +17,9 @@ type User struct {
 	IconURL    string     `sql:"size:140;default:''"`
 	Website    string     `sql:"size:300;default:''"`
 	Location   string     `sql:"size:50;default:''"`
+
+	Programs []Program
+	Goods    []Good
 }
 
 func (this *User) Load(id int) error {
@@ -31,6 +34,14 @@ func (this *User) LoadFromScreenName(screenname string) error {
 	err := DB.Where("screen_name = ?", screenname).First(this).Error
 
 	return err
+}
+
+func (this *User) LoadPrograms() error {
+	return DB.Model(this).Related(&this.Programs).Error
+}
+
+func (this *User) LoadGoods() error {
+	return DB.Model(this).Related(&this.Goods).Error
 }
 
 func (this *User) Update() error {

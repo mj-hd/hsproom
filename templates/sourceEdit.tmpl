@@ -606,7 +606,7 @@ var Module = {
 		$("#thumb_box .upload_box_nofile").hide();
 		$("#thumb_box .upload_box_preview").attr("src", "/api/program/thumbnail/?p={{ .Program.ID }}").show();
 
-		{{ range $i, $file := .Program.Attachments.Files }}
+		{{ range $i, $file := .Program.Attachments }}
 			attachments.push({
 				"name":  "{{ $file.Name }}",
 				"value": "{{ $file.ToBase64 }}",
@@ -614,7 +614,6 @@ var Module = {
 	
 			var del = $('<a class="badge" href="javascript:void();">X</a>');
 			del.on("click", function() {
-				attachments[{{ $i }}].value = "DELETE";
 				$("#attachments_box").deleteItemUploadbox("{{ $file.Name }}");
 			});
 			// TODO: SmallPreview。arraybufferを解析する必要があるかもしれない。

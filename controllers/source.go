@@ -78,6 +78,24 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	err = program.LoadThumbnail()
+	if err != nil {
+		log.DebugStr(os.Stdout, "サムネイル画像の読み込みに失敗しました。")
+
+		showError(document, request, "サムネイル画像の読み込みに失敗しました。")
+
+		return
+	}
+
+	err = program.LoadAttachments()
+	if err != nil {
+		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗しました。")
+
+		showError(document, request, "添付ファイルの読み込みに失敗しました。")
+
+		return
+	}
+
 	err = tmpl.Render(document, sourceEditMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "ソースコードの編集 - " + config.SiteTitle,

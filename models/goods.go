@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -10,6 +12,9 @@ func initGoods() {
 
 type Good struct {
 	ID        int `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
 	UserID    int `sql:"index"`
 	ProgramID int `sql:"index"`
 }
@@ -45,10 +50,6 @@ func (this *Good) Remove() error {
 func GetGoodListByUser(out *[]Good, userId int, from int, number int) (int, error) {
 	var err error
 
-	if cap(*out) < number {
-		*out = make([]Good, number)
-	}
-
 	var rowCount int
 	err = DB.Model(Good{}).Where("user_id = ?", userId).Count(&rowCount).Error
 
@@ -63,10 +64,6 @@ func GetGoodListByUser(out *[]Good, userId int, from int, number int) (int, erro
 
 func GetGoodListByProgram(out *[]Good, programId int, from int, number int) (int, error) {
 	var err error
-
-	if cap(*out) < number {
-		*out = make([]Good, number)
-	}
 
 	var rowCount int
 	err = DB.Model(Good{}).Where("program_id = ?", programId).Count(&rowCount).Error
