@@ -95,7 +95,7 @@ func UpdateRankingForWeek() error {
 		message += "\n"
 		message += strconv.Itoa(i+1) + "位: "
 		message += programs[i].Title + " "
-		message += "by " + programs[i].GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
+		message += "by " + programs[i].UserName + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
 	}
 
 	return UpdateTweet(message)
@@ -119,7 +119,7 @@ func UpdateRankingForMonth() error {
 		message += "\n"
 		message += strconv.Itoa(i+1) + "位: "
 		message += programs[i].Title + " "
-		message += "by " + programs[i].GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
+		message += "by " + programs[i].UserName + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
 	}
 
 	return UpdateTweet(message)
@@ -143,7 +143,7 @@ func UpdateRankingForDay() error {
 		message += "\n"
 		message += strconv.Itoa(i+1) + "位: "
 		message += programs[i].Title + " "
-		message += "by " + programs[i].GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
+		message += "by " + programs[i].UserName + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(programs[i].ID)
 	}
 
 	return UpdateTweet(message)

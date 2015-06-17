@@ -29,6 +29,7 @@ type Program struct {
 	DeletedAt   *time.Time ``
 	Title       string     `sql:"size:100;not null"`
 	UserID      int        `sql:"not null;index"`
+	UserName    string     `sql:"-"`
 	Good        int        `sql:"default:0"`
 	Play        int        `sql:"default:0"`
 	Description string     `sql:"size:500"`
@@ -98,11 +99,23 @@ func NewProgram() *Program {
 	return &Program{}
 }
 
+func (this *Program) AfterFind() (err error) {
+	this.LoadUserName()
+
+	return nil
+}
+
 func (this *Program) Load(id int) error {
 
 	err := DB.First(this, id).Error
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	this.LoadUserName()
+
+	return nil
 }
 
 func (this *Program) LoadAttachments() error {
@@ -115,6 +128,10 @@ func (this *Program) LoadThumbnail() error {
 
 func (this *Program) LoadStartax() error {
 	return DB.Model(this).Related(&this.Startax).Error
+}
+
+func (this *Program) LoadUserName() {
+	this.UserName = this.GetUserName()
 }
 
 func (this *Program) Update() error {
@@ -167,6 +184,12 @@ func (this *Program) FindAttachment(name string) (*Attachment, error) {
 	}
 
 	return nil, errors.New("ファイル" + name + "が見つかりませんでした。")
+}
+
+func (this *Program) GetUser() (*User, error) {
+	var result User
+	err := DB.Model(this).Related(&result).Error
+	return &result, err
 }
 
 func (this Program) GetScreenName() string {

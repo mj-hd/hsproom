@@ -158,7 +158,7 @@
 				<div class="title_heading row">
 					<div class="title col-md-6">
 						<h1>{{ .Program.Title }}</h1>
-						<span class="cap"> by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日 15:04:05" }}</span>
+						<span class="cap"> by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.UserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日 15:04:05" }}</span>
 					</div>
 					<div class="share_buttons col-md-6">
 						<span class="share_played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Program.Play }}</span> 
@@ -205,7 +205,7 @@
 									<img id="profile_icon" class="circle" alt="icon">
 								</div>
 								<div class="row-content">
-									<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a></h4>
+									<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.UserName }}</a></h4>
 									<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
 									<a class="user_detail_link" href="/user/view/?u={{ .Program.UserID }}">詳しく...</a>
 								</div>
@@ -236,7 +236,7 @@
 							<div class="program_content">
 								<div class="program_item_heading">
 									<span class="h2"><a href="/program/view/?p={{ .ID }}">{{ .Title }}</a></span>
-									<span class="small"><a href="/user/view/?u={{ .UserID }}">{{ .GetUserName }}</a></span>
+									<span class="small"><a href="/user/view/?u={{ .UserID }}">{{ .UserName }}</a></span>
 								</div>
 								<div class="program_item_accessory">
 									<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span>

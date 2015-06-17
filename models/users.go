@@ -99,11 +99,15 @@ func ExistsUser(id int) bool {
 
 func GetUserName(id int) (string, error) {
 
-	var name string
+	result := struct {
+		Name string
+	}{
+		Name: "",
+	}
 
-	err := DB.Model(User{}).Where("id = ?", id).Select("name").Scan(&name).Error
+	err := DB.Model(User{}).Where("id = ?", id).Select("name").Scan(&result).Error
 
-	return name, err
+	return result.Name, err
 }
 
 func GetUserScreenName(id int) (string, error) {

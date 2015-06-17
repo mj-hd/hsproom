@@ -189,7 +189,7 @@
 </nav>
 
 <div class="information">
-	<small>by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日" }}</small>
+	<small>by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.UserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日" }}</small>
 </div>
 <div class="indicators">
 	<i class="mdi-av-play-circle-outline"></i>{{ .Program.Play }}
@@ -263,7 +263,7 @@
 				<img id="profile_icon" class="circle" alt="icon">
 			</div>
 			<div class="row-content">
-				<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.GetUserName }}</a></h4>
+				<h4 class="list-group-item-heading"><a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.UserName }}</a></h4>
 				<p id="profile" class="list-group-item-text">ここはユーザの紹介文</p>
 				<a class="user_detail_link" href="/user/view/?u={{ .Program.UserID }}">詳しく...</a>
 			</div>

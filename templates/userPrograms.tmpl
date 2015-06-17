@@ -47,7 +47,7 @@
 <div class="col-md-7 col-xs-12">
 	<div class="panel panel-default">
 		<div class="panel-heading">
-				<b>{{ .GetUserName }} のプログラム</b>
+				<b>{{ .UserName }} のプログラム</b>
 			<span id="sort_display" class="small"></span>
 		</div>
 		<div class="panel-body">
@@ -68,7 +68,7 @@
 						<div class="program_content">
 							<div class="program_item_heading">
 								<span class="h2"><a href="/program/view/?p={{ .ID }}">{{ .Title }}</a></span>
-								<span class="small">by <a href="/user/view/?u={{ .UserID }}">{{ .GetUserName }}</a></span>
+								<span class="small">by <a href="/user/view/?u={{ .UserID }}">{{ .UserName }}</a></span>
 							</div>
 							<div class="program_item_accessory">
 								<span class="played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Play }}</span> 

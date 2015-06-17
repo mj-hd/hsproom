@@ -28,7 +28,7 @@ func (this *Good) Load(id int) error {
 
 func (this *Good) LoadByUserAndProgram(userId int, programId int) error {
 
-	err := DB.Model(Good{}).Where("user_id = ? AND program_id", userId, programId).First(this).Error
+	err := DB.Model(Good{}).Where("user_id = ? AND program_id = ?", userId, programId).First(this).Error
 
 	return err
 }
