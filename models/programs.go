@@ -399,7 +399,6 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	if (flag & ProgramThumbnail) != 0 {
 
-			attachments[{{ $i }}].value = "DELETE";
 		data, err := base64.StdEncoding.DecodeString(this.Thumbnail)
 		if err != nil {
 			return program, err
