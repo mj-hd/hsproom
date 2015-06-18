@@ -200,13 +200,20 @@
 
 			</div>
 		</div>
+
+		<input id="published" type="hidden" name="published" value="{{ .Program.Published }}">
 	
-		<div class="col-md-6">
+		<div class="col-md-4">
 			<div class="form-group">
 				<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</a>
 			</div>
 		</div>
-		<div class="col-md-6">
+		<div class="col-md-4">
+			<div class="form-group">
+				<button class="btn btn-default btn-raised btn-block form-control" type="button"onclick="submitAsDraft();" >下書きとして保存</button>
+			</div>
+		</div>
+		<div class="col-md-4">
 			<div class="form-group">
 				<button class="btn btn-success btn-raised btn-block form-control" type="submit">更新</a>
 			</div>
@@ -237,6 +244,12 @@
 var thumbnail = "";
 var startax   = "";
 var attachments = new Array(0);
+
+function submitAsDraft() {
+	$("#published").val("false");
+
+	$("#update_program").submit();
+}
 
 $(document).ready(function() {
 

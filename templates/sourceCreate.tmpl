@@ -144,13 +144,20 @@
 			</div>
 		</div>
 
+		<input id="published" type="hidden" name="published" value="true">
+
 		<div class="row">
-			<div class="col-md-6">
+			<div class="col-md-4">
 				<div class="form-group">
 					<button class="btn btn-default btn-raised form-control" type="reset">キャンセル</button>
 				</div>
 			</div>
-			<div class="col-md-6">
+			<div class="col-md-4">
+				<div class="form-group">
+					<button class="btn btn-default btn-raised form-control" type="button" onclick="submitAsDraft();">下書きとして保存</button>
+				</div>
+			</div>
+			<div class="col-md-4">
 				<div class="form-group">
 					<button class="btn btn-success btn-raised form-control" type="submit">投稿</button>
 				</div>
@@ -421,6 +428,12 @@ var Module = {
 		var keyword = editor.getSelectedText();
 
 		window.open("http://ohdl.hsproom.me/?q="+keyword, "OHDL", "width=800,height=500,menubar=no,status=no,");
+	}
+
+	function submitAsDraft() {
+		$("#published").val("false");
+
+		$("#create_source").submit();
 	}
 
 	$(document).ready(function () {

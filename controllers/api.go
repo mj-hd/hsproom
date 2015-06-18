@@ -215,7 +215,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramID | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
+	targetFlags := models.ProgramPublished | models.ProgramID | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
 	rawProgram.ID = request.FormValue("id")
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
@@ -226,6 +226,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.Steps = request.FormValue("steps")
 	rawProgram.Sourcecode = request.FormValue("sourcecode")
 	rawProgram.Runtime = request.FormValue("runtime")
+	rawProgram.Published = request.FormValue("published")
 
 	if rawProgram.Steps == "" {
 		targetFlags -= models.ProgramSteps
@@ -335,6 +336,10 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	Found:
 	}
 
+	if program.Published {
+		println("Published!!")
+	}
+
 	err = program.Update()
 	if err != nil {
 		log.Fatal(os.Stdout, err)
@@ -386,7 +391,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
+	targetFlags := models.ProgramPublished | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
 	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
@@ -396,6 +401,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.Steps = request.FormValue("steps")
 	rawProgram.Sourcecode = request.FormValue("sourcecode")
 	rawProgram.Runtime = request.FormValue("runtime")
+	rawProgram.Published = request.FormValue("published")
 
 	if rawProgram.Steps == "" {
 		targetFlags -= models.ProgramSteps
@@ -1252,19 +1258,21 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 		}, 403)
 	}
 
-	var programs []models.Program
-	i, err := models.GetProgramListByUser(models.ProgramColCreatedAt, &programs, userId, true, offset, number)
+	var user models.User
+	err = user.Load(userId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		// エラー処理
+	}
 
-		writeStruct(document, apiUserProgramListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+	err = user.LoadPrograms()
+
+	if err != nil {
+		// エラー処理
+	}
+
+	if offset+number > len(user.Programs) {
+		number = len(user.Programs) - offset
 	}
 
 	writeStruct(document, apiUserProgramListMember{
@@ -1272,8 +1280,8 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 			Status:  "success",
 			Message: "一覧の取得に成功しました。",
 		},
-		Programs:     programs,
-		ProgramCount: i,
+		Programs:     user.Programs[offset : offset+number],
+		ProgramCount: len(user.Programs),
 	}, 200)
 }
 

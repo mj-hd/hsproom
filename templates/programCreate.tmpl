@@ -195,16 +195,23 @@
 
 			</div>
 		</div>
+
+	<input id="published" type="hidden" name="published" value="true">
 	
 	<div class="row">
-		<div class="col-md-6">
+		<div class="col-md-4">
 			<div class="form-group">
-				<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</a>
+				<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</button>
 			</div>
 		</div>
-		<div class="col-md-6">
+		<div class="col-md-4">
 			<div class="form-group">
-				<button class="btn btn-success btn-raised btn-block form-control" type="submit">投稿</a>
+				<button class="btn btn-default btn-raised btn-block form-control" type="button"onclick="submitAsDraft();" >下書きとして保存</button>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="form-group">
+				<button class="btn btn-success btn-raised btn-block form-control" type="submit">投稿</button>
 			</div>
 		</div>
 	</div>
@@ -234,6 +241,12 @@
 var thumbnail = "";
 var startax   = "";
 var attachments = new Array(0);
+
+function submitAsDraft() {
+	$("#published").val("false");
+
+	$("#create_program").submit();
+}
 
 $(document).ready(function() {
 

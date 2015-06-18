@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -176,13 +177,25 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = models.PlayProgram(program.ID)
+	userId := getSessionUser(request)
 
-	if err != nil {
-		log.Fatal(os.Stdout, err)
+	if program.Published {
 
-		showError(document, request, "エラーが発生しました。")
-		return
+		err = models.PlayProgram(program.ID)
+
+		if err != nil {
+			log.Fatal(os.Stdout, err)
+
+			showError(document, request, "エラーが発生しました。")
+			return
+		}
+	} else {
+		if program.UserID != userId {
+			log.Debug(os.Stdout, errors.New("非公開のプログラムへのアクセス"))
+
+			showError(document, request, "非公開のプログラムです。")
+			return
+		}
 	}
 
 	var related []models.Program

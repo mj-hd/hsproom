@@ -35,6 +35,7 @@ type Program struct {
 	Description string     `sql:"size:500"`
 	Steps       int        `sql:"default:5000"`
 	Runtime     string     `sql:"size:10;default:'HSP3Dish'"`
+	Published   bool       `sql:"not null"`
 
 	Startax     Startax      ``
 	Attachments []Attachment ``
@@ -97,6 +98,10 @@ func (this *Attachment) Remove() error {
 
 func NewProgram() *Program {
 	return &Program{}
+}
+
+func Published(db *gorm.DB) *gorm.DB {
+	return db.Where("published = ?", 1)
 }
 
 func (this *Program) AfterFind() (err error) {
@@ -217,6 +222,7 @@ type RawProgram struct {
 	Steps       string
 	Sourcecode  string
 	Runtime     string
+	Published   string
 }
 
 const (
@@ -230,9 +236,21 @@ const (
 	ProgramSteps
 	ProgramSourcecode
 	ProgramRuntime
+	ProgramPublished
 )
 
 func (this *RawProgram) Validate(flag uint) error {
+
+	published := true
+
+	if (flag & ProgramPublished) != 0 {
+
+		if this.Published != "true" {
+			println("Unpublished!!")
+			published = false
+		}
+
+	}
 
 	if (flag & ProgramID) != 0 {
 
@@ -269,8 +287,14 @@ func (this *RawProgram) Validate(flag uint) error {
 
 	if (flag & ProgramDescription) != 0 {
 
-		if len(this.Description) <= 0 || len(this.Description) > 500 {
-			return errors.New("説明文の文字数が範囲外です。")
+		if published {
+			if len(this.Description) <= 0 || len(this.Description) > 500 {
+				return errors.New("説明文の文字数が範囲外です。")
+			}
+		} else {
+			if len(this.Description) > 500 {
+				return errors.New("説明文の文字数が範囲外です。")
+			}
 		}
 
 	}
@@ -321,6 +345,16 @@ func (this *RawProgram) Validate(flag uint) error {
 func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	program := NewProgram()
+
+	program.Published = true
+
+	if (flag & ProgramPublished) != 0 {
+
+		if this.Published != "true" {
+			program.Published = false
+		}
+
+	}
 
 	if (flag & ProgramID) != 0 {
 
@@ -377,7 +411,9 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		if len(data) == 0 {
-			return program, errors.New("Startaxファイルの内容が空です。")
+			if program.Published {
+				return program, errors.New("Startaxファイルの内容が空です。")
+			}
 		}
 
 		program.Startax.Data = data
@@ -394,7 +430,10 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		err := json.Unmarshal([]byte(this.Attachments), &pairs)
 
 		if err != nil {
-			return program, err
+			if program.Published {
+				return program, err
+			}
+			// TODO: elseの場合、抜け出す処理をすべき
 		}
 
 		for _, pair := range pairs {
@@ -428,7 +467,9 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		if len(data) == 0 {
-			return program, errors.New("サムネイルの内容が空です。")
+			if program.Published {
+				return program, errors.New("サムネイルの内容が空です。")
+			}
 		}
 
 		program.Thumbnail.Data = data
@@ -525,12 +566,12 @@ func getProgramRankingSince(since time.Time, out *[]Program, from int, number in
 	var err error
 
 	var rowCount int
-	err = DB.Model(Program{}).Where("created_at >= ?", since.Format("2006-1-2")).Count(&rowCount).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("created_at >= ?", since.Format("2006-1-2")).Count(&rowCount).Error
 	if err != nil {
 		return 0, err
 	}
 
-	err = DB.Model(Program{}).Where("created_at >= ?", since.Format("2006-1-2")).Order("good desc, play desc").Limit(from).Offset(number).Find(out).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("created_at >= ?", since.Format("2006-1-2")).Order("good desc, play desc").Limit(from).Offset(number).Find(out).Error
 	return rowCount, err
 }
 
@@ -558,7 +599,7 @@ func GetProgramListBy(keyColumn ProgramColumn, out *[]Program, isDesc bool, from
 	}
 
 	// クエリを発行
-	err = DB.Model(Program{}).Order(keyColumn.String() + " " + order).Limit(number).Offset(from).Find(out).Error
+	err = DB.Model(Program{}).Scopes(Published).Order(keyColumn.String() + " " + order).Limit(number).Offset(from).Find(out).Error
 
 	return rowCount, err
 }
@@ -578,13 +619,13 @@ func GetProgramListByQuery(out *[]Program, query string, keyColumn ProgramColumn
 	queryMod := "%" + query + "%"
 
 	var rowCount int
-	err = DB.Model(Program{}).Where("title LIKE ?", queryMod).Count(&rowCount).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("title LIKE ?", queryMod).Count(&rowCount).Error
 	if err != nil {
 		return 0, err
 	}
 
 	// クエリを発行
-	err = DB.Model(Program{}).Where("title LIKE ?", queryMod).Order(keyColumn.String() + " " + order).Limit(number).Offset(offset).Find(out).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("title LIKE ?", queryMod).Order(keyColumn.String() + " " + order).Limit(number).Offset(offset).Find(out).Error
 
 	return int(rowCount), err
 
@@ -603,12 +644,12 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]Program, user int, isD
 	}
 
 	var rowCount int
-	err = DB.Model(Program{}).Where("user_id = ?", user).Count(&rowCount).Error
+	err = DB.Model(Program{}).Where("user_id = ?", user).Scopes(Published).Count(&rowCount).Error
 	if err != nil {
 		return 0, err
 	}
 
-	err = DB.Model(Program{}).Where("user_id = ?", user).Order(keyColumn.String() + " " + order).Limit(number).Offset(from).Find(out).Error
+	err = DB.Model(Program{}).Where("user_id = ?", user).Scopes(Published).Order(keyColumn.String() + " " + order).Limit(number).Offset(from).Find(out).Error
 
 	return rowCount, err
 }
@@ -628,20 +669,20 @@ func GetProgramListRelatedTo(out *[]Program, title string, number int) error {
 	}
 
 	var rowCount int
-	err = DB.Model(Program{}).Where("("+condition+") AND title <> ?", title).Count(&rowCount).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("("+condition+") AND title <> ?", title).Count(&rowCount).Error
 
 	if (err != nil) || (rowCount == 0) {
 		return errors.New("関連プログラムが見つかりませんでした。")
 	}
 
-	err = DB.Model(Program{}).Where("("+condition+") AND title <> ?", title).Find(out).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("("+condition+") AND title <> ?", title).Find(out).Error
 	return err
 }
 
 func ExistsProgram(id int) bool {
 
 	var rowCount int
-	err := DB.Model(Program{}).Where("id = ?", id).Count(&rowCount).Error
+	err := DB.Model(Program{}).Scopes(Published).Where("id = ?", id).Count(&rowCount).Error
 
 	if err != nil {
 		return false
