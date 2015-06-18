@@ -307,6 +307,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	prevProg.LoadAttachments()
 
 	// 以前のプログラムと合成する
+	program.CreatedAt = prevProg.CreatedAt
 	program.UserID = prevProg.UserID
 	program.Good = prevProg.Good
 	program.Play = prevProg.Play
@@ -364,7 +365,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 type apiProgramCreateMember struct {
 	*apiMember
-	Id int
+	ID int
 }
 
 type apiNameValuePair struct {
@@ -476,7 +477,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 			Status:  "success",
 			Message: "保存に成功しました。",
 		},
-		Id: id,
+		ID: id,
 	}, 200)
 
 	bot.UpdateTweet("新しいプログラムが投稿されました! #hsproom\n\n " + program.Title + " by " + program.GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(id))
@@ -949,6 +950,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 
 		id = oldUser.ID
 		dbUser.ID = oldUser.ID
+		dbUser.CreatedAt = oldUser.CreatedAt
 
 		err = dbUser.Update()
 

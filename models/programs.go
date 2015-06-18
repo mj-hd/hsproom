@@ -246,7 +246,6 @@ func (this *RawProgram) Validate(flag uint) error {
 	if (flag & ProgramPublished) != 0 {
 
 		if this.Published != "true" {
-			println("Unpublished!!")
 			published = false
 		}
 

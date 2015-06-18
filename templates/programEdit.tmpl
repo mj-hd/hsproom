@@ -353,6 +353,8 @@ $(document).ready(function() {
 			}
 
 			assertBottom("success", message);
+
+			location.href = "/program/view/?p={{ .Program.ID }}";
 		}).error(function (json) {
 			
 			var modal = $("#modal");
