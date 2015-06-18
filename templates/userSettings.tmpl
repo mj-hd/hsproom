@@ -255,7 +255,13 @@ function updateUserPrograms(page) {
 		$("#edit .list-group").html("");
 		$.each(data.Programs, function () {
 			if (this.Title != "") {
-				$("#edit .list-group").append(userProgramListItem(this));
+				var listItem = userProgramListItem(this);
+
+				if (!this.Published) {
+					listItem.find(".least-content").prepend('<span class="label label-info">下書き</span> ');
+				}
+
+				$("#edit .list-group").append(listItem);
 			}
 		});
 
