@@ -2,7 +2,6 @@ package bot
 
 import (
 	"errors"
-	"os"
 	"strconv"
 	"time"
 
@@ -43,23 +42,23 @@ func init() {
 			// 12時0分
 			if now.Hour() == 12 && now.Minute() == 0 {
 				err = UpdateRankingForDay()
-				log.InfoStr(os.Stdout, "Tweeted daily ranking.")
+				log.InfoStr("Tweeted daily ranking.")
 			}
 
 			// 金曜日12時0分
 			if now.Weekday() == time.Friday && now.Hour() == 12 && now.Minute() == 0 {
 				err = UpdateRankingForWeek()
-				log.InfoStr(os.Stdout, "Tweeted weekly ranking.")
+				log.InfoStr("Tweeted weekly ranking.")
 			}
 
 			// 1日12時0分
 			if now.Day() == 1 && now.Hour() == 12 && now.Minute() == 0 {
 				err = UpdateRankingForMonth()
-				log.InfoStr(os.Stdout, "Tweeted monthly ranking.")
+				log.InfoStr("Tweeted monthly ranking.")
 			}
 
 			if err != nil {
-				log.Fatal(os.Stdout, err)
+				log.Fatal(err)
 			}
 
 			time.Sleep(60 * time.Second)

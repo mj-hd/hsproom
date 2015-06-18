@@ -3,7 +3,6 @@ package controllers
 import (
 	"html/template"
 	"net/http"
-	"os"
 
 	"../config"
 	"../templates"
@@ -29,7 +28,7 @@ func helpHandler(document http.ResponseWriter, request *http.Request) {
 	})
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		showError(document, request, "エラーが発生しました。")
 	}

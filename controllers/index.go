@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"os"
 
 	"../config"
 	"../models"
@@ -27,7 +26,7 @@ func indexHandler(document http.ResponseWriter, request *http.Request) {
 	_, err := models.GetProgramListBy(models.ProgramColCreatedAt, &programs, true, 0, 4)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		showError(document, request, "ページの読み込みに失敗しました。")
 
@@ -42,7 +41,7 @@ func indexHandler(document http.ResponseWriter, request *http.Request) {
 		RecentPrograms: &programs,
 	})
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 		showError(document, request, "ページの表示に失敗しました。")
 		return
 	}

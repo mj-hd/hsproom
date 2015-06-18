@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strconv"
 
@@ -56,7 +55,7 @@ func writeStruct(document http.ResponseWriter, s interface{}, httpStatus int) {
 
 	if err != nil {
 
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(500)
 		document.Write([]byte("{ \"Status\" : \"error\", \"Message\" : \"不明のエラーです。\" }"))
@@ -92,7 +91,7 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 
 	if request.Method != "POST" {
 
-		log.DebugStr(os.Stdout, "POST以外のGoodリクエスト")
+		log.DebugStr("POST以外のGoodリクエスト")
 
 		writeStruct(document, apiProgramGoodMember{
 			apiMember: &apiMember{
@@ -110,8 +109,8 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 
 	if err != nil {
 
-		log.DebugStr(os.Stdout, "不正なプログラムID "+string(programId))
-		log.Debug(os.Stdout, err)
+		log.DebugStr("不正なプログラムID " + string(programId))
+		log.Debug(err)
 
 		writeStruct(document, apiProgramGoodMember{
 			apiMember: &apiMember{
@@ -125,8 +124,8 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 
 	if !models.ExistsProgram(programId) {
 
-		log.FatalStr(os.Stdout, "プログラム["+string(programId)+"]の読み込みに失敗")
-		log.Fatal(os.Stdout, err)
+		log.FatalStr("プログラム[" + string(programId) + "]の読み込みに失敗")
+		log.Fatal(err)
 
 		writeStruct(document, apiProgramGoodMember{
 			apiMember: &apiMember{
@@ -141,7 +140,7 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 	user := getSessionUser(request)
 	if user == 0 {
 
-		log.DebugStr(os.Stdout, "匿名のGoodリクエスト")
+		log.DebugStr("匿名のGoodリクエスト")
 
 		writeStruct(document, apiProgramGoodMember{
 			apiMember: &apiMember{
@@ -154,7 +153,7 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 	}
 
 	if !models.CanGoodProgram(user, programId) {
-		log.DebugStr(os.Stdout, "無効なGoodリクエスト")
+		log.DebugStr("無効なGoodリクエスト")
 
 		writeStruct(document, apiProgramGoodMember{
 			apiMember: &apiMember{
@@ -173,7 +172,7 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 	_, err = good.Create()
 	if err != nil {
 
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 		writeStruct(document, apiProgramGoodMember{
 			apiMember: &apiMember{
 				Status:  "error",
@@ -201,7 +200,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	// メソッドの確認
 	if request.Method != "POST" {
 
-		log.DebugStr(os.Stdout, "POST以外のUpdateリクエスト")
+		log.DebugStr("POST以外のUpdateリクエスト")
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -243,7 +242,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	err := rawProgram.Validate(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -258,7 +257,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	// プログラムへ変換
 	program, err := rawProgram.ToProgram(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -275,7 +274,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	err = prevProg.Load(program.ID)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -289,7 +288,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// ユーザのチェック
 	if getSessionUser(request) != prevProg.UserID {
-		log.DebugStr(os.Stdout, "プログラムの権限のない変更")
+		log.DebugStr("プログラムの権限のない変更")
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -343,7 +342,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	err = program.Update()
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -378,7 +377,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	// メソッドの確認
 	if request.Method != "POST" {
 
-		log.DebugStr(os.Stdout, "POST以外のCreateリクエスト")
+		log.DebugStr("POST以外のCreateリクエスト")
 
 		writeStruct(document, apiProgramUpdateMember{
 			apiMember: &apiMember{
@@ -415,7 +414,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// ログインしていない
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名のCreateリクエスト")
+		log.DebugStr("匿名のCreateリクエスト")
 
 		writeStruct(document, apiProgramCreateMember{
 			apiMember: &apiMember{
@@ -429,7 +428,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	err := rawProgram.Validate(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramCreateMember{
 			apiMember: &apiMember{
@@ -444,7 +443,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	// プログラムへ変換
 	program, err := rawProgram.ToProgram(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramCreateMember{
 			apiMember: &apiMember{
@@ -460,7 +459,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	id, err := program.Create()
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiProgramCreateMember{
 			apiMember: &apiMember{
@@ -492,7 +491,7 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 
 	if request.Method != "GET" {
 
-		log.DebugStr(os.Stdout, "GET以外のDataListリクエスト")
+		log.DebugStr("GET以外のDataListリクエスト")
 
 		writeStruct(document, apiProgramDataListMember{
 			apiMember: &apiMember{
@@ -508,7 +507,7 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 
 	if err != nil {
 
-		log.DebugStr(os.Stdout, "プログラムIDが不正")
+		log.DebugStr("プログラムIDが不正")
 
 		writeStruct(document, apiProgramDataListMember{
 			apiMember: &apiMember{
@@ -525,7 +524,7 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramDataListMember{
 			apiMember: &apiMember{
@@ -541,7 +540,7 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramDataListMember{
 			apiMember: &apiMember{
@@ -573,7 +572,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 	if request.Method != "GET" {
 
-		log.DebugStr(os.Stdout, "GET以外のDataリクエスト")
+		log.DebugStr("GET以外のDataリクエスト")
 
 		document.WriteHeader(400)
 
@@ -587,7 +586,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 	if err != nil {
 
-		log.DebugStr(os.Stdout, "不正なプログラムID")
+		log.DebugStr("不正なプログラムID")
 
 		document.WriteHeader(400)
 
@@ -599,8 +598,8 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
-		log.DebugStr(os.Stdout, "プログラムが見つからない")
+		log.Debug(err)
+		log.DebugStr("プログラムが見つからない")
 
 		document.WriteHeader(404)
 
@@ -610,7 +609,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	fileName := request.URL.Query().Get("f")
 	if fileName == "" {
 
-		log.DebugStr(os.Stdout, "空のDataリクエスト")
+		log.DebugStr("空のDataリクエスト")
 
 		document.WriteHeader(404)
 
@@ -632,7 +631,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 	if err != nil {
 
-		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗")
+		log.DebugStr("添付ファイルの読み込みに失敗")
 
 		document.WriteHeader(400)
 
@@ -650,7 +649,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	}
 
 	// ファイルが見つからなかった
-	log.DebugStr(os.Stdout, "指定されたファイルが見つからなかった")
+	log.DebugStr("指定されたファイルが見つからなかった")
 	document.WriteHeader(404)
 }
 
@@ -659,7 +658,7 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 
 	if request.Method != "GET" {
 
-		log.DebugStr(os.Stdout, "GET以外のThumbnailリクエスト")
+		log.DebugStr("GET以外のThumbnailリクエスト")
 
 		document.WriteHeader(400)
 
@@ -673,7 +672,7 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		document.WriteHeader(400)
 
@@ -686,7 +685,7 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		document.WriteHeader(404)
 
@@ -697,7 +696,7 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		document.WriteHeader(400)
 
@@ -748,7 +747,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	number, err := strconv.Atoi(rawNumber)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiTwitterSearchMember{
 			apiMember: &apiMember{
@@ -761,7 +760,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	offset, err := strconv.ParseInt(rawOffset, 10, 64)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiTwitterSearchMember{
 			apiMember: &apiMember{
@@ -777,7 +776,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 	symbols, err := regexp.Compile("[\\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]")
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiTwitterSearchMember{
 			apiMember: &apiMember{
@@ -796,7 +795,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	tweets, err := twitterClient.SearchTweets(query, number, offset)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiTwitterSearchMember{
 			apiMember: &apiMember{
@@ -808,7 +807,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiTwitterSearchMember{
 			apiMember: &apiMember{
@@ -836,7 +835,7 @@ type apiOAuthRequestTokenMember struct {
 
 func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.Request) {
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のRequestTokenリクエスト")
+		log.DebugStr("GET以外のRequestTokenリクエスト")
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
@@ -850,7 +849,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 	callbackUrl := request.URL.Query().Get("c")
 
 	if callbackUrl == "" {
-		log.DebugStr(os.Stdout, "callback指定のないRequestTokenリクエスト")
+		log.DebugStr("callback指定のないRequestTokenリクエスト")
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
@@ -863,7 +862,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 
 	url, err := oauthClient.GetAuthURL(config.SiteURL + "/api/twitter/access_token/?c=" + url.QueryEscape(callbackUrl))
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
@@ -887,7 +886,7 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のAccessTokenリクエスト")
+		log.DebugStr("GET以外のAccessTokenリクエスト")
 
 		document.WriteHeader(403)
 
@@ -898,7 +897,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	token := request.URL.Query().Get("oauth_token")
 
 	if verifier == "" || token == "" {
-		log.DebugStr(os.Stdout, "クエリが空")
+		log.DebugStr("クエリが空")
 
 		document.WriteHeader(403)
 
@@ -907,7 +906,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 
 	accessToken, err := oauthClient.GetAccessToken(verifier, token)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(500)
 
@@ -917,7 +916,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	user, err := oauthClient.CheckUserCredentialsAndGetUser(accessToken)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(500)
 
@@ -940,7 +939,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	if err != nil {
 		id, err = dbUser.Create()
 		if err != nil {
-			log.Fatal(os.Stdout, err)
+			log.Fatal(err)
 
 			document.WriteHeader(500)
 
@@ -955,7 +954,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 		err = dbUser.Update()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
+			log.Fatal(err)
 
 			document.WriteHeader(500)
 
@@ -966,7 +965,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 
 	session, err := getSession(request)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(403)
 
@@ -987,7 +986,7 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 
 func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Request) {
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のGoogleRequestTokenリクエスト")
+		log.DebugStr("GET以外のGoogleRequestTokenリクエスト")
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
@@ -1000,7 +999,7 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 
 	url, err := oauth2Client.GetAuthURL(config.SiteURL + "/api/google/access_token/")
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
@@ -1013,7 +1012,7 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 
 	session, err := getSession(request)
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiOAuthRequestTokenMember{
 			apiMember: &apiMember{
@@ -1044,7 +1043,7 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のGoogleAccessTokenリクエスト")
+		log.DebugStr("GET以外のGoogleAccessTokenリクエスト")
 
 		document.WriteHeader(403)
 
@@ -1055,7 +1054,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 	token := request.URL.Query().Get("code")
 
 	if verifier == "" || token == "" {
-		log.DebugStr(os.Stdout, "クエリが空")
+		log.DebugStr("クエリが空")
 
 		document.WriteHeader(403)
 
@@ -1064,7 +1063,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 
 	accessToken, err := oauth2Client.GetToken(verifier, token)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(500)
 
@@ -1074,7 +1073,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 	userinfo, err := oauth2Client.GetUser(accessToken)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(500)
 
@@ -1098,7 +1097,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 		id, err = dbUser.Create()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
+			log.Fatal(err)
 
 			document.WriteHeader(500)
 
@@ -1112,7 +1111,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 		err = dbUser.Update()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
+			log.Fatal(err)
 
 			document.WriteHeader(500)
 
@@ -1122,7 +1121,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 
 	session, err := getSession(request)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		document.WriteHeader(403)
 
@@ -1151,7 +1150,7 @@ type apiUserInfoMember struct {
 
 func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) {
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のUserInfoリクエスト")
+		log.DebugStr("GET以外のUserInfoリクエスト")
 
 		writeStruct(document, apiUserInfoMember{
 			apiMember: &apiMember{
@@ -1166,7 +1165,7 @@ func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) {
 	userId, err := strconv.Atoi(rawUserId)
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "ユーザ指定のないリクエスト")
+		log.DebugStr("ユーザ指定のないリクエスト")
 
 		writeStruct(document, apiUserInfoMember{
 			apiMember: &apiMember{
@@ -1182,7 +1181,7 @@ func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) {
 	err = user.Load(userId)
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "存在しないユーザのリクエスト")
+		log.DebugStr("存在しないユーザのリクエスト")
 
 		writeStruct(document, apiUserInfoMember{
 			apiMember: &apiMember{
@@ -1207,7 +1206,7 @@ type apiUserProgramListMember struct {
 func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のUserProgramListリクエスト")
+		log.DebugStr("GET以外のUserProgramListリクエスト")
 
 		writeStruct(document, apiUserProgramListMember{
 			apiMember: &apiMember{
@@ -1220,7 +1219,7 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiUserProgramListMember{
 			apiMember: &apiMember{
@@ -1232,7 +1231,7 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 	}
 
 	if !models.ExistsUser(userId) {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiUserProgramListMember{
 			apiMember: &apiMember{
@@ -1250,7 +1249,7 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 
 	number, err := strconv.Atoi(request.URL.Query().Get("n"))
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiUserProgramListMember{
 			apiMember: &apiMember{
@@ -1296,7 +1295,7 @@ type apiUserGoodsMember struct {
 func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のUserGoodリクエスト")
+		log.DebugStr("GET以外のUserGoodリクエスト")
 
 		writeStruct(document, apiUserGoodsMember{
 			apiMember: &apiMember{
@@ -1310,7 +1309,7 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiUserGoodsMember{
 			apiMember: &apiMember{
@@ -1322,7 +1321,7 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 	}
 
 	if !models.ExistsUser(userId) {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiUserGoodsMember{
 			apiMember: &apiMember{
@@ -1336,7 +1335,7 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 	offset, err := strconv.Atoi(request.URL.Query().Get("o"))
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "不正なオフセット。")
+		log.DebugStr("不正なオフセット。")
 
 		writeStruct(document, apiUserGoodsMember{
 			apiMember: &apiMember{
@@ -1349,7 +1348,7 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 	number, err := strconv.Atoi(request.URL.Query().Get("n"))
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "不正な制限数。")
+		log.DebugStr("不正な制限数。")
 
 		writeStruct(document, apiUserGoodsMember{
 			apiMember: &apiMember{
@@ -1366,7 +1365,7 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiUserGoodsMember{
 			apiMember: &apiMember{
@@ -1407,7 +1406,7 @@ type apiProgramGoodCountMember struct {
 func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のProgramGoodCountリクエスト")
+		log.DebugStr("GET以外のProgramGoodCountリクエスト")
 
 		writeStruct(document, apiProgramGoodCountMember{
 			apiMember: &apiMember{
@@ -1421,7 +1420,7 @@ func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Requ
 	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramGoodCountMember{
 			apiMember: &apiMember{
@@ -1433,7 +1432,7 @@ func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Requ
 	}
 
 	if !models.ExistsProgram(programId) {
-		log.DebugStr(os.Stdout, "存在しないプログラムID。")
+		log.DebugStr("存在しないプログラムID。")
 
 		writeStruct(document, apiProgramGoodCountMember{
 			apiMember: &apiMember{
@@ -1463,7 +1462,7 @@ type apiProgramRemoveMember struct {
 func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "POST" {
-		log.DebugStr(os.Stdout, "POST以外のProgramRemoveリクエスト")
+		log.DebugStr("POST以外のProgramRemoveリクエスト")
 
 		writeStruct(document, apiProgramRemoveMember{
 			apiMember: &apiMember{
@@ -1477,7 +1476,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 	programId, err := strconv.Atoi(request.FormValue("p"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiProgramRemoveMember{
 			apiMember: &apiMember{
@@ -1490,7 +1489,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 
 	userId := getSessionUser(request)
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名のProgramRemoveリクエスト")
+		log.DebugStr("匿名のProgramRemoveリクエスト")
 
 		writeStruct(document, apiProgramRemoveMember{
 			apiMember: &apiMember{
@@ -1505,7 +1504,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 	err = program.Load(programId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiProgramRemoveMember{
 			apiMember: &apiMember{
@@ -1517,7 +1516,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	if program.UserID != userId {
-		log.DebugStr(os.Stdout, "権限のないProgramRemoveリクエスト")
+		log.DebugStr("権限のないProgramRemoveリクエスト")
 
 		writeStruct(document, apiProgramRemoveMember{
 			apiMember: &apiMember{
@@ -1531,7 +1530,7 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 	err = program.Remove()
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiProgramRemoveMember{
 			apiMember: &apiMember{
@@ -1557,7 +1556,7 @@ type apiGoodRemoveMember struct {
 func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "POST" {
-		log.DebugStr(os.Stdout, "POST以外のGoodRemoveリクエスト")
+		log.DebugStr("POST以外のGoodRemoveリクエスト")
 
 		writeStruct(document, apiGoodRemoveMember{
 			apiMember: &apiMember{
@@ -1571,7 +1570,7 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
 	programId, err := strconv.Atoi(request.FormValue("p"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		writeStruct(document, apiGoodRemoveMember{
 			apiMember: &apiMember{
@@ -1584,7 +1583,7 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
 
 	userId := getSessionUser(request)
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名のGoodRemoveリクエスト")
+		log.DebugStr("匿名のGoodRemoveリクエスト")
 
 		writeStruct(document, apiGoodRemoveMember{
 			apiMember: &apiMember{
@@ -1599,7 +1598,7 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
 	err = good.LoadByUserAndProgram(userId, programId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiGoodRemoveMember{
 			apiMember: &apiMember{
@@ -1613,7 +1612,7 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
 	err = good.Remove()
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		writeStruct(document, apiGoodRemoveMember{
 			apiMember: &apiMember{
