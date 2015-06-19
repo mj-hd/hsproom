@@ -4,7 +4,7 @@ var critical = false;
 var Module = {
 	TOTAL_MEMORY: 1024*1024*30,
 	preRun: [],
-	postRun: [],
+	postRun: [postProgramRun],
 	print:  (function() {
 		return function(text) {
 			text = Array.prototype.slice.call(arguments).join(' ');
@@ -26,11 +26,10 @@ var Module = {
 	arguments: ["start.ax"],
 	filePackagePrefixURL: "/static/data/"
 };
-console.log("Downloading...");
+console.log("Waiting...");
 
 Module["preRun"].push(function() {
 	Module["addRunDependency"]("hsp");
-	runWithFS();
 });
 
 </script>
@@ -43,7 +42,9 @@ Module["preRun"].push(function() {
 var fileNames = ["start.ax"];
 
 // 初期化後の読み込み
-function runWithFS() {
+function runWithFS(log) {
+
+	log.append("読み込み中です... <br/>");
 
 	// HSPの設定
 	ENV.HSP_WX = "640";//スクリプトの動作解像度
@@ -57,10 +58,10 @@ function runWithFS() {
 
 	console.log("Start to download file list...");
 
-	importDataList().then(function() {
+	importDataList(log).then(function() {
 
 		console.log("Start to download files...");
-		importDataArrays().then(function () {
+		importDataArrays(log).then(function () {
 
 			console.log("Initialized");
 
@@ -71,7 +72,7 @@ function runWithFS() {
 
 }
 
-function importDataList() {
+function importDataList(log) {
 	var defer = $.Deferred();
 
 	$.ajax({
@@ -87,6 +88,7 @@ function importDataList() {
 			fileNames = fileNames.concat(data.Names);
 		}
 
+		log.append("ファイル一覧を取得しました<br/>");
 		console.log("Downloaded file list.");
 
 		defer.resolve();
@@ -128,11 +130,14 @@ function importDataArray(name) {
 	return defer.promise();
 }
 
-function importDataArrays() {
+function importDataArrays(log) {
 	var defer = $.Deferred();
 	var processingNum = fileNames.length;
 
 	$.each(fileNames, function (i, name) {
+
+		log.append("ファイルを読み込んでいます...("+i+"/"+processingNum+")<br/>");
+
 		importDataArray(name).then(function () {
 			processingNum--;
 			if (processingNum == 0) {

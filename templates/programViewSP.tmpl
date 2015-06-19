@@ -169,6 +169,69 @@
 		width: 150px;
 	}
 
+	.screen_box {
+		position: relative;
+
+		width:  640px;
+		height: 480px;
+	}
+
+	#screen {
+		position: absolute;
+
+		top:  0;
+		left: 0;
+	}
+
+	#screen_overlay {
+		position: absolute;
+
+		top:  0;
+		left: 0;
+
+		width:  640px;
+		height: 480px;
+		min-height: 480px;
+
+		background: #000;
+
+		filter:  alpha(opacity=70);
+		opacity: 0.7;
+		-moz-opacity: 0.7;
+	}
+
+	.screen_overlay_log {
+		position: absolute;
+
+		top:  0;
+		left: 0;
+
+		width:  100%;
+		height: 100%;
+
+		padding: 5px;
+
+		color: #fff;
+
+		font-size: 30px;
+	}
+
+	.screen_overlay_playbtn {
+		position: absolute;
+
+		top:  50%;
+		left: 50%;
+
+		margin: -75px 0 0 -75px;
+	}
+
+	.screen_overlay_playbtn .btn-fab {
+		width:  150px;
+		height: 150px;
+
+		font-size: 120px;
+	}
+
 </style>
 
 {{ end }}
@@ -196,8 +259,18 @@
 	<a href="javascript:good();" class="btn btn-default btn-raised" ><i class="mdi-social-mood"></i> <span id="good"></span></a> 
 </div>
 
+<br clear="both"/>
 
-<canvas id="screen" width=640 height=480></canvas>
+<div class="screen_box">
+	<canvas id="screen" width=640 height=480></canvas>
+	<div id="screen_overlay">
+		<div class="screen_overlay_log">
+		</div>
+		<div class="screen_overlay_playbtn">
+			<a href="javascript:runProgram();" class="btn btn-primary btn-fab btn-raised mdi-av-play-circle-fill"></a>
+		</div>
+	</div>
+</div>
 
 <div id="virtual_key">
 	<div class="row">
@@ -287,6 +360,13 @@
 			$("#profile_icon").attr("src", data.IconURL);
 		}).error(function (data, status, error) {
 		});
+	}
+
+	function setThumbnail() {
+		$("#screen").css({
+			"background-image": "url(/api/program/thumbnail/?p={{ .Program.ID }})",
+			"background-size" : "640px 480px"
+			});
 	}
 
 	function updateGoodCount() {
@@ -385,6 +465,16 @@
 			document.body.fireEvent("onkey"+keyEventName, e);
 		}
 	}
+	
+	function runProgram() {
+		runWithFS($("#screen_overlay .screen_overlay_log"));
+
+		$("#screen_overlay .screen_overlay_playbtn").fadeOut("slow");
+	}
+
+	function postProgramRun() {
+		$("#screen_overlay").hide();
+	}
 
 	$(document).ready(function() {
 
@@ -419,6 +509,7 @@
 
 
 		setProfile();
+		setThumbnail();
 		updateGoodCount();
 	
 	});
