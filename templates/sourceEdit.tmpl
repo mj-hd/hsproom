@@ -79,14 +79,14 @@
 					<div class="btn-group btn-group-sm" role="group">
 						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">ファイル<span class="caret"></span></button>
 						<ul class="dropdown-menu" role="menu">
-							<li><a href="javascript:download_source();">ソースコードをダウンロードする...</a></li>
+							<li><a href="javascript:download_source();">ソースコードをダウンロードする...(Ctrl+S)</a></li>
 							<li><a href="javascript:download_ax();">AXファイルをダウンロードする...</a></li>
 						</ul>
 					</div>
 					<div class="btn-group btn-group-sm" role="group">
-						<button type="button" class="btn btn-default btn-flat" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i>実行</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="compile(false);" ><i class="mdi-av-play-arrow"></i>実行(F5)</button>
 						<button type="button" class="btn btn-default btn-flat" onclick="compile(true);" ><i class="mdi-action-done"></i>文法チェック</button>
-						<button type="button" class="btn btn-default btn-flat" onclick="search_help();"><i class="mdi-action-help"></i>ヘルプ</button>
+						<button type="button" class="btn btn-default btn-flat" onclick="search_help();"><i class="mdi-action-help"></i>ヘルプ(F1)</button>
 					</div>
 				</div>
 				<pre id="editor">{{ .Program.Sourcecode }}</pre>
