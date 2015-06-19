@@ -6,12 +6,12 @@ import (
 	"os"
 	"syscall"
 
+	"../bot"
 	"../config"
 	"../controllers"
 	"../models"
 	"../plugins"
 	"../templates"
-	"../bot"
 	"../utils/log"
 
 	"github.com/gorilla/context"
@@ -36,13 +36,13 @@ func Del() {
 func Start() {
 	for route := range controllers.Router.Iterator() {
 		http.HandleFunc(route.Path, route.Function)
-		log.DebugStr(os.Stdout, route.Path+"に関数を割当")
+		log.DebugStr(route.Path + "に関数を割当")
 	}
 
 	http.Handle("/"+config.StaticPath, http.StripPrefix("/"+config.StaticPath, http.FileServer(http.Dir(config.StaticPath))))
-	log.DebugStr(os.Stdout, "/"+config.StaticPath+"に静的コンテンツを割当")
+	log.DebugStr("/" + config.StaticPath + "に静的コンテンツを割当")
 
-	log.InfoStr(os.Stdout, "ポート"+config.ServerPort+"でサーバを開始...")
+	log.InfoStr("ポート" + config.ServerPort + "でサーバを開始...")
 	http.ListenAndServe(":"+config.ServerPort, context.ClearHandler(http.DefaultServeMux))
 }
 

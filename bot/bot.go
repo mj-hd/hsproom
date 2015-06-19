@@ -2,7 +2,6 @@ package bot
 
 import (
 	"errors"
-	"os"
 	"strconv"
 	"time"
 
@@ -43,23 +42,23 @@ func init() {
 			// 12時0分
 			if now.Hour() == 12 && now.Minute() == 0 {
 				err = UpdateRankingForDay()
-				log.InfoStr(os.Stdout, "Tweeted daily ranking.")
+				log.InfoStr("Tweeted daily ranking.")
 			}
 
 			// 金曜日12時0分
 			if now.Weekday() == time.Friday && now.Hour() == 12 && now.Minute() == 0 {
 				err = UpdateRankingForWeek()
-				log.InfoStr(os.Stdout, "Tweeted weekly ranking.")
+				log.InfoStr("Tweeted weekly ranking.")
 			}
 
 			// 1日12時0分
 			if now.Day() == 1 && now.Hour() == 12 && now.Minute() == 0 {
 				err = UpdateRankingForMonth()
-				log.InfoStr(os.Stdout, "Tweeted monthly ranking.")
+				log.InfoStr("Tweeted monthly ranking.")
 			}
 
 			if err != nil {
-				log.Fatal(os.Stdout, err)
+				log.Fatal(err)
 			}
 
 			time.Sleep(60 * time.Second)
@@ -70,14 +69,14 @@ func init() {
 func Del() {
 }
 
-func UpdateTweet(message string) error {
+func UpdateTweet(message string) (err error) {
 	if !config.TwitterBotEnabled {
 		return errors.New("Twitter Bot is disabled by option.")
 	}
 	return client.UpdateTweet(token, message)
 }
 
-func UpdateRankingForWeek() error {
+func UpdateRankingForWeek() (err error) {
 	var programs []models.Program
 
 	count, err := models.GetProgramRankingForWeek(&programs, 0, 3)
@@ -101,7 +100,7 @@ func UpdateRankingForWeek() error {
 	return UpdateTweet(message)
 }
 
-func UpdateRankingForMonth() error {
+func UpdateRankingForMonth() (err error) {
 	var programs []models.Program
 
 	count, err := models.GetProgramRankingForMonth(&programs, 0, 3)
@@ -125,7 +124,7 @@ func UpdateRankingForMonth() error {
 	return UpdateTweet(message)
 }
 
-func UpdateRankingForDay() error {
+func UpdateRankingForDay() (err error) {
 	var programs []models.Program
 
 	count, err := models.GetProgramRankingForDay(&programs, 0, 3)

@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"os"
 	"strconv"
 
 	"../config"
@@ -15,24 +15,18 @@ type sourceCreateMember struct {
 	*templates.DefaultMember
 }
 
-func sourceCreateHandler(document http.ResponseWriter, request *http.Request) {
+func sourceCreateHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "sourceCreate.tmpl"
 
-	err := tmpl.Render(document, sourceCreateMember{
+	return tmpl.Render(document, sourceCreateMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "ソースコードの作成 - " + config.SiteTitle,
 			UserID: getSessionUser(request),
 		},
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-	}
-
 }
 
 type sourceEditMember struct {
@@ -40,7 +34,7 @@ type sourceEditMember struct {
 	Program *models.Program
 }
 
-func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
+func sourceEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -50,11 +44,11 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		showError(document, request, "プログラムが見つかりません。")
 
-		return
+		return nil
 	}
 
 	user := getSessionUser(request)
@@ -63,50 +57,40 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) {
 	err = program.Load(programId)
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		showError(document, request, "プログラムの読み込みに失敗しました。")
-
-		return
+		return errors.New("プログラムの読み込みに失敗: \r\n" + err.Error())
 	}
 
 	if program.UserID != user {
-		log.DebugStr(os.Stdout, "権限のない編集画面へのアクセス")
+		log.DebugStr("権限のない編集画面へのアクセス")
 
 		showError(document, request, "プログラムの編集権限がありません。")
 
-		return
+		return nil
 	}
 
 	err = program.LoadThumbnail()
 	if err != nil {
-		log.DebugStr(os.Stdout, "サムネイル画像の読み込みに失敗しました。")
+		log.DebugStr("サムネイル画像の読み込みに失敗しました。")
 
 		showError(document, request, "サムネイル画像の読み込みに失敗しました。")
 
-		return
+		return nil
 	}
 
 	err = program.LoadAttachments()
 	if err != nil {
-		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗しました。")
+		log.DebugStr("添付ファイルの読み込みに失敗しました。")
 
 		showError(document, request, "添付ファイルの読み込みに失敗しました。")
 
-		return
+		return nil
 	}
 
-	err = tmpl.Render(document, sourceEditMember{
+	return tmpl.Render(document, sourceEditMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "ソースコードの編集 - " + config.SiteTitle,
 			UserID: getSessionUser(request),
 		},
 		Program: program,
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-	}
-
 }

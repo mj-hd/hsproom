@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"os"
 
 	"./gum"
 	"./utils/log"
@@ -20,7 +19,7 @@ func main() {
 		err := gum.Daemonize()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
+			log.Fatal(err)
 		}
 
 	}

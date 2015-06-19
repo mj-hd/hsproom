@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"os"
 	"unicode/utf8"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -62,7 +61,7 @@ func markdownFile(file string) template.HTML {
 
 	raw, err := ioutil.ReadFile(config.TemplatesPath + "markdowns/" + file)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
+		log.Fatal(err)
 
 		return template.HTML("See other...")
 	}

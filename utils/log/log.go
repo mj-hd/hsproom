@@ -26,9 +26,9 @@ var LogFile string
 var DisplayLog bool
 var LogLevel int
 
-func InfoStr(w io.Writer, message string) {
+func InfoStr(message string) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -36,9 +36,9 @@ func InfoStr(w io.Writer, message string) {
 	})
 }
 
-func Info(w io.Writer, err error) {
+func Info(err error) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -46,9 +46,9 @@ func Info(w io.Writer, err error) {
 	})
 }
 
-func DebugStr(w io.Writer, message string) {
+func DebugStr(message string) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -56,9 +56,9 @@ func DebugStr(w io.Writer, message string) {
 	})
 }
 
-func Debug(w io.Writer, err error) {
+func Debug(err error) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -66,9 +66,9 @@ func Debug(w io.Writer, err error) {
 	})
 }
 
-func ErrorStr(w io.Writer, message string) {
+func ErrorStr(message string) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -76,9 +76,9 @@ func ErrorStr(w io.Writer, message string) {
 	})
 }
 
-func Error(w io.Writer, err error) {
+func Error(err error) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,
@@ -86,9 +86,9 @@ func Error(w io.Writer, err error) {
 	})
 }
 
-func FatalStr(w io.Writer, message string) {
+func FatalStr(message string) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    message,
 		CallerFile: file,
 		CallerLine: line,
@@ -96,9 +96,9 @@ func FatalStr(w io.Writer, message string) {
 	})
 }
 
-func Fatal(w io.Writer, err error) {
+func Fatal(err error) {
 	_, file, line, _ := runtime.Caller(1)
-	PrintLog(w, ErrorDetails{
+	PrintLog(os.Stdout, ErrorDetails{
 		Message:    err.Error(),
 		CallerFile: file,
 		CallerLine: line,

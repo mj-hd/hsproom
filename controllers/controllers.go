@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/sessions"
 
 	"../config"
 	"../templates"
+	"../utils/log"
 )
 
 var Router Routes
@@ -16,49 +18,49 @@ func init() {
 
 	apiInit()
 
-	Router.Register("/", indexHandler)
+	Router.RegisterPage("/", indexHandler)
 	Router.Register("/error/", flashHandler)
 	Router.Register("/success/", flashHandler)
-	Router.Register("/help/", helpHandler)
-	Router.Register("/about/", aboutHandler)
-	Router.Register("/program/", programHandler)
-	Router.Register("/program/list/", programListHandler)
-	Router.Register("/program/view/", programViewHandler)
-	Router.Register("/program/edit/", programEditHandler)
-	Router.Register("/program/create/", programCreateHandler)
-	Router.Register("/program/search/", programSearchHandler)
-	Router.Register("/program/ranking/daily/", programRankingDailyHandler)
-	Router.Register("/program/ranking/weekly/", programRankingWeeklyHandler)
-	Router.Register("/program/ranking/monthly/", programRankingMonthlyHandler)
-	Router.Register("/program/ranking/alltime/", programRankingAllTimeHandler)
-	Router.Register("/source/create/", sourceCreateHandler)
-	Router.Register("/source/edit/", sourceEditHandler)
-	Router.Register("/user/logout/", userLogoutHandler)
-	Router.Register("/user/login/", userLoginHandler)
-	Router.Register("/user/view/", userViewHandler)
-	Router.Register("/user/edit/", userEditHandler)
-	Router.Register("/user/list/", userListHandler)
-	Router.Register("/user/programs/", userProgramsHandler)
-	Router.Register("/user/settings/", userSettingsHandler)
-	Router.Register("/api/", apiHandler)
-	Router.Register("/api/markdown/", apiMarkdownHandler)
-	Router.Register("/api/twitter/search/", apiTwitterSearchHandler)
-	Router.Register("/api/program/good/", apiProgramGoodHandler)
-	Router.Register("/api/program/good/count/", apiProgramGoodCountHandler)
-	Router.Register("/api/program/update/", apiProgramUpdateHandler)
-	Router.Register("/api/program/create/", apiProgramCreateHandler)
-	Router.Register("/api/program/remove/", apiProgramRemoveHandler)
+	Router.RegisterPage("/help/", helpHandler)
+	Router.RegisterPage("/about/", aboutHandler)
+	Router.RegisterPage("/program/", programHandler)
+	Router.RegisterPage("/program/list/", programListHandler)
+	Router.RegisterPage("/program/view/", programViewHandler)
+	Router.RegisterPage("/program/edit/", programEditHandler)
+	Router.RegisterPage("/program/create/", programCreateHandler)
+	Router.RegisterPage("/program/search/", programSearchHandler)
+	Router.RegisterPage("/program/ranking/daily/", programRankingDailyHandler)
+	Router.RegisterPage("/program/ranking/weekly/", programRankingWeeklyHandler)
+	Router.RegisterPage("/program/ranking/monthly/", programRankingMonthlyHandler)
+	Router.RegisterPage("/program/ranking/alltime/", programRankingAllTimeHandler)
+	Router.RegisterPage("/source/create/", sourceCreateHandler)
+	Router.RegisterPage("/source/edit/", sourceEditHandler)
+	Router.RegisterPage("/user/logout/", userLogoutHandler)
+	Router.RegisterPage("/user/login/", userLoginHandler)
+	Router.RegisterPage("/user/view/", userViewHandler)
+	Router.RegisterPage("/user/edit/", userEditHandler)
+	Router.RegisterPage("/user/list/", userListHandler)
+	Router.RegisterPage("/user/programs/", userProgramsHandler)
+	Router.RegisterPage("/user/settings/", userSettingsHandler)
+	Router.RegisterApi("/api/", apiHandler)
+	Router.RegisterApi("/api/markdown/", apiMarkdownHandler)
+	Router.RegisterApi("/api/twitter/search/", apiTwitterSearchHandler)
+	Router.RegisterApi("/api/program/good/", apiProgramGoodHandler)
+	Router.RegisterApi("/api/program/good/count/", apiProgramGoodCountHandler)
+	Router.RegisterApi("/api/program/update/", apiProgramUpdateHandler)
+	Router.RegisterApi("/api/program/create/", apiProgramCreateHandler)
+	Router.RegisterApi("/api/program/remove/", apiProgramRemoveHandler)
 	Router.Register("/api/program/data/", apiProgramDataHandler)
-	Router.Register("/api/program/data_list/", apiProgramDataListHandler)
+	Router.RegisterApi("/api/program/data_list/", apiProgramDataListHandler)
 	Router.Register("/api/program/thumbnail/", apiProgramThumbnailHandler)
-	Router.Register("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
+	Router.RegisterApi("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
 	Router.Register("/api/twitter/access_token/", apiTwitterAccessTokenHandler)
-	Router.Register("/api/google/request_token/", apiGoogleRequestTokenHandler)
+	Router.RegisterApi("/api/google/request_token/", apiGoogleRequestTokenHandler)
 	Router.Register("/api/google/access_token/", apiGoogleAccessTokenHandler)
-	Router.Register("/api/user/info/", apiUserInfoHandler)
-	Router.Register("/api/user/programs/", apiUserProgramsHandler)
-	Router.Register("/api/user/goods/", apiUserGoodsHandler)
-	Router.Register("/api/good/remove/", apiGoodRemoveHandler)
+	Router.RegisterApi("/api/user/info/", apiUserInfoHandler)
+	Router.RegisterApi("/api/user/programs/", apiUserProgramsHandler)
+	Router.RegisterApi("/api/user/goods/", apiUserGoodsHandler)
+	Router.RegisterApi("/api/good/remove/", apiGoodRemoveHandler)
 
 }
 func Del() {
@@ -95,6 +97,32 @@ func removeSession(document http.ResponseWriter, request *http.Request) {
 	session.Save(request, document)
 }
 
+func writeStruct(document http.ResponseWriter, s interface{}, httpStatus int) {
+
+	var err error
+
+	document.Header().Set("Content-Type", "application/json")
+	jso, err := json.Marshal(s)
+
+	if err != nil {
+
+		log.Fatal(err)
+
+		document.WriteHeader(500)
+		document.Write([]byte("{ \"Status\" : \"error\", \"Message\" : \"不明のエラーです。\" }"))
+
+		return
+	}
+
+	document.WriteHeader(httpStatus)
+	document.Write(jso)
+}
+
+type apiMember struct {
+	Status  string
+	Message string
+}
+
 type Routes struct {
 	keys   []string
 	values []func(http.ResponseWriter, *http.Request)
@@ -119,6 +147,37 @@ func (this *Routes) Iterator() <-chan Route {
 	}()
 
 	return ret
+}
+
+func (this *Routes) RegisterPage(path string, fn func(http.ResponseWriter, *http.Request) error) {
+	this.keys = append(this.keys, path)
+	this.values = append(this.values, func(document http.ResponseWriter, request *http.Request) {
+		err := fn(document, request)
+		if err != nil {
+			log.FatalStr("ページの表示に失敗:")
+			log.Fatal(err)
+
+			showError(document, request, "ページの表示中にエラーが発生しました。管理人へ報告してください。")
+		}
+	})
+}
+
+func (this *Routes) RegisterApi(path string, fn func(http.ResponseWriter, *http.Request) (int, error)) {
+	this.keys = append(this.keys, path)
+	this.values = append(this.values, func(document http.ResponseWriter, request *http.Request) {
+		status, err := fn(document, request)
+		if err != nil {
+			log.FatalStr("APIの実行に失敗:")
+			log.Fatal(err)
+
+			writeStruct(document, apiMember{
+				Status:  "error",
+				Message: err.Error(),
+			}, status)
+
+			return
+		}
+	})
 }
 
 func (this *Routes) Register(path string, fn func(http.ResponseWriter, *http.Request)) {

@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"os"
 	"strconv"
 
 	"../config"
@@ -17,9 +17,7 @@ type userViewMember struct {
 	UserPrograms *[]models.Program
 }
 
-func userViewHandler(document http.ResponseWriter, request *http.Request) {
-
-	var err error
+func userViewHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -29,20 +27,20 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 	uid, err := strconv.Atoi(rawUid)
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		showError(document, request, "ユーザが見つかりませんでした。")
-		return
+		return nil
 	}
 
 	var user models.User
 	err = user.Load(uid)
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		showError(document, request, "ユーザが見つかりませんでした。")
-		return
+		return nil
 	}
 
 	var programs []models.Program
@@ -50,13 +48,10 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 	_, err = models.GetProgramListByUser(models.ProgramColCreatedAt, &programs, user.ID, true, 0, 4)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("ユーザプログラム一覧の取得に失敗: \r\n" + err.Error())
 	}
 
-	err = tmpl.Render(document, userViewMember{
+	return tmpl.Render(document, userViewMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  user.Name + " のプロフィール - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -64,36 +59,25 @@ func userViewHandler(document http.ResponseWriter, request *http.Request) {
 		UserInfo:     &user,
 		UserPrograms: &programs,
 	})
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-	}
 }
 
-func userListHandler(document http.ResponseWriter, request *http.Request) {
-
+func userListHandler(document http.ResponseWriter, request *http.Request) (err error) {
+	return nil
 }
 
-func userLoginHandler(document http.ResponseWriter, request *http.Request) {
+func userLoginHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "userLogin.tmpl"
 
-	err := tmpl.Render(document, templates.DefaultMember{
+	return tmpl.Render(document, templates.DefaultMember{
 		Title:  "ログイン",
 		UserID: getSessionUser(request),
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-	}
 }
 
-func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
+func userLogoutHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -101,19 +85,14 @@ func userLogoutHandler(document http.ResponseWriter, request *http.Request) {
 
 	removeSession(document, request)
 
-	err := tmpl.Render(document, templates.DefaultMember{
+	return tmpl.Render(document, templates.DefaultMember{
 		Title:  "ログアウト中です...",
 		UserID: 0,
 	})
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ログアウト中にエラーが発生しました。")
-	}
 }
 
-func userEditHandler(document http.ResponseWriter, request *http.Request) {
-
+func userEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
+	return nil
 }
 
 type userProgramsMember struct {
@@ -127,19 +106,21 @@ type userProgramsMember struct {
 	UserId       int
 }
 
-func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
+func userProgramsHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "userPrograms.tmpl"
 
-	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
+	rawUserId := request.URL.Query().Get("u")
+	userId, err := strconv.Atoi(rawUserId)
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
 
-		showError(document, request, "エラーが発生しました。")
-		return
+		log.DebugStr("リクエストが不正 Request:" + rawUserId)
+
+		showError(document, request, "不正なリクエストです。")
+		return nil
 	}
 
 	sort := request.URL.Query().Get("s")
@@ -162,7 +143,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	}
 
 	if !models.ExistsUser(userId) {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		showError(document, request, "ユーザが存在しません。")
 		return
@@ -172,10 +153,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	i, err := models.GetProgramListByUser(sortKey, &programs, userId, true, page*10, 10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("ユーザプログラム一覧の取得に失敗: \r\n" + err.Error())
 	}
 
 	maxPage := i / 10
@@ -186,13 +164,10 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) {
 	userName, err := models.GetUserName(userId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("ユーザ名の取得に失敗: \r\n" + err.Error())
 	}
 
-	err = tmpl.Render(document, userProgramsMember{
+	return tmpl.Render(document, userProgramsMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  userName + " - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -212,7 +187,7 @@ type userSettingsMember struct {
 	UserInfo models.User
 }
 
-func userSettingsHandler(document http.ResponseWriter, request *http.Request) {
+func userSettingsHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -221,24 +196,18 @@ func userSettingsHandler(document http.ResponseWriter, request *http.Request) {
 	userId := getSessionUser(request)
 
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名の管理画面へのアクセス")
-
-		showError(document, request, "ログインが必要です。")
-		// TODO: ログインさせる。
-		return
+		http.Redirect(document, request, "/user/login/", http.StatusFound)
+		return nil
 	}
 
 	var user models.User
-	err := user.Load(userId)
+	err = user.Load(userId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("ユーザの読み込みに失敗: \r\n" + err.Error())
 	}
 
-	err = tmpl.Render(document, userSettingsMember{
+	return tmpl.Render(document, userSettingsMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "管理画面 - " + config.SiteTitle,
 			UserID: userId,

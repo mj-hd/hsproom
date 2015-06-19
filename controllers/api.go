@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strconv"
 
@@ -47,61 +46,24 @@ func apiDel() {
 	twitterClient.Close()
 }
 
-func writeStruct(document http.ResponseWriter, s interface{}, httpStatus int) {
-
-	var err error
-
-	document.Header().Set("Content-Type", "application/json")
-	jso, err := json.Marshal(s)
-
-	if err != nil {
-
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(500)
-		document.Write([]byte("{ \"Status\" : \"error\", \"Message\" : \"不明のエラーです。\" }"))
-
-		return
-	}
-
-	document.WriteHeader(httpStatus)
-	document.Write(jso)
-}
-
-type apiMember struct {
-	Status  string
-	Message string
-}
-
-func apiHandler(document http.ResponseWriter, request *http.Request) {
+func apiHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	writeStruct(document, apiMember{
 		Status:  "success",
 		Message: "エラーなし",
-	}, 200)
+	}, http.StatusOK)
 
+	return http.StatusOK, nil
 }
 
 type apiProgramGoodMember struct {
 	*apiMember
 }
 
-func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) {
-
-	var err error
+func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "POST" {
-
-		log.DebugStr(os.Stdout, "POST以外のGoodリクエスト")
-
-		writeStruct(document, apiProgramGoodMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "POST以外のメソッドです。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
 	}
 
 	// プログラムIDの取得
@@ -109,61 +71,20 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
-
-		log.DebugStr(os.Stdout, "不正なプログラムID "+string(programId))
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramGoodMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "プログラムIDが不正です。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("プログラムIDが不正です。")
 	}
 
 	if !models.ExistsProgram(programId) {
-
-		log.FatalStr(os.Stdout, "プログラム["+string(programId)+"]の読み込みに失敗")
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiProgramGoodMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-
-		return
+		return http.StatusInternalServerError, errors.New("プログラムの読み込みに失敗しました。")
 	}
 
 	user := getSessionUser(request)
 	if user == 0 {
-
-		log.DebugStr(os.Stdout, "匿名のGoodリクエスト")
-
-		writeStruct(document, apiProgramGoodMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "ログインが必要です。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("ログインが必要です。")
 	}
 
 	if !models.CanGoodProgram(user, programId) {
-		log.DebugStr(os.Stdout, "無効なGoodリクエスト")
-
-		writeStruct(document, apiProgramGoodMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "無効なGoodリクエストです。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("いいね!は一回までです。")
 	}
 
 	var good models.Good
@@ -172,16 +93,8 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 
 	_, err = good.Create()
 	if err != nil {
-
-		log.Fatal(os.Stdout, err)
-		writeStruct(document, apiProgramGoodMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("いいね!に失敗しました。")
 	}
 
 	writeStruct(document, apiProgramGoodMember{
@@ -190,27 +103,19 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 			Message: "保存に成功しました。",
 		},
 	}, 200)
+
+	return http.StatusOK, nil
 }
 
 type apiProgramUpdateMember struct {
 	*apiMember
 }
 
-func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request) {
+func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	// メソッドの確認
 	if request.Method != "POST" {
-
-		log.DebugStr(os.Stdout, "POST以外のUpdateリクエスト")
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "POST以外のメソッドです。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
 	}
 
 	// 入力値のバリデート
@@ -241,33 +146,16 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 		targetFlags -= models.ProgramStartax
 	}
 
-	err := rawProgram.Validate(targetFlags)
+	err = rawProgram.Validate(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: err.Error(),
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, err
 	}
 
 	// プログラムへ変換
 	program, err := rawProgram.ToProgram(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-
-		return
+		log.Debug(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	// プログラムの確認
@@ -275,30 +163,13 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	err = prevProg.Load(program.ID)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "プログラムIDが不正です。",
-			},
-		}, 400)
-
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("プログラムIDが不正です。")
 	}
 
 	// ユーザのチェック
 	if getSessionUser(request) != prevProg.UserID {
-		log.DebugStr(os.Stdout, "プログラムの権限のない変更")
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "プログラムを編集する権限がありません。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("プログラムを編集する権限がありません。")
 	}
 
 	// TODO: エラー処理
@@ -337,22 +208,10 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	Found:
 	}
 
-	if program.Published {
-		println("Published!!")
-	}
-
 	err = program.Update()
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "保存に失敗しました。",
-			},
-		}, 500)
-
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("保存に失敗しました。")
 	}
 
 	writeStruct(document, apiProgramUpdateMember{
@@ -360,7 +219,9 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 			Status:  "success",
 			Message: "保存に成功しました。",
 		},
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 type apiProgramCreateMember struct {
@@ -373,21 +234,12 @@ type apiNameValuePair struct {
 	Value string `json:"value"`
 }
 
-func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request) {
+func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	// メソッドの確認
 	if request.Method != "POST" {
-
-		log.DebugStr(os.Stdout, "POST以外のCreateリクエスト")
-
-		writeStruct(document, apiProgramUpdateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "POST以外のメソッドです。",
-			},
-		}, 400)
-
-		return
+		log.DebugStr("POST以外のCreateリクエスト")
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
 	}
 
 	// 入力値のバリデート
@@ -415,61 +267,27 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// ログインしていない
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名のCreateリクエスト")
-
-		writeStruct(document, apiProgramCreateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "ログインする必要があります。",
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, errors.New("ログインする必要があります。")
 	}
 
-	err := rawProgram.Validate(targetFlags)
+	err = rawProgram.Validate(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramCreateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: err.Error(),
-			},
-		}, 400)
-
-		return
+		return http.StatusBadRequest, err
 	}
 
 	// プログラムへ変換
 	program, err := rawProgram.ToProgram(targetFlags)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramCreateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-
-		return
+		log.Debug(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	program.UserID = userId
 
 	id, err := program.Create()
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiProgramCreateMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "保存に失敗しました。もう一度お試しください。",
-			},
-		}, 500)
-
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("保存に失敗しました。もう一度お試しください。")
 	}
 
 	writeStruct(document, apiProgramCreateMember{
@@ -478,9 +296,13 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 			Message: "保存に成功しました。",
 		},
 		ID: id,
-	}, 200)
+	}, http.StatusOK)
 
-	bot.UpdateTweet("新しいプログラムが投稿されました! #hsproom\n\n " + program.Title + " by " + program.GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(id))
+	if program.Published {
+		bot.UpdateTweet("新しいプログラムが投稿されました! #hsproom\n\n " + program.Title + " by " + program.GetUserName() + " " + config.SiteURL + "/program/view/?p=" + strconv.Itoa(id))
+	}
+
+	return http.StatusOK, nil
 }
 
 type apiProgramDataListMember struct {
@@ -488,69 +310,33 @@ type apiProgramDataListMember struct {
 	Names []string
 }
 
-func apiProgramDataListHandler(document http.ResponseWriter, request *http.Request) {
+func apiProgramDataListHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "GET" {
-
-		log.DebugStr(os.Stdout, "GET以外のDataListリクエスト")
-
-		writeStruct(document, apiProgramDataListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 400)
-
-		return
+		log.DebugStr("GET以外のDataListリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
 
 	if err != nil {
-
-		log.DebugStr(os.Stdout, "プログラムIDが不正")
-
-		writeStruct(document, apiProgramDataListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "プログラムIDが不正です。",
-			},
-		}, 400)
-
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("プログラムIDが不正です。")
 	}
 
 	program := models.NewProgram()
 	err = program.Load(programId)
 
 	if err != nil {
-
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramDataListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "プログラムが存在しません。",
-			},
-		}, 400)
-
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("プログラムが存在しません。")
 	}
 
 	err = program.LoadAttachments()
 
 	if err != nil {
-
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramDataListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "添付ファイルの取得に失敗しました。",
-			},
-		}, 400)
-
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("添付ファイルの取得に失敗しました。")
 	}
 
 	var names []string
@@ -565,18 +351,17 @@ func apiProgramDataListHandler(document http.ResponseWriter, request *http.Reque
 			Message: "添付ファイル一覧の取得に成功しました。",
 		},
 		Names: names,
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 // jsonじゃないよ
 func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-
-		log.DebugStr(os.Stdout, "GET以外のDataリクエスト")
-
-		document.WriteHeader(400)
-
+		log.DebugStr("GET以外のDataリクエスト")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -586,11 +371,8 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
-
-		log.DebugStr(os.Stdout, "不正なプログラムID")
-
-		document.WriteHeader(400)
-
+		log.DebugStr("不正なプログラムID")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -598,22 +380,16 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	err = program.Load(programId)
 
 	if err != nil {
-
-		log.Debug(os.Stdout, err)
-		log.DebugStr(os.Stdout, "プログラムが見つからない")
-
-		document.WriteHeader(404)
-
+		log.Debug(err)
+		log.DebugStr("プログラムが見つからない")
+		document.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	fileName := request.URL.Query().Get("f")
 	if fileName == "" {
-
-		log.DebugStr(os.Stdout, "空のDataリクエスト")
-
-		document.WriteHeader(404)
-
+		log.DebugStr("空のDataリクエスト")
+		document.WriteHeader(http.StatusNotFound)
 		return
 	}
 
@@ -621,7 +397,7 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 
 		program.LoadStartax()
 
-		document.WriteHeader(200)
+		document.WriteHeader(http.StatusOK)
 		document.Write(program.Startax.Data)
 
 		return
@@ -631,38 +407,30 @@ func apiProgramDataHandler(document http.ResponseWriter, request *http.Request) 
 	err = program.LoadAttachments()
 
 	if err != nil {
-
-		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗")
-
-		document.WriteHeader(400)
-
+		log.DebugStr("添付ファイルの読み込みに失敗")
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	for _, att := range program.Attachments {
 		if att.Name == fileName {
-
-			document.WriteHeader(200)
+			document.WriteHeader(http.StatusOK)
 			document.Write(att.Data)
-
 			return
 		}
 	}
 
 	// ファイルが見つからなかった
-	log.DebugStr(os.Stdout, "指定されたファイルが見つからなかった")
-	document.WriteHeader(404)
+	log.DebugStr("指定されたファイルが見つからなかった")
+	document.WriteHeader(http.StatusNotFound)
 }
 
 // jsonじゃない
 func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-
-		log.DebugStr(os.Stdout, "GET以外のThumbnailリクエスト")
-
-		document.WriteHeader(400)
-
+		log.DebugStr("GET以外のThumbnailリクエスト")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -672,11 +440,8 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
-
-		log.Debug(os.Stdout, err)
-
-		document.WriteHeader(400)
-
+		log.Debug(err)
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -685,22 +450,16 @@ func apiProgramThumbnailHandler(document http.ResponseWriter, request *http.Requ
 	err = program.Load(programId)
 
 	if err != nil {
-
-		log.Debug(os.Stdout, err)
-
-		document.WriteHeader(404)
-
+		log.Debug(err)
+		document.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	err = program.LoadThumbnail()
 
 	if err != nil {
-
-		log.Debug(os.Stdout, err)
-
-		document.WriteHeader(400)
-
+		log.Debug(err)
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -712,7 +471,7 @@ type apiMarkdownMember struct {
 	Markdown string
 }
 
-func apiMarkdownHandler(document http.ResponseWriter, request *http.Request) {
+func apiMarkdownHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	var text string
 	var texts = request.URL.Query()["text"]
@@ -731,8 +490,9 @@ func apiMarkdownHandler(document http.ResponseWriter, request *http.Request) {
 		Markdown: string(
 			bluemonday.UGCPolicy().SanitizeBytes(
 				blackfriday.MarkdownCommon(
-					[]byte(text))))}, 200)
+					[]byte(text))))}, http.StatusOK)
 
+	return http.StatusOK, nil
 }
 
 type apiTwitterSearchMember struct {
@@ -740,7 +500,7 @@ type apiTwitterSearchMember struct {
 	Tweets twitter.SearchResponse
 }
 
-func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request) {
+func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	programName := bluemonday.UGCPolicy().Sanitize(request.URL.Query().Get("pn"))
 	rawNumber := request.URL.Query().Get("n")
@@ -748,28 +508,14 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	number, err := strconv.Atoi(rawNumber)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiTwitterSearchMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "不正な数値です。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("不正なnの値です。")
 	}
 
 	offset, err := strconv.ParseInt(rawOffset, 10, 64)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiTwitterSearchMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "不正な数値です。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("不正なoの値です。")
 	}
 
 	query := "#hsproom"
@@ -777,15 +523,8 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 	symbols, err := regexp.Compile("[\\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]")
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiTwitterSearchMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "検索に失敗しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("検索に失敗しました。")
 	}
 
 	programName = symbols.ReplaceAllString(programName, "")
@@ -796,27 +535,13 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 
 	tweets, err := twitterClient.SearchTweets(query, number, offset)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiTwitterSearchMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "検索に失敗しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("検索に失敗しました。")
 	}
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiTwitterSearchMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	writeStruct(document, apiTwitterSearchMember{
@@ -825,8 +550,9 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 			Message: "検索に成功しました。",
 		},
 		Tweets: tweets,
-	}, 200)
+	}, http.StatusOK)
 
+	return http.StatusOK, nil
 }
 
 type apiOAuthRequestTokenMember struct {
@@ -834,44 +560,23 @@ type apiOAuthRequestTokenMember struct {
 	AuthURL string
 }
 
-func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.Request) {
+func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のRequestTokenリクエスト")
-
-		writeStruct(document, apiOAuthRequestTokenMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("GET以外のRequestTokenリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	callbackUrl := request.URL.Query().Get("c")
 
 	if callbackUrl == "" {
-		log.DebugStr(os.Stdout, "callback指定のないRequestTokenリクエスト")
-
-		writeStruct(document, apiOAuthRequestTokenMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "コールバック指定が必要です。",
-			},
-		}, 400)
-		return
+		log.DebugStr("callback指定のないRequestTokenリクエスト")
+		return http.StatusBadRequest, errors.New("コールバック指定が必要です。")
 	}
 
 	url, err := oauthClient.GetAuthURL(config.SiteURL + "/api/twitter/access_token/?c=" + url.QueryEscape(callbackUrl))
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiOAuthRequestTokenMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	writeStruct(document, apiOAuthRequestTokenMember{
@@ -880,17 +585,17 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 			Message: "URLの取得に成功しました。",
 		},
 		AuthURL: url,
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 // jsonじゃない
 func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のAccessTokenリクエスト")
-
-		document.WriteHeader(403)
-
+		log.DebugStr("GET以外のAccessTokenリクエスト")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -898,29 +603,23 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	token := request.URL.Query().Get("oauth_token")
 
 	if verifier == "" || token == "" {
-		log.DebugStr(os.Stdout, "クエリが空")
-
-		document.WriteHeader(403)
-
+		log.DebugStr("クエリが空")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	accessToken, err := oauthClient.GetAccessToken(verifier, token)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(500)
-
+		log.Fatal(err)
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	user, err := oauthClient.CheckUserCredentialsAndGetUser(accessToken)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(500)
-
+		log.Fatal(err)
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -940,10 +639,8 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	if err != nil {
 		id, err = dbUser.Create()
 		if err != nil {
-			log.Fatal(os.Stdout, err)
-
-			document.WriteHeader(500)
-
+			log.Fatal(err)
+			document.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -955,10 +652,8 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 		err = dbUser.Update()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
-
-			document.WriteHeader(500)
-
+			log.Fatal(err)
+			document.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -966,10 +661,8 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 
 	session, err := getSession(request)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(403)
-
+		log.Fatal(err)
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -981,47 +674,26 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 		callbackUrl = config.SiteURL + "/"
 	}
 
-	http.Redirect(document, request, callbackUrl, 301)
+	http.Redirect(document, request, callbackUrl, http.StatusFound)
 	return
 }
 
-func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Request) {
+func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のGoogleRequestTokenリクエスト")
-
-		writeStruct(document, apiOAuthRequestTokenMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("GET以外のGoogleRequestTokenリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	url, err := oauth2Client.GetAuthURL(config.SiteURL + "/api/google/access_token/")
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiOAuthRequestTokenMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	session, err := getSession(request)
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiOAuthRequestTokenMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "クッキーが有効ではありません。",
-			},
-		}, 400)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("クッキーが有効ではありません。")
 	}
 
 	callbackUrl := request.URL.Query().Get("c")
@@ -1038,16 +710,16 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 			Message: "URLの取得に成功しました。",
 		},
 		AuthURL: url,
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Request) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のGoogleAccessTokenリクエスト")
-
-		document.WriteHeader(403)
-
+		log.DebugStr("GET以外のGoogleAccessTokenリクエスト")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -1055,29 +727,23 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 	token := request.URL.Query().Get("code")
 
 	if verifier == "" || token == "" {
-		log.DebugStr(os.Stdout, "クエリが空")
-
-		document.WriteHeader(403)
-
+		log.DebugStr("クエリが空")
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	accessToken, err := oauth2Client.GetToken(verifier, token)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(500)
-
+		log.Fatal(err)
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	userinfo, err := oauth2Client.GetUser(accessToken)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(500)
-
+		log.Fatal(err)
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -1098,10 +764,8 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 		id, err = dbUser.Create()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
-
-			document.WriteHeader(500)
-
+			log.Fatal(err)
+			document.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -1112,20 +776,16 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 		err = dbUser.Update()
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
-
-			document.WriteHeader(500)
-
+			log.Fatal(err)
+			document.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
 
 	session, err := getSession(request)
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		document.WriteHeader(403)
-
+		log.Fatal(err)
+		document.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -1140,7 +800,7 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 		callbackUrl = config.SiteURL + "/"
 	}
 
-	http.Redirect(document, request, callbackUrl, 301)
+	http.Redirect(document, request, callbackUrl, http.StatusFound)
 	return
 }
 
@@ -1149,53 +809,30 @@ type apiUserInfoMember struct {
 	*models.User
 }
 
-func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) {
+func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のUserInfoリクエスト")
-
-		writeStruct(document, apiUserInfoMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 400)
-		return
+		log.DebugStr("GET以外のUserInfoリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	rawUserId := request.URL.Query().Get("u")
 	userId, err := strconv.Atoi(rawUserId)
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "ユーザ指定のないリクエスト")
-
-		writeStruct(document, apiUserInfoMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "数値が不正です。",
-			},
-		}, 400)
-
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("uの値が不正です。")
 	}
 
 	var user models.User
 	err = user.Load(userId)
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "存在しないユーザのリクエスト")
-
-		writeStruct(document, apiUserInfoMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "ユーザIDが不正です。",
-			},
-		}, 400)
-
-		return
+		log.DebugStr("存在しないユーザのリクエスト")
+		return http.StatusBadRequest, errors.New("存在しないユーザです。")
 	}
 
-	writeStruct(document, user, 200)
-
+	writeStruct(document, user, http.StatusOK)
+	return http.StatusOK, nil
 }
 
 type apiUserProgramListMember struct {
@@ -1204,43 +841,22 @@ type apiUserProgramListMember struct {
 	ProgramCount int
 }
 
-func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request) {
+func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のUserProgramListリクエスト")
-
-		writeStruct(document, apiUserProgramListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("GET以外のUserProgramListリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiUserProgramListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "ユーザIDが不正です。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("uの値が不正です。")
 	}
 
 	if !models.ExistsUser(userId) {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiUserProgramListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "ユーザが存在しません。",
-			},
-		}, 403)
-		return
+		log.Fatal(err)
+		return http.StatusBadRequest, errors.New("存在しないユーザです。")
 	}
 
 	offset, err := strconv.Atoi(request.URL.Query().Get("o"))
@@ -1250,27 +866,23 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 
 	number, err := strconv.Atoi(request.URL.Query().Get("n"))
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiUserProgramListMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "取得数の指定が不正です。",
-			},
-		}, 403)
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("nの値が不正です。")
 	}
 
 	var user models.User
 	err = user.Load(userId)
 
 	if err != nil {
-		// エラー処理
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	err = user.LoadPrograms()
 
 	if err != nil {
-		// エラー処理
+		log.Debug(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	if offset+number > len(user.Programs) {
@@ -1284,7 +896,9 @@ func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request)
 		},
 		Programs:     user.Programs[offset : offset+number],
 		ProgramCount: len(user.Programs),
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 type apiUserGoodsMember struct {
@@ -1293,71 +907,37 @@ type apiUserGoodsMember struct {
 	ProgramCount int
 }
 
-func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
+func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のUserGoodリクエスト")
-
-		writeStruct(document, apiUserGoodsMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("GET以外のUserGoodリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiUserGoodsMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "不正なユーザIDです。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("uの値が不正です。")
 	}
 
 	if !models.ExistsUser(userId) {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiUserGoodsMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "存在しないユーザIDです。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("存在しないユーザです。")
 	}
 
 	offset, err := strconv.Atoi(request.URL.Query().Get("o"))
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "不正なオフセット。")
-
-		writeStruct(document, apiUserGoodsMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "オフセット値が不正です。",
-			},
-		}, 403)
+		log.DebugStr("不正なオフセット。")
+		return http.StatusBadRequest, errors.New("oの値が不正です。")
 	}
 
 	number, err := strconv.Atoi(request.URL.Query().Get("n"))
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "不正な制限数。")
-
-		writeStruct(document, apiUserGoodsMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "取得数が不正です。",
-			},
-		}, 403)
-		return
+		log.DebugStr("不正な制限数。")
+		return http.StatusBadRequest, errors.New("nの値が不正です。")
 	}
 
 	var goods []models.Good
@@ -1365,16 +945,8 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 	programCount, err := models.GetGoodListByUser(&goods, userId, offset, number)
 
 	if err != nil {
-
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiUserGoodsMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	programs := make([]models.Program, number)
@@ -1396,7 +968,9 @@ func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) {
 		},
 		Programs:     programs,
 		ProgramCount: programCount,
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 type apiProgramGoodCountMember struct {
@@ -1404,44 +978,23 @@ type apiProgramGoodCountMember struct {
 	GoodCount int
 }
 
-func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Request) {
+func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "GET" {
-		log.DebugStr(os.Stdout, "GET以外のProgramGoodCountリクエスト")
-
-		writeStruct(document, apiProgramGoodCountMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "GETを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("GET以外のProgramGoodCountリクエスト")
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
 	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramGoodCountMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "不正なプログラムIDです。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("pの値が不正です。")
 	}
 
 	if !models.ExistsProgram(programId) {
-		log.DebugStr(os.Stdout, "存在しないプログラムID。")
-
-		writeStruct(document, apiProgramGoodCountMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "存在しないプログラムIDです。",
-			},
-		}, 403)
-		return
+		log.DebugStr("存在しないプログラムID。")
+		return http.StatusBadRequest, errors.New("存在しないプログラムです。")
 	}
 
 	goodCount := models.GetGoodCountByProgram(programId)
@@ -1452,94 +1005,53 @@ func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Requ
 			Message: "いいね数の取得に成功しました。",
 		},
 		GoodCount: goodCount,
-	}, 200)
+	}, http.StatusOK)
 
+	return http.StatusOK, nil
 }
 
 type apiProgramRemoveMember struct {
 	*apiMember
 }
 
-func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request) {
+func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "POST" {
-		log.DebugStr(os.Stdout, "POST以外のProgramRemoveリクエスト")
-
-		writeStruct(document, apiProgramRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "POSTを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("POST以外のProgramRemoveリクエスト")
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
 	}
 
 	programId, err := strconv.Atoi(request.FormValue("p"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiProgramRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "不正なプログラムIDです。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("pの値が不正です。")
 	}
 
 	userId := getSessionUser(request)
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名のProgramRemoveリクエスト")
-
-		writeStruct(document, apiProgramRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "削除する権限がありません。",
-			},
-		}, 403)
-		return
+		log.DebugStr("匿名のProgramRemoveリクエスト")
+		return http.StatusBadRequest, errors.New("削除する権限がありません。")
 	}
 
 	var program models.Program
 	err = program.Load(programId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiProgramRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	if program.UserID != userId {
-		log.DebugStr(os.Stdout, "権限のないProgramRemoveリクエスト")
-
-		writeStruct(document, apiProgramRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "削除する権限がありません。",
-			},
-		}, 403)
-		return
+		log.DebugStr("権限のないProgramRemoveリクエスト")
+		return http.StatusBadRequest, errors.New("削除する権限がありません。")
 	}
 
 	err = program.Remove()
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiProgramRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	writeStruct(document, apiProgramRemoveMember{
@@ -1547,81 +1059,48 @@ func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request
 			Status:  "success",
 			Message: "削除に成功しました。",
 		},
-	}, 200)
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
 }
 
 type apiGoodRemoveMember struct {
 	*apiMember
 }
 
-func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
+func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
 	if request.Method != "POST" {
-		log.DebugStr(os.Stdout, "POST以外のGoodRemoveリクエスト")
-
-		writeStruct(document, apiGoodRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "POSTを使用してください。",
-			},
-		}, 403)
-		return
+		log.DebugStr("POST以外のGoodRemoveリクエスト")
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
 	}
 
 	programId, err := strconv.Atoi(request.FormValue("p"))
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
-
-		writeStruct(document, apiGoodRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "不正なプログラムIDです。",
-			},
-		}, 403)
-		return
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("pの値が不正です。")
 	}
 
 	userId := getSessionUser(request)
 	if userId == 0 {
-		log.DebugStr(os.Stdout, "匿名のGoodRemoveリクエスト")
-
-		writeStruct(document, apiGoodRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "削除する権限がありません。",
-			},
-		}, 403)
-		return
+		log.DebugStr("匿名のGoodRemoveリクエスト")
+		return http.StatusBadRequest, errors.New("削除する権限がありません。")
 	}
 
 	var good models.Good
 	err = good.LoadByUserAndProgram(userId, programId)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiGoodRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	err = good.Remove()
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		writeStruct(document, apiGoodRemoveMember{
-			apiMember: &apiMember{
-				Status:  "error",
-				Message: "内部エラーが発生しました。",
-			},
-		}, 500)
-		return
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
 	writeStruct(document, apiGoodRemoveMember{
@@ -1629,6 +1108,7 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) {
 			Status:  "success",
 			Message: "削除に成功しました。",
 		},
-	}, 200)
+	}, http.StatusOK)
 
+	return http.StatusOK, nil
 }

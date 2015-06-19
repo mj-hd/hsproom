@@ -3,7 +3,6 @@ package controllers
 import (
 	"errors"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -21,7 +20,7 @@ type programMember struct {
 	RecentPrograms []models.Program
 }
 
-func programHandler(document http.ResponseWriter, request *http.Request) {
+func programHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -30,29 +29,19 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 	var goodPrograms []models.Program
 	var recentPrograms []models.Program
 
-	i, err := models.GetProgramRankingForAllTime(&goodPrograms, 0, 4)
+	_, err = models.GetProgramRankingForAllTime(&goodPrograms, 0, 4)
 
 	if err != nil {
-		log.FatalStr(os.Stdout, "Error At :"+strconv.Itoa(i))
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました、管理人へ報告してください。")
-
-		return
+		return errors.New("人気順プログラムの取得に失敗: \r\n" + err.Error())
 	}
 
 	_, err = models.GetProgramListBy(models.ProgramColCreatedAt, &recentPrograms, true, 0, 4)
 
 	if err != nil {
-
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました、管理人へ知らせてください。")
-
-		return
+		return errors.New("新着順プログラムの取得に失敗: \r\n" + err.Error())
 	}
 
-	err = tmpl.Render(document, programMember{
+	return tmpl.Render(document, programMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -60,14 +49,6 @@ func programHandler(document http.ResponseWriter, request *http.Request) {
 		GoodPrograms:   goodPrograms,
 		RecentPrograms: recentPrograms,
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
-
-		return
-	}
 }
 
 type programListMember struct {
@@ -75,7 +56,7 @@ type programListMember struct {
 	Programs []models.Program
 }
 
-func programListHandler(document http.ResponseWriter, request *http.Request) {
+func programListHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	sortKey := request.URL.Query().Get("k")
 	order := request.URL.Query().Get("o")
@@ -87,7 +68,6 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 
 	// プログラムの一覧を取得
 	var programs []models.Program
-	var err error
 	isDesc := (order == "d")
 
 	// sortKeyでふるい分け
@@ -104,24 +84,16 @@ func programListHandler(document http.ResponseWriter, request *http.Request) {
 	_, err = models.GetProgramListBy(keyColumn, &programs, isDesc, 0, 10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-		return
+		return errors.New("プログラム一覧の取得に失敗: \r\n" + err.Error())
 	}
 
-	err = tmpl.Render(document, programListMember{
+	return tmpl.Render(document, programListMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "プログラム一覧",
 			UserID: getSessionUser(request),
 		},
 		Programs: programs,
 	})
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-		return
-	}
-
 }
 
 type programViewMember struct {
@@ -130,7 +102,7 @@ type programViewMember struct {
 	RelatedPrograms []models.Program
 }
 
-func programViewHandler(document http.ResponseWriter, request *http.Request) {
+func programViewHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 
@@ -155,12 +127,11 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		log.Info(os.Stdout, err)
-		showError(document, request, "リクエストが不正です。")
+		log.Info(err)
 
-		document.WriteHeader(400)
+		showError(document, request, "リクエストが不正です。Request:"+rawProgramId)
 
-		return
+		return nil
 	}
 
 	// プログラムを取得
@@ -169,12 +140,11 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 	err = program.Load(programId)
 	if err != nil {
 
-		log.Info(os.Stdout, err)
+		log.Info(err)
+
 		showError(document, request, "プログラムが存在しません。")
 
-		document.WriteHeader(404)
-
-		return
+		return nil
 	}
 
 	userId := getSessionUser(request)
@@ -184,17 +154,14 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		err = models.PlayProgram(program.ID)
 
 		if err != nil {
-			log.Fatal(os.Stdout, err)
-
-			showError(document, request, "エラーが発生しました。")
-			return
+			log.FatalStr("プレイ回数を加算できませんでした。ProgramID:" + string(program.ID))
 		}
 	} else {
 		if program.UserID != userId {
-			log.Debug(os.Stdout, errors.New("非公開のプログラムへのアクセス"))
+			log.DebugStr("非公開のプログラムへのアクセス。ProgramID:" + string(program.ID))
 
 			showError(document, request, "非公開のプログラムです。")
-			return
+			return nil
 		}
 	}
 
@@ -205,7 +172,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		related = make([]models.Program, 0)
 	}
 
-	err = tmpl.Render(document, programViewMember{
+	return tmpl.Render(document, programViewMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  program.Title + " - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -213,18 +180,13 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) {
 		Program:         program,
 		RelatedPrograms: related,
 	})
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-	}
-
 }
 
 type programPostMember struct {
 	*templates.DefaultMember
 }
 
-func programPostHandler(document http.ResponseWriter, request *http.Request) {
+func programPostHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -232,22 +194,18 @@ func programPostHandler(document http.ResponseWriter, request *http.Request) {
 
 	user := getSessionUser(request)
 	if user == 0 {
-		// TODO: ログインを促す
 
-		return
+		http.Redirect(document, request, "/user/login/", http.StatusFound)
+
+		return nil
 	}
 
-	err := tmpl.Render(document, programPostMember{
+	return tmpl.Render(document, programPostMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "プログラムの投稿 - " + config.SiteTitle,
 			UserID: user,
 		},
 	})
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-		showError(document, request, "ページの表示に失敗しました。管理人へ問い合わせてください。")
-	}
-
 }
 
 type programEditMember struct {
@@ -255,18 +213,18 @@ type programEditMember struct {
 	Program *models.Program
 }
 
-func programEditHandler(document http.ResponseWriter, request *http.Request) {
+func programEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	// プログラムIdの取得
 	rawProgramId := request.URL.Query().Get("p")
 	programId, err := strconv.Atoi(rawProgramId)
 
 	if err != nil {
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
-		showError(document, request, "プログラムが見つかりません。")
+		showError(document, request, "リクエストが不正です。")
 
-		return
+		return nil
 	}
 
 	// テンプレートの設定
@@ -277,9 +235,10 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 	// ユーザの取得
 	user := getSessionUser(request)
 	if user == 0 {
-		// TODO: ログインを促す
 
-		return
+		http.Redirect(document, request, "/user/login/", http.StatusFound)
+
+		return nil
 	}
 
 	// プログラムの読み込み
@@ -288,52 +247,52 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 
-		log.Debug(os.Stdout, err)
+		log.Debug(err)
 
 		showError(document, request, "プログラムの読み込みに失敗しました。管理人へ問い合わせてください。")
 
-		return
+		return nil
 	}
 
 	if program.UserID != user {
-		log.DebugStr(os.Stdout, "権限のない編集画面へのアクセス")
+		log.DebugStr("権限のない編集画面へのアクセス。ProgramID:" + string(program.ID) + " UserID:" + string(user))
 
 		showError(document, request, "プログラムの編集権限がありません。")
 
-		return
+		return nil
 	}
 
 	if program.Sourcecode != "" {
 		from := request.URL.Query().Get("f")
 
 		if from != "source" {
-			http.Redirect(document, request, "/source/edit/?p="+strconv.Itoa(program.ID), 303)
-			return
+			http.Redirect(document, request, "/source/edit/?p="+strconv.Itoa(program.ID), http.StatusFound)
+			return nil
 		}
 	}
 
 	err = program.LoadThumbnail()
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "サムネイル画像の読み込みに失敗しました。")
+		log.DebugStr("サムネイル画像の読み込みに失敗しました。ProgramID:" + string(program.ID))
 
 		showError(document, request, "サムネイル画像の読み込みに失敗しました。")
 
-		return
+		return nil
 	}
 
 	err = program.LoadAttachments()
 
 	if err != nil {
-		log.DebugStr(os.Stdout, "添付ファイルの読み込みに失敗しました")
+		log.DebugStr("添付ファイルの読み込みに失敗しました。ProgramID:" + string(program.ID))
 
 		showError(document, request, "添付ファイルの読み込みに失敗しました")
 
-		return
+		return nil
 	}
 
 	// 表示
-	err = tmpl.Render(document, programEditMember{
+	return tmpl.Render(document, programEditMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  program.Title + " - " + config.SiteTitle,
 			UserID: user,
@@ -341,34 +300,18 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) {
 		Program: program,
 	})
 
-	if err != nil {
-
-		log.Debug(os.Stdout, err)
-
-		showError(document, request, "ページの読み込みに失敗しました。管理人へ問い合わせてください。")
-
-		return
-	}
-
 }
 
-func programCreateHandler(document http.ResponseWriter, request *http.Request) {
+func programCreateHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "programCreate.tmpl"
 
-	err := tmpl.Render(document, &templates.DefaultMember{
+	return tmpl.Render(document, &templates.DefaultMember{
 		Title:  "新規プログラム - " + config.SiteTitle,
 		UserID: getSessionUser(request),
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。管理人へ報告してください。")
-	}
-
 }
 
 type programSearchMember struct {
@@ -381,7 +324,7 @@ type programSearchMember struct {
 	ProgramCount int
 }
 
-func programSearchHandler(document http.ResponseWriter, request *http.Request) {
+func programSearchHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -415,11 +358,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 	i, err := models.GetProgramListByQuery(&programs, queryWord, sortKey, true, 10, page*10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-
-		return
+		return errors.New("プログラム一覧の取得に失敗:\r\n" + err.Error())
 	}
 
 	maxPage := 0
@@ -430,7 +369,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	err = tmpl.Render(document, programSearchMember{
+	return tmpl.Render(document, programSearchMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "プログラムの検索 - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -442,12 +381,6 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) {
 		Programs:     programs,
 		ProgramCount: i,
 	})
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
-		return
-	}
 }
 
 type programRankingMember struct {
@@ -459,7 +392,7 @@ type programRankingMember struct {
 	Period       string
 }
 
-func programRankingDailyHandler(document http.ResponseWriter, request *http.Request) {
+func programRankingDailyHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -476,10 +409,7 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 	i, err := models.GetProgramRankingForDay(&programs, page*10, 10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("日間ランキングの取得に失敗: \r\n" + err.Error())
 	}
 
 	maxPage := i / 10
@@ -487,7 +417,7 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 		maxPage--
 	}
 
-	err = tmpl.Render(document, programRankingMember{
+	return tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "日間ランキング - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -498,16 +428,9 @@ func programRankingDailyHandler(document http.ResponseWriter, request *http.Requ
 		ProgramCount: i,
 		Period:       "daily",
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
-		return
-	}
 }
 
-func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Request) {
+func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -524,10 +447,7 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 	i, err := models.GetProgramRankingForMonth(&programs, page*10, 10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("月間ランキングの取得に失敗: \r\n" + err.Error())
 	}
 
 	maxPage := i / 10
@@ -535,7 +455,7 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 		maxPage--
 	}
 
-	err = tmpl.Render(document, programRankingMember{
+	return tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "月間ランキング - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -546,17 +466,9 @@ func programRankingMonthlyHandler(document http.ResponseWriter, request *http.Re
 		ProgramCount: i,
 		Period:       "monthly",
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
-		return
-	}
-
 }
 
-func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Request) {
+func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -573,10 +485,7 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 	i, err := models.GetProgramRankingForWeek(&programs, page*10, 10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("週間ランキングの取得に失敗: \r\n" + err.Error())
 	}
 
 	maxPage := i / 10
@@ -584,7 +493,7 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 		maxPage--
 	}
 
-	err = tmpl.Render(document, programRankingMember{
+	return tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "週間ランキング - " + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -595,17 +504,9 @@ func programRankingWeeklyHandler(document http.ResponseWriter, request *http.Req
 		ProgramCount: i,
 		Period:       "weekly",
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
-		return
-	}
-
 }
 
-func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Request) {
+func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 	tmpl.Layout = "default.tmpl"
@@ -622,10 +523,7 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 	i, err := models.GetProgramRankingForAllTime(&programs, page*10, 10)
 
 	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "エラーが発生しました。")
-		return
+		return errors.New("総合ランキングの取得に失敗: \r\n" + err.Error())
 	}
 
 	maxPage := i / 10
@@ -633,7 +531,7 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 		maxPage--
 	}
 
-	err = tmpl.Render(document, programRankingMember{
+	return tmpl.Render(document, programRankingMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "総合ランキング" + config.SiteTitle,
 			UserID: getSessionUser(request),
@@ -644,12 +542,4 @@ func programRankingAllTimeHandler(document http.ResponseWriter, request *http.Re
 		ProgramCount: i,
 		Period:       "alltime",
 	})
-
-	if err != nil {
-		log.Fatal(os.Stdout, err)
-
-		showError(document, request, "ページの表示に失敗しました。管理人へ報告してください。")
-		return
-	}
-
 }
