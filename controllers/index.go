@@ -6,7 +6,6 @@ import (
 	"../config"
 	"../models"
 	"../templates"
-	"../utils/log"
 )
 
 type indexMember struct {
@@ -14,7 +13,7 @@ type indexMember struct {
 	RecentPrograms *[]models.Program
 }
 
-func indexHandler(document http.ResponseWriter, request *http.Request) {
+func indexHandler(document http.ResponseWriter, request *http.Request) (err error) {
 
 	var tmpl templates.Template
 
@@ -23,26 +22,17 @@ func indexHandler(document http.ResponseWriter, request *http.Request) {
 
 	var programs []models.Program
 
-	_, err := models.GetProgramListBy(models.ProgramColCreatedAt, &programs, true, 0, 4)
+	_, err = models.GetProgramListBy(models.ProgramColCreatedAt, &programs, true, 0, 4)
 
 	if err != nil {
-		log.Fatal(err)
-
-		showError(document, request, "ページの読み込みに失敗しました。")
-
-		return
+		return err
 	}
 
-	err = tmpl.Render(document, indexMember{
+	return tmpl.Render(document, indexMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  config.SiteTitle,
 			UserID: getSessionUser(request),
 		},
 		RecentPrograms: &programs,
 	})
-	if err != nil {
-		log.Fatal(err)
-		showError(document, request, "ページの表示に失敗しました。")
-		return
-	}
 }
