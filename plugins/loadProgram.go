@@ -4,28 +4,26 @@ import (
 	"io/ioutil"
 	"os"
 
-	"../config"
 	"html/template"
+
+	"../config"
 )
 
-func loadProgramHGIMG4() interface{} {
+func loadProgram(params []interface{}) interface{} {
 
-	fp, err := os.Open(config.TemplatesPath + "plugins/loadProgramHGIMG4.tmpl")
-	if err != nil {
-		return ""
+	runtime, ok := params[0].(string)
+
+	if !ok {
+		return "See Other..."
 	}
 
-	byt, err := ioutil.ReadAll(fp)
-	if err != nil {
-		return ""
+	switch runtime {
+	case "HSP3Dish", "HGIMG4":
+	default:
+		return "See Other..."
 	}
 
-	return template.JS(string(byt))
-}
-
-func loadProgramHSP3Dish() interface{} {
-
-	fp, err := os.Open(config.TemplatesPath + "plugins/loadProgramHSP3Dish.tmpl")
+	fp, err := os.Open(config.TemplatesPath + "plugins/loadProgram" + runtime + ".tmpl")
 	if err != nil {
 		return ""
 	}

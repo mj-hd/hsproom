@@ -51,8 +51,8 @@ func embedImage(imgFile string, alt string) template.HTML {
 func linkJS(jsFile string) template.HTML {
 	return template.HTML("<script type='text/javascript' src='/" + config.JsPath + jsFile + "' ></script>")
 }
-func plugin(name string) interface{} {
-	return plugins.Plugins[name]()
+func plugin(name string, params ...interface{}) interface{} {
+	return plugins.Plugins[name](params)
 }
 func markdown(markdown string) template.HTML {
 	return template.HTML(bluemonday.UGCPolicy().SanitizeBytes(blackfriday.MarkdownCommon([]byte(markdown))))

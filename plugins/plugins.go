@@ -1,8 +1,7 @@
 package plugins
 
-var Plugins = map[string]func() interface{} {
-	"loadProgramHSP3Dish": loadProgramHSP3Dish,
-	"loadProgramHGIMG4":   loadProgramHGIMG4,
+var Plugins = map[string]func([]interface{}) interface{}{
+	"loadProgram": loadProgram,
 }
 
 func init() {
