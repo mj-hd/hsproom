@@ -87,7 +87,7 @@
 						</div>
 						<div class="help_cap col-md-3">
 							<p>
-								png, gif, jpg, bmpに対応しています。<strong>3MBまで</strong>のファイルが使用できます。
+								png, gif, jpg, bmpに対応しています。<strong>{{ plugin "byteFormat" .ThumbnailLimitSize }}まで</strong>のファイルが使用できます。
 							</p>
 	
 						</div>
@@ -103,7 +103,7 @@
 						</div>
 						<div class="help_cap col-md-3">
 							<p>
-								HSP3に付属の、「HSP3Dish Helper」で「hsp3dish.js」用に変換した際に出力される、「(ファイル名).ax」ファイルをドロップしてください。<strong>1MBまで</strong>対応しています。
+								HSP3に付属の、「HSP3Dish Helper」で「hsp3dish.js」用に変換した際に出力される、「(ファイル名).ax」ファイルをドロップしてください。<strong>{{ plugin "byteFormat" .StartaxLimitSize }}まで</strong>対応しています。
 							</p>
 						</div>
 		
@@ -145,7 +145,7 @@
 						</div>
 						<div class="help_cap col-md-3">
 							<p>
-								プログラム中で使用するファイル(画像, 音楽など)を選択してください。<strong>5MBまで</strong>対応しています。複数可。
+								プログラム中で使用するファイル(画像, 音楽, テキストなど)を選択してください。<strong>{{ plugin "byteFormat" .AttachmentsLimitSize }}まで</strong>対応しています。複数可。
 							</p>
 						</div>
 		
@@ -256,29 +256,29 @@ $(document).ready(function() {
 	$("#thumb_box").uploadbox({
 		emptyText:      "サムネイル画像をドロップしてください。",
 		emptyIconClass: "mdi-editor-insert-photo",
-		limitSize: 1024*1024*3
+		limitSize: {{ .ThumbnailLimitSize }}
 	}).on("onupload", function(e, data) {
 		thumbnail = data;
 	});
 	$("#startax_box").uploadbox({
 		emptyText:      "startaxファイルをドロップしてください。",
-		limitSize: 1024*1024*1
+		limitSize: {{ .StartaxLimitSize }}
 	}).on("onupload", function(e, data) {
 		startax = data;
 	});
 	$("#attachments_box").uploadbox({
 		allowMultiFiles: true,
 		emptyText:      "添付ファイルをドロップしてください。",
-		limitSize: 1024*1024*5
+		limitSize: {{ .AttachmentsLimitSize }}
 	}).on("onupload", function(e, data, file) {
 		attachments.push({
 			"name" : file.name,
 			"value": data
 		});
 
-		updateAttachmentsProgress(1024*1024*5);
+		updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 	}).on("ondelete", function(e) {
-		updateAttachmentsProgress(1024*1024*5);
+		updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 		var index = -1;
 
@@ -401,7 +401,7 @@ $(document).ready(function() {
 		$("#attachments_box").data("fileCount", $("#attachments_box").data("fileCount") + 1);
 	{{ end }}
 
-	updateAttachmentsProgress(1024*1024*5);
+	updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 	$("#description").trigger("propertychange");
 

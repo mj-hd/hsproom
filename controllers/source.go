@@ -13,6 +13,9 @@ import (
 
 type sourceCreateMember struct {
 	*templates.DefaultMember
+	ThumbnailLimitSize   int
+	StartaxLimitSize     int
+	AttachmentsLimitSize int
 }
 
 func sourceCreateHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -26,12 +29,18 @@ func sourceCreateHandler(document http.ResponseWriter, request *http.Request) (e
 			Title:  "ソースコードの作成 - " + config.SiteTitle,
 			UserID: getSessionUser(request),
 		},
+		ThumbnailLimitSize:   config.ThumbnailLimitSize,
+		StartaxLimitSize:     config.StartaxLimitSize,
+		AttachmentsLimitSize: config.AttachmentsLimitSize,
 	})
 }
 
 type sourceEditMember struct {
 	*templates.DefaultMember
-	Program *models.Program
+	Program              *models.Program
+	ThumbnailLimitSize   int
+	StartaxLimitSize     int
+	AttachmentsLimitSize int
 }
 
 func sourceEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -91,6 +100,9 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) (err
 			Title:  "ソースコードの編集 - " + config.SiteTitle,
 			UserID: getSessionUser(request),
 		},
-		Program: program,
+		Program:              program,
+		ThumbnailLimitSize:   config.ThumbnailLimitSize,
+		StartaxLimitSize:     config.StartaxLimitSize,
+		AttachmentsLimitSize: config.AttachmentsLimitSize,
 	})
 }

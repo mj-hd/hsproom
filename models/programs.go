@@ -51,7 +51,7 @@ type Thumbnail struct {
 	DeletedAt *time.Time
 	ProgramID int `sql:"index"`
 
-	Data []byte `sql:"size:3145728"`
+	Data []byte `sql:"type:longblob"`
 }
 
 type Startax struct {
@@ -62,7 +62,7 @@ type Startax struct {
 	ProgramID  int        `sql:"index"`
 	Attachment Attachment `gorm:"polymorphic:Owner;"`
 
-	Data []byte `sql:"size:1048576"`
+	Data []byte `sql:"type:longblob"`
 }
 
 type Attachment struct {

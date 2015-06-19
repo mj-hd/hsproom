@@ -210,7 +210,10 @@ func programPostHandler(document http.ResponseWriter, request *http.Request) (er
 
 type programEditMember struct {
 	*templates.DefaultMember
-	Program *models.Program
+	Program              *models.Program
+	ThumbnailLimitSize   int
+	StartaxLimitSize     int
+	AttachmentsLimitSize int
 }
 
 func programEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -297,9 +300,19 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) (er
 			Title:  program.Title + " - " + config.SiteTitle,
 			UserID: user,
 		},
-		Program: program,
+		Program:              program,
+		ThumbnailLimitSize:   config.ThumbnailLimitSize,
+		StartaxLimitSize:     config.StartaxLimitSize,
+		AttachmentsLimitSize: config.AttachmentsLimitSize,
 	})
 
+}
+
+type programCreateMember struct {
+	*templates.DefaultMember
+	ThumbnailLimitSize   int
+	StartaxLimitSize     int
+	AttachmentsLimitSize int
 }
 
 func programCreateHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -308,9 +321,14 @@ func programCreateHandler(document http.ResponseWriter, request *http.Request) (
 	tmpl.Layout = "default.tmpl"
 	tmpl.Template = "programCreate.tmpl"
 
-	return tmpl.Render(document, &templates.DefaultMember{
-		Title:  "新規プログラム - " + config.SiteTitle,
-		UserID: getSessionUser(request),
+	return tmpl.Render(document, programCreateMember{
+		DefaultMember: &templates.DefaultMember{
+			Title:  "新規プログラム - " + config.SiteTitle,
+			UserID: getSessionUser(request),
+		},
+		ThumbnailLimitSize:   config.ThumbnailLimitSize,
+		StartaxLimitSize:     config.StartaxLimitSize,
+		AttachmentsLimitSize: config.AttachmentsLimitSize,
 	})
 }
 

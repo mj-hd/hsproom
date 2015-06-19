@@ -478,16 +478,16 @@ var Module = {
 		$("#attachments_box").uploadbox({
 			allowMultiFiles: true,
 			emptyText: "添付ファイルをドロップしてください。",
-			limitSize: 1024*1024*5
+			limitSize: {{ .AttachmentsLimitSize }}
 		}).on("onupload", function(e, data, file) {
 			attachments.push({
 				"name":  file.name,
 				"value": data
 			});
 
-			updateAttachmentsProgress(1024*1024*5);
+			updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 		}).on("ondelete", function(e, fname) {
-			updateAttachmentsProgress(1024*1024*5);
+			updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 			var index = -1;
 	
@@ -507,7 +507,7 @@ var Module = {
 		$("#thumb_box").uploadbox({
 			emptyText: "サムネイル画像をドロップしてください。",
 			emptyIconClass: "mdi-editor-insert-photo",
-			limitSize: 1024*1024*3
+			limitSize: {{ .ThumbnailLimitSize }}
 		}).on("onupload", function(e, data) {
 			thumbnail = data;
 		});
@@ -636,7 +636,7 @@ var Module = {
 			$("#attachments_box").data("fileCount", $("#attachments_box").data("fileCount") + 1);
 		{{ end }}
 
-		updateAttachmentsProgress(1024*1024*5);
+		updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 		$("#description").trigger("propertychange");
 
