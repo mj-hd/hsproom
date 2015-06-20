@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 
 	"../bot"
@@ -502,9 +501,15 @@ type apiTwitterSearchMember struct {
 
 func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
-	programName := bluemonday.UGCPolicy().Sanitize(request.URL.Query().Get("pn"))
+	rawProgramId := request.URL.Query().Get("p")
 	rawNumber := request.URL.Query().Get("n")
 	rawOffset := request.URL.Query().Get("o")
+
+	_, err = strconv.Atoi(rawProgramId)
+	if err != nil {
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("不正なpの値です。")
+	}
 
 	number, err := strconv.Atoi(rawNumber)
 	if err != nil {
@@ -519,19 +524,7 @@ func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request
 	}
 
 	query := "#hsproom"
-
-	symbols, err := regexp.Compile("[\\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]")
-
-	if err != nil {
-		log.Fatal(err)
-		return http.StatusInternalServerError, errors.New("検索に失敗しました。")
-	}
-
-	programName = symbols.ReplaceAllString(programName, "")
-
-	if programName != "" {
-		query += " #" + programName
-	}
+	query += " #program" + rawProgramId
 
 	tweets, err := twitterClient.SearchTweets(query, number, offset)
 	if err != nil {

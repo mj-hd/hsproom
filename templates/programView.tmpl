@@ -399,7 +399,7 @@
 			dataType: "json",
 			cache: false,
 			data: {
-				"pn": "{{ .Program.Title }}",
+				"p": {{ .Program.ID }},
 				"n": 10,
 				"o": max_id
 			}
@@ -455,7 +455,7 @@
 	function openTwitter() {
 
 		var title = encodeURIComponent("{{ .Program.Title }}");
-		var hashtags = encodeURIComponent("hsproom #"+"{{ .Program.Title }}".replace(/[\s\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, ""));
+		var hashtags = encodeURIComponent("hsproom #program{{ .Program.ID }}");
 		var url   = encodeURIComponent(location.href);
 
 		// ユーザ名の取得は後で統一も要検討
