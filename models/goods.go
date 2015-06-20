@@ -4,6 +4,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
 
 func initGoods() {
@@ -35,14 +36,42 @@ func (this *Good) LoadByUserAndProgram(userId int, programId int) error {
 
 func (this *Good) Create() (int, error) {
 
-	err := DB.Create(this).Error
+	tx := DB.Begin()
 
-	return this.ID, err
+	err := tx.Create(this).Error
+	if err != nil {
+		tx.Rollback()
+		return this.ID, err
+	}
+
+	err = tx.Model(Program{}).Where("id = ?", this.ProgramID).UpdateColumn("good", gorm.Expr("good + ?", 1)).Error
+	if err != nil {
+		tx.Rollback()
+		return this.ID, err
+	}
+
+	tx.Commit()
+
+	return this.ID, nil
 }
 
 func (this *Good) Remove() error {
 
-	err := DB.Delete(this).Error
+	tx := DB.Begin()
+
+	err := tx.Delete(this).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = DB.Model(Program{}).Where("id = ?", this.ProgramID).UpdateColumn("good", gorm.Expr("good - ?", 1)).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
 
 	return err
 }
