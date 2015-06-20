@@ -298,20 +298,3 @@ func (this *OAuthClient) UpdateTweet(accessToken *oauth.AccessToken, message str
 
 	return nil
 }
-
-/*func main() {
-	client, err := NewClient(config.TwitterKey, config.TwitterSecret)
-	if err != nil {
-		panic(err)
-	}
-
-	tweets, err := client.SearchTweets("HSP", 5, 1)
-	if err != nil {
-		panic(err)
-	}
-
-	for tweet := range tweets {
-		js, _ := json.Marshal(tweet)
-		println(string(js))
-	}
-}*/

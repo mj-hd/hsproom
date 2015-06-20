@@ -21,7 +21,7 @@ func init() {
 		panic(err.Error())
 	}
 
-	if config.LogLevel >= log.Level_Debug {
+	if config.LogLevel == log.Level_Debug {
 		DB.LogMode(true)
 	}
 
