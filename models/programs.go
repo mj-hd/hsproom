@@ -156,29 +156,38 @@ func (this *Program) Create() (int, error) {
 func (this *Program) Remove() error {
 	var err error
 
-	err = DB.Model(this).Related(&this.Attachments).Delete(&this.Attachments).Error
+	tx := DB.Begin()
+
+	err = tx.Where("program_id = ?", this.ID).Delete(&this.Attachments).Error
 	if err != nil && (err != gorm.RecordNotFound) {
+		tx.Rollback()
 		return err
 	}
 
-	err = DB.Model(this).Related(&this.Thumbnail).Delete(&this.Thumbnail).Error
+	err = tx.Model(this).Related(&this.Thumbnail).Delete(&this.Thumbnail).Error
 	if err != nil && (err != gorm.RecordNotFound) {
+		tx.Rollback()
 		return err
 	}
 
-	err = DB.Model(this).Related(&this.Startax).Delete(&this.Startax).Error
+	err = tx.Model(this).Related(&this.Startax).Delete(&this.Startax).Error
 	if err != nil && (err != gorm.RecordNotFound) {
+		tx.Rollback()
 		return err
 	}
 
-	err = DB.Model(this).Related(&this.Goods).Delete(&this.Goods).Error
+	err = tx.Where("program_id = ?", this.ID).Delete(&this.Goods).Error
 	if err != nil && (err != gorm.RecordNotFound) {
+		tx.Rollback()
 		return err
 	}
 
-	err = DB.Delete(this).Error
+	err = tx.Delete(this).Error
+	if err != nil {
+		tx.Rollback()
+	}
 
-	return err
+	return tx.Commit().Error
 }
 
 func (this *Program) FindAttachment(name string) (*Attachment, error) {
