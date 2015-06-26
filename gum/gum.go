@@ -34,6 +34,12 @@ func Del() {
 }
 
 func Start() {
+	bot.Init()
+	controllers.Init()
+	models.Init()
+	plugins.Init()
+	templates.Init()
+
 	for route := range controllers.Router.Iterator() {
 		http.HandleFunc(route.Path, route.Function)
 		log.DebugStr(route.Path + "に関数を割当")

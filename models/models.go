@@ -12,7 +12,7 @@ import (
 
 var DB gorm.DB
 
-func init() {
+func Init() {
 	var err error
 
 	DB, err = gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", config.DBUser, config.DBPass, config.DBHost, config.DBPort, config.DBName))

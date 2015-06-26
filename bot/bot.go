@@ -16,7 +16,7 @@ import (
 var client *twitter.OAuthClient
 var token *oauth.AccessToken
 
-func init() {
+func Init() {
 	var err error
 
 	if !config.TwitterBotEnabled {

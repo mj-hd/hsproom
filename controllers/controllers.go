@@ -14,7 +14,7 @@ import (
 var Router Routes
 var sessionStore = sessions.NewCookieStore([]byte(config.SessionKey))
 
-func init() {
+func Init() {
 
 	apiInit()
 

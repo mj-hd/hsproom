@@ -5,7 +5,7 @@ var Plugins = map[string]func([]interface{}) interface{}{
 	"byteFormat":  byteFormat,
 }
 
-func init() {
+func Init() {
 
 }
 func Del() {

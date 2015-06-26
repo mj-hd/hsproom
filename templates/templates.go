@@ -24,7 +24,7 @@ type DefaultMember struct {
 	UserID int
 }
 
-func init() {
+func Init() {
 }
 func Del() {
 }
