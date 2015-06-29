@@ -544,6 +544,18 @@ var Module = {
 			}
 		});
 
+		$("#preview_dialog").focus(function () {
+			$("#preview_frame").focus();
+		});
+
+		$("#preview_dialog input").focus(function () {
+			$("#preview_frame").focus();
+		});
+
+		$("#preview_dialog").on("show.bs.modal", function() {
+			$("#preview_frame").focus();
+		});
+
 		$("#preview_dialog").on("hidden.bs.modal", function() {
 			var iframe = $("#preview_frame")[0];
 
