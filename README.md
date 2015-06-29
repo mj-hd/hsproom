@@ -10,9 +10,7 @@ HSP製のプログラムを、hsp3dish.jsを使って手軽に実行できるWeb
 ```
 git clone https://github.com/mjhd-devlion/hsproom.git
 cd hsproom
-
-go get "github.com/mattn/gom"
-gom install
+make
 ```
 
 Google+API、TwitterAPI、TwitterBot用のアクセストークンを用意し、config/config.go.exampleを編集し、config/config.goとして保存する。
