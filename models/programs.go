@@ -579,7 +579,7 @@ func getProgramRankingSince(since time.Time, out *[]Program, from int, number in
 		return 0, err
 	}
 
-	err = DB.Model(Program{}).Scopes(Published).Where("created_at >= ?", since.Format("2006-1-2")).Order("good desc, play desc").Limit(from).Offset(number).Find(out).Error
+	err = DB.Model(Program{}).Scopes(Published).Where("created_at >= ?", since.Format("2006-1-2")).Order("good desc, play desc").Limit(number).Offset(from).Find(out).Error
 	return rowCount, err
 }
 
