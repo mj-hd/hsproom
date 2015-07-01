@@ -1,5 +1,7 @@
 {{ define "Header" }}
 
+{{ linkJS "bootstrap-paginator.min.js" }}
+
 {{ end }}
 
 {{ define "Content" }}
@@ -39,9 +41,7 @@
 				<div class="list-group">
 
 				</div>
-				<ul class="pagination pagination-sm">
-					<li class="prev_button" data-type="primary"><a href="javascript:prevUserProgramsPage();">«</a></li>
-					<li class="next_button" data-type="primary"><a href="javascript:nextUserProgramsPage();">»</a></li>
+				<ul id="edit_pagination" class="pagination pagination-sm">
 				</ul>
 
 			</div>
@@ -55,9 +55,7 @@
 				<div class="list-group">
 
 				</div>
-				<ul class="pagination pagination-sm">
-					<li class="prev_button" data-type="primary"><a href="javascript:prevGoodProgramsPage();">«</a></li>
-					<li class="next_button" data-type="primary"><a href="javascript:nextGoodProgramsPage();">»</a></li>
+				<ul id="good_pagination" class="pagination pagination-sm">
 				</ul>
 
 			</div>
@@ -173,7 +171,6 @@ function hideAll() {
 	$(".panel").each(function () {
 		$(this).hide();
 	});
-
 	$("#menu .disabled").removeClass("disabled");
 }
 
@@ -183,7 +180,7 @@ function changeUserProgramsPage(page) {
 		if (rowCount % 5 == 0) {
 			maxPage--;
 		}
-		updatePagination($("#edit"), "changeUserProgramsPage", page, maxPage);
+		updatePagination($("#edit_pagination"), changeUserProgramsPage, page, maxPage);
 
 		currentProgramPage = page;
 	});
@@ -191,51 +188,14 @@ function changeUserProgramsPage(page) {
 
 function updatePagination(baseElem, changeFunc, curPage, maxPage) {
 
-	if (curPage == 0) {
-		baseElem.find(".prev_button").addClass("disabled");
-	}
-	if (curPage == maxPage) {
-		baseElem.find(".next_button").addClass("disabled");
-	}
-
-	var nextButton = baseElem.find(".next_button");
-	var iLimit = 0;
-
-	baseElem.find(".pagination li[data-type!='primary']").remove();
-
-	iLimit = curPage+1 >= 5 ? 2 : 5;
-	for (var i = 1; (i-1 <= iLimit) && (i <= maxPage); i++) {
-		var li = $("<li />").append('<a href="javascript:'+changeFunc+'('+(i-1)+');">' +  i + "</a>");
-		if (i == curPage +1) {
-			li.addClass("active");
+	baseElem.bootstrapPaginator({
+		bootstrapMajorVersion: 3,
+		currentPage: curPage + 1,
+		totalPages:  maxPage + 1,
+		onPageClicked: function (event, oe, type, page) {
+			changeFunc(page - 1);
 		}
-		nextButton.before(li);
-	}
-
-	if (maxPage > 10) {
-		nextButton.before('<li><a href="#" class="disabled">...</a></li>');
-	}
-
-	iLimit = (curPage+1 >= 5) && (curPage <= maxPage -5) ? 5 : 0;
-	for (var i = 1;i <= iLimit; i++) {
-		var li = $("<li />").append('<a href="javascript:'+changeFunc+'(' + (curPage -3 + i)  + ');">' + (curPage -2 + i) + "</a>");
-		if (i == 3) {
-			li.addClass("active");
-		}
-		nextButton.before(li);
-
-	}
-	
-	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
-
-	iLimit = curPage >= maxPage -4 ? 5 : 2;
-	for (var i = iLimit; (i > 0) && (maxPage + 2 -i) > 0; i--) {
-		var li = $("<li />").append('<a href="javascript:'+changeFunc+'(' + (maxPage - i +1) + ');">' + (maxPage +2 - i) + "</a>");
-		if (maxPage +1 -i == curPage) {
-			li.addClass("active");
-		}
-		nextButton.before(li);
-	}
+	});
 
 }
 
@@ -282,7 +242,7 @@ function changeGoodProgramsPage(page) {
 		if (rowCount % 5 == 0) {
 			maxPage--;
 		}
-		updatePagination($("#good"), "changeGoodProgramsPage", page, maxPage);
+		updatePagination($("#good_pagination"), changeGoodProgramsPage, page, maxPage);
 
 		currentGoodPage = page;
 	});

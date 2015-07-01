@@ -11,6 +11,8 @@
 
 </style>
 
+{{ linkJS "bootstrap-paginator.min.js" }}
+
 {{ end }}
 
 {{ define "Content" }}
@@ -87,9 +89,7 @@
 
 			</div>
 
-			<ul class="pagination pagination-sm">
-				<li id="prev_button"><a href="javascript:prevPage();">«</a></li>
-				<li id="next_button"><a href="javascript:nextPage();">»</a></li>
+			<ul id="pagination" class="pagination pagination-sm">
 			</ul>
 
 		</div>
@@ -97,16 +97,6 @@
 </div>
 
 <script type="text/javascript">
-
-function nextPage() {
-	if ({{ .CurPage }} == {{ .MaxPage }}) { return; }
-	location.href = location.path + "?s={{ .Sort }}&u={{ .UserID }}&p=" + ({{ .CurPage }} + 1);
-}
-
-function prevPage() {
-	if ({{ .CurPage }} == 0) { return; }
-	location.href = location.path + "?s={{ .Sort }}&u={{ .UserID }}&p=" + ({{ .CurPage }} - 1);
-}
 
 $(document).ready(function() {
 
@@ -129,50 +119,14 @@ $(document).ready(function() {
 			break;
 	}
 
-	if ({{ .CurPage }} == 0) {
-		$("#prev_button").addClass("disabled");
-	}
-	if ({{ .CurPage }} == {{ .MaxPage }}) {
-		$("#next_button").addClass("disabled");
-	}
-
-	var nextButton = $("#next_button");
-	var iLimit = 0;
-
-	iLimit = {{ .CurPage }}+1 >= 5 ? 2 : 5;
-	for (var i = 1; (i <= iLimit) && (i-1 <= {{ .MaxPage }}); i++) {
-		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .UserID }}&p=' + (i-1) + '">' +  i + "</a>");
-		if (i == {{ .CurPage }} +1) {
-			li.addClass("active");
+	$("#pagination").bootstrapPaginator({
+		bootstrapMajorVersion: 3,
+		currentPage: {{ .CurPage }} + 1,
+		totalPages:  {{ .MaxPage }} + 1,
+		onPageClicked: function (event, oe,type, page) {
+			location.href = location.pathname + "?s={{ .Sort }}&u={{ .UserID }}&p=" + (page - 1);
 		}
-		nextButton.before(li);
-	}
-
-	if ({{ .MaxPage }} > 10) {
-		nextButton.before('<li><a href="#" class="disabled">...</a></li>');
-	}
-
-	iLimit = ({{ .CurPage }}+1 >= 5) && ({{ .CurPage }} <= {{ .MaxPage }} -5) ? 5 : 0;
-	for (var i = 1;i <= iLimit; i++) {
-		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .UserID }}&p=' + ({{ .CurPage }} -3 + i)  + '">' + ({{ .CurPage }} -2 + i) + "</a>");
-		if (i == 3) {
-			li.addClass("active");
-		}
-		nextButton.before(li);
-
-	}
-	
-	if (i > 1) {nextButton.before('<li><a href="#" class="disabled">...</a></li>');}
-
-	iLimit = {{ .CurPage }} >= {{ .MaxPage }} -4 ? 5 : 2;
-	for (var i = iLimit; (i > 0) && ({{ .MaxPage }} + 2 - i) > 0; i--) {
-		var li = $("<li />").append('<a href="'+location.path+'?s={{ .Sort }}&u={{ .UserID }}&p=' + ({{ .MaxPage }} - i +1) + '">' + ({{ .MaxPage }} +2 - i) + "</a>");
-		if ({{ .MaxPage }} +1 -i == {{ .CurPage }}) {
-			li.addClass("active");
-		}
-		nextButton.before(li);
-
-	}
+	});
 
 });
 
