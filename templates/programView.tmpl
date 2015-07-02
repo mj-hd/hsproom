@@ -271,7 +271,7 @@
 			</div>
 			<div class="panel-body">
 				<div class="description pull-left markdown">
-					{{ markdown .Program.Description }}
+					{{ plugin "replaceSourceTag" .Program.Description .Program.Sourcecode | markdown }}
 				</div>
 				<div class="user_box pull-right">
 					<span class="user_title"><i class="mdi-action-face-unlock"></i>作成者</span>

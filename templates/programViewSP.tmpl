@@ -322,7 +322,7 @@
 </div>
 
 <div class="description markdown">
-	{{ markdown .Program.Description }}
+	{{ plugin "replaceSourceTag" .Program.Description "" | markdown }}
 	<br />
 	<div class="share_box">
 		<a href="javascript:openTwitter();" class="btn btn-default btn-raised">Twitterでコメントする</a>
