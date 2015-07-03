@@ -158,6 +158,7 @@
 		<div class="panel panel-default">
 			<div class="panel-heading">
 				<b>6. 説明 </b><span class="small text-muted" id="description_count">    0 / 500 文字</span>
+				<a href="javascript:showMarkdownHelp();"><i class="mdi-communication-live-help"></i></a>
 			</div>
 			<div class="panel-body">
 				<div class="row">
@@ -237,6 +238,8 @@
 		</div>
 	</div>
 </div>
+
+{{ plugin "showMarkdownHelp" }}
 
 {{ linkJS "jquery.uploadbox.js" }}
 <script type="text/javascript">

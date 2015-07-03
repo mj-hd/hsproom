@@ -1,0 +1,87 @@
+<div id="markdown_help" class="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title">Markdownチートシート</h4>
+			</div>
+			<div class="modal-body">
+				<p>
+				<table class="table">
+					<thead>
+						<tr>
+							<th>結果</th>
+							<th>入力</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong>太字</strong></td>
+							<td>**text**</td>
+						</tr>
+						<tr>
+							<td><em>強調</em></td>
+							<td>*text*</td>
+						</tr>
+						<tr>
+							<td><del>打ち消し</del></td>
+							<td>~~text~~</td>
+						</tr>
+						<tr>
+							<td><a href="http://">リンク</a></td>
+							<td>[title](http://)</td>
+						</tr>
+						<tr>
+							<td><code>行内コード</code></td>
+							<td>`code`</td>
+						</tr>
+						<tr>
+							<td>画像</td>
+							<td>![alt](http://~.png)</td>
+						</tr>
+						<tr>
+							<td>箇条書き</td>
+							<td>* text</td>
+						</tr>
+						<tr>
+							<td>引用</td>
+							<td>> text</td>
+						</tr>
+						<tr>
+							<td>見出し</td>
+							<td># text や ## text，### text など</td>
+						</tr>
+						<tr>
+							<td>コード</td>
+							<td>```<br /> code <br /> ```</td>
+						</tr>
+						<tr>
+							<td>ソースコードを埋め込む</td>
+							<td>[sourcecode] をそのまま記述してください</td>
+						</tr>
+						<tr>
+							<td>テーブル</td>
+							<td>header1 | header2<br />
+								-------|-------<br />
+								要素   | 要素  <br />
+								要素   | 要素  <br />
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+
+function showMarkdownHelp() {
+	$("#markdown_help").modal();
+}
+
+</script>

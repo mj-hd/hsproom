@@ -112,7 +112,7 @@
 			
 				</div>
 
-				<label for="description" class="form-label">3. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span></label>
+				<label for="description" class="form-label">3. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span> <a href="javascript:showMarkdownHelp();"><i class="mdi-communication-live-help"></i></a></label>
 				<div class="row">
 					<div class="col-md-6">
 						<textarea id="description" name="description" rows="12" class="form-control floating-label" placeholder="プログラムの説明文を入力しましょう">{{ .Program.Description }}</textarea>
@@ -195,7 +195,7 @@
 	</div>
 </div>
 
-
+{{ plugin "showMarkdownHelp" }}
 
 <script type="text/javascript">
 
