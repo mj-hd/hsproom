@@ -11,6 +11,23 @@
 	#preview_dialog .modal-dialog .modal-body {
 		max-height: 580px;
 	}
+	#template_dialog #template_list {
+		margin: 20px;
+	}
+	#template_dialog #template_list button {
+		width:  100px;
+		height: 130px;
+
+		margin: 10px;
+
+		overflow: hidden;
+	}
+	#template_dialog #template_list i {
+		font-size: 30px;
+
+		color: #ababab;
+	}
+
 	.toolbar {
 	}
 
@@ -77,6 +94,8 @@
 					<div class="btn-group btn-group-sm" role="group">
 						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">ファイル<span class="caret"></span></button>
 						<ul class="dropdown-menu" role="menu">
+							<li><a href="javascript:select_template();">テンプレートを開く...</a></li>
+							<li class="divider"></li>
 							<li><a href="javascript:download_source();">ソースコードをダウンロードする...(Ctrl+S)</a></li>
 							<li><a href="javascript:download_ax();">AXファイルをダウンロードする...</a></li>
 						</ul>
@@ -87,23 +106,7 @@
 						<button type="button" class="btn btn-default btn-flat" onclick="search_help();"><i class="mdi-action-help"></i>ヘルプ(F1)</button>
 					</div>
 				</div>
-				<pre id="editor">#include "hsp3dish.as"
-#cmpopt varname 1
-
-	x2=320:y2=480
-
-	screen 0,x2,y2
-	title "DEMO"
-
-*main
-	redraw 0
-	color 0,0,32:boxf
-	color 255,255,255:pos 10,24:mes "Hello World!"
-
-	redraw 1
-	await 33
-
-	goto *main</pre>
+				<pre id="editor"></pre>
 				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
 					<button type="button" class="close" onclick="dismiss_error();">×</button>
 					<div id="error_caption">
@@ -209,6 +212,26 @@
 	</div>
 </div>
 
+<div id="template_dialog" class="modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 id="modal_title" class="modal-title">テンプレートを選んでください</h4>
+			</div>
+			<div class="modal-body">
+				<div id="template_list">
+				</div>
+				<br clear="both" />
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" onclick="load_template();">開く</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 {{ plugin "showMarkdownHelp" }}
 
 <script type="text/javascript">
@@ -252,6 +275,13 @@ var Module = {
 	var editor;
 	var thumbnail = "";
 	var attachments = new Array(0);
+
+	var templateList = {
+		"helloworld" :"Hello World!!",
+		"letsdraw1"  :"図形をかこう1",
+		"lets3d1"    :"3Dしよう1"
+	};
+	var selectedTemplate = "";
 
 	function compile(compileOnly) {
 		console.log("Compile:");
@@ -436,6 +466,22 @@ var Module = {
 		$("#create_source").submit();
 	}
 
+	function select_template() {
+		$("#template_dialog").modal();
+	}
+
+	function load_template() {
+		$.get("/static/templates/" + selectedTemplate + ".hsp",
+			{}, function (data) {
+				editor.setValue(data, -1);
+				$("#template_dialog").modal("hide");
+				assertBottom("success", "テンプレートを読み込みました");
+			}
+		).fail(function () {
+			assertBottom("error", "テンプレートの読み込みに失敗しました");
+		});
+	}
+
 	$(document).ready(function () {
 		$(document).on("keydown", function(e) {
 			if ((e.which || e.keyCode) == 116) {
@@ -487,6 +533,10 @@ var Module = {
 			exec: function() {
 				download_source();
 			}
+		});
+
+		$.get("/static/templates/helloworld.hsp", {}, function (data) {
+			editor.setValue(data, -1);
 		});
 
 		$("#attachments_box").uploadbox({
@@ -640,6 +690,48 @@ var Module = {
 				modal_text.text(message);
 				modal.modal();
 			});
+		});
+
+		$.each(templateList, function(key, name) {
+			$("#template_list").append(
+				$('<button class="btn btn-block pull-left template_' + key + '" />').on("click", function (event) {
+					if (selectedTemplate != key) {
+						$(this).animate({
+							"background-color": "#59B75C",
+							"color": "#ffffff"
+						});
+						$(this).find("i").animate({
+							"color": "#ffffff"
+						});
+
+						if (selectedTemplate != "") {
+							reset($("#template_list").find(".template_" + selectedTemplate));
+						}
+
+						selectedTemplate = key;
+
+					} else {
+						selectedTemplate = "";
+						reset($(this));
+					}
+
+					function reset(elem) {
+						elem.animate({
+							"background-color": "#ffffff",
+							"color": "#0000000"
+						});
+						elem.find("i").animate({
+							"color": "#ababab"
+						});
+					}
+				}).append(
+					$('<i class="mdi-editor-insert-drive-file"></i>')
+				).append(
+					$("<br />")
+				).append(
+					$("<span>").text(name)
+				)
+			);
 		});
 
 		if ({{ .UserID }} == 0) {

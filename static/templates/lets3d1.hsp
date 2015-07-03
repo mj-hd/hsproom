@@ -1,0 +1,29 @@
+#include "hgimg4.as"
+
+	// 画面のクリア設定(画面のクリアを黒で行う)
+	setcls CLSMODE_SOLID, $000000
+	
+	// カメラの位置を(0, 0, 5)に設定
+	setpos GPOBJ_CAMERA, 0, 0, 5
+	
+	// 箱を追加
+	gpbox id_model, 1
+	
+*main
+
+	// 箱を回転させる
+	addang id_model, 0, 0.02, 0.01
+
+	// 描画開始
+	redraw 0
+	
+	// 描画
+	gpdraw
+	
+	// 描画終了
+	redraw 1
+	
+	// 33ミリ秒待つ
+	await 33
+
+goto *main
