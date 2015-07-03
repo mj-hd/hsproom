@@ -75,6 +75,13 @@
 				</div>
 	
 				<label for="editor" class="form-label">2. ソースコード</label>
+
+				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
+					<button type="button" class="close" onclick="dismiss_error();">×</button>
+					<div id="error_caption">
+					</div>
+				</div>
+
 				<div class="toolbar btn-toolbar" role="toolbar">
 					<div class="btn-group btn-group-sm" role="group">
 						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">ファイル<span class="caret"></span></button>
@@ -90,11 +97,6 @@
 					</div>
 				</div>
 				<pre id="editor">{{ .Program.Sourcecode }}</pre>
-				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
-					<button type="button" class="close" onclick="dismiss_error();">×</button>
-					<div id="error_caption">
-					</div>
-				</div>
 
 				<div class="form-group row">
 					<div class="col-md-6">
@@ -284,12 +286,12 @@ var Module = {
 		var lines = message.split("\n");
 
 		// エラー行チェック
+		editor.session.clearAnnotations();
 		for (var i = 0; i < lines.length; i++) {
 			var err = lines[i].match(/\.hsp\(([0-9]+)\) : error /);
 			if (err && err[1]) {
 				var lineno = +err[1];
 				editor.gotoLine(lineno);
-				editor.session.clearAnnotations();
 				editor.session.setAnnotations([{
 					row:lineno - 1 ,column: 0,
 					text: lines[i], type:"error"}]); 
