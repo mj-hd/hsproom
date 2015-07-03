@@ -88,21 +88,31 @@
 					</div>
 				</div>
 				<pre id="editor">#include "hsp3dish.as"
-#cmpopt varname 1
 
-	x2=320:y2=480
-
-	screen 0,x2,y2
-	title "DEMO"
+	// 初期化
+	screen 0, 640, 480
 
 *main
-	redraw 0
-	color 0,0,32:boxf
-	color 255,255,255:pos 10,24:mes "Hello World!"
 
+	// 画面の書き換えを止める
+	redraw 0
+
+	// 画面全体を(0, 0, 32)の色で塗りつぶす
+	color 0, 0, 32
+	boxf
+	
+	// 白色(255, 255, 255)で(10, 10)の位置に"Hello World!!"と表示
+	color 255, 255, 255
+	pos 10, 10
+	mes "Hello World!"
+
+	// 画面の書き換えを反映
 	redraw 1
+	
+	// 33ミリ秒待つ
 	await 33
 
+	// *mainまで戻る
 	goto *main</pre>
 				<div id="error" class="alert alert-dissmissable alert-danger" style="display:none;">
 					<button type="button" class="close" onclick="dismiss_error();">×</button>
