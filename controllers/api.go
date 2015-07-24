@@ -20,6 +20,9 @@ import (
 var twitterClient *twitter.Client
 var oauthClient *twitter.OAuthClient
 var oauth2Client *google.OAuth2Client
+var enabledTwitter bool = true
+var enabledOAuth bool = true
+var enabledOAuth2 bool = true
 
 func apiInit() {
 	var err error
@@ -27,18 +30,24 @@ func apiInit() {
 	// 2-legged
 	twitterClient, err = twitter.NewClient(config.TwitterKey, config.TwitterSecret)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		log.FatalStr("TwitterAPIへのアクセスに失敗．Twitter連携機能をオフにします．")
+		enabledTwitter = false
 	}
 
 	// 3-legged
 	oauthClient, err = twitter.NewOAuthClient(config.TwitterKey, config.TwitterSecret)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		log.FatalStr("TwitterAPIへのアクセスに失敗．Twitter連携機能をオフにします．")
+		enabledOAuth = false
 	}
 
 	oauth2Client, err = google.NewOAuth2Client(config.GoogleKey, config.GoogleSecret)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		log.FatalStr("Google+APIへのアクセスに失敗．Google連携機能をオフにします．")
+		enabledOAuth2 = false
 	}
 }
 func apiDel() {
@@ -501,6 +510,11 @@ type apiTwitterSearchMember struct {
 
 func apiTwitterSearchHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
+	if !enabledTwitter {
+		log.FatalStr("Twitter連携機能がオフです．")
+		return http.StatusInternalServerError, errors.New("Twitter連携機能がオフです．")
+	}
+
 	rawProgramId := request.URL.Query().Get("p")
 	rawNumber := request.URL.Query().Get("n")
 	rawOffset := request.URL.Query().Get("o")
@@ -559,6 +573,11 @@ func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.R
 		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
+	if !enabledOAuth {
+		log.FatalStr("Twitterログイン機能がオフです．")
+		return http.StatusInternalServerError, errors.New("Twitterログイン機能がオフです．")
+	}
+
 	callbackUrl := request.URL.Query().Get("c")
 
 	if callbackUrl == "" {
@@ -589,6 +608,12 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 	if request.Method != "GET" {
 		log.DebugStr("GET以外のAccessTokenリクエスト")
 		document.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !enabledOAuth {
+		log.FatalStr("Twitterログイン機能がオフです．")
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -677,6 +702,11 @@ func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Re
 		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
 	}
 
+	if !enabledOAuth2 {
+		log.FatalStr("Googleログイン機能がオフです．")
+		return http.StatusInternalServerError, errors.New("Googleログイン機能がオフです．")
+	}
+
 	url, err := oauth2Client.GetAuthURL(config.SiteURL + "/api/google/access_token/")
 	if err != nil {
 		log.Fatal(err)
@@ -713,6 +743,12 @@ func apiGoogleAccessTokenHandler(document http.ResponseWriter, request *http.Req
 	if request.Method != "GET" {
 		log.DebugStr("GET以外のGoogleAccessTokenリクエスト")
 		document.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !enabledOAuth2 {
+		log.FatalStr("Googleログイン機能がオフです．")
+		document.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
