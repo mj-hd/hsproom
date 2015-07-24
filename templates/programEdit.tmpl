@@ -203,20 +203,17 @@
 		</div>
 
 		<input id="published" type="hidden" name="published" value="{{ .Program.Published }}">
-	
-		<div class="col-md-4">
-			<div class="form-group">
-				<button class="btn btn-default btn-raised btn-block form-control" type="reset">キャンセル</a>
+
+		<div class="row">
+			<div class="col-md-6">
+				<div class="form-group">
+					<button class="btn btn-default btn-raised btn-block form-control" type="button"onclick="submitAsDraft();" >下書きとして保存</button>
+				</div>
 			</div>
-		</div>
-		<div class="col-md-4">
-			<div class="form-group">
-				<button class="btn btn-default btn-raised btn-block form-control" type="button"onclick="submitAsDraft();" >下書きとして保存</button>
-			</div>
-		</div>
-		<div class="col-md-4">
-			<div class="form-group">
-				<button class="btn btn-success btn-raised btn-block form-control" type="submit">更新</a>
+			<div class="col-md-6">
+				<div class="form-group">
+					<button class="btn btn-success btn-raised btn-block form-control" type="submit">更新</a>
+				</div>
 			</div>
 		</div>
 	</div>
