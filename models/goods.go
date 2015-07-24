@@ -5,6 +5,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+
+	"../config"
 )
 
 func initGoods() {
@@ -18,6 +20,17 @@ type Good struct {
 	DeletedAt *time.Time
 	UserID    int `sql:"index"`
 	ProgramID int `sql:"index"`
+}
+
+func (this *Good) AfterFind() (err error) {
+	this.CreatedAt = this.CreatedAt.In(config.JST())
+	this.UpdatedAt = this.UpdatedAt.In(config.JST())
+
+	if this.DeletedAt != nil {
+		*this.DeletedAt = this.DeletedAt.In(config.JST())
+	}
+
+	return nil
 }
 
 func (this *Good) Load(id int) error {

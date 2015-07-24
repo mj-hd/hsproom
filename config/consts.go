@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 const (
 	TemplatesPath string = "templates/"
 	LayoutsPath   string = "templates/layouts/"
@@ -12,3 +14,8 @@ const (
 	AttachmentsLimitSize int = 1024 * 1024 * 50 // 50MB
 	ThumbnailLimitSize   int = 1024 * 1024 * 3  // 3MB
 )
+
+// DIRTY:
+func JST() *time.Location {
+	return time.FixedZone("Asia/Tokyo", 9*60*60)
+}

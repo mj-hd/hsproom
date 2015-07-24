@@ -6,13 +6,12 @@ import (
 	"errors"
 	"strconv"
 	"time"
-	//"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/lestrrat/go-ngram"
 
-	//"../utils/log"
+	"../config"
 )
 
 func initPrograms() {
@@ -106,6 +105,12 @@ func Published(db *gorm.DB) *gorm.DB {
 
 func (this *Program) AfterFind() (err error) {
 	this.LoadUserName()
+	this.CreatedAt = this.CreatedAt.In(config.JST())
+	this.UpdatedAt = this.UpdatedAt.In(config.JST())
+
+	if this.DeletedAt != nil {
+		*this.DeletedAt = this.DeletedAt.In(config.JST())
+	}
 
 	return nil
 }

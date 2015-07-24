@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+	
+	"../config"
+)
 
 func initUsers() {
 	DB.AutoMigrate(&User{})
@@ -20,6 +24,17 @@ type User struct {
 
 	Programs []Program
 	Goods    []Good
+}
+
+func (this *User) AfterFind() (err error) {
+	this.CreatedAt = this.CreatedAt.In(config.JST())
+	this.UpdatedAt = this.UpdatedAt.In(config.JST())
+
+	if this.DeletedAt != nil {
+		*this.DeletedAt = this.DeletedAt.In(config.JST())
+	}
+
+	return nil
 }
 
 func (this *User) Load(id int) error {
