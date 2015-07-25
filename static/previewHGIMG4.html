@@ -64,6 +64,13 @@ var Module = {
 Module["preRun"].push(function() {
   Module['addRunDependency']('hsp start.ax');
 });
+Module["preRun"].push(function() {
+	FS.mkdir("/saves");
+});
+Module["postRun"].push(function() {
+	FS.symlink("/saves/tmp", "/save");
+});
+
 </script>
 
 <script async type="text/javascript" src="/static/js/hgimg4res.js"></script>
@@ -82,7 +89,8 @@ Module["preRun"].push(function() {
 		ENV.HSP_FPS = "0";
 		ENV.HSP_LIMIT_STEP = steps;
 		ENV.HSP_AUTOSCALE = "0";//スケーリングモード
-		ENV.HSP_SYNC_DIR = "/save";
+		ENV.HSP_SYNC_DIR = "/saves/tmp";
+
 		console.log("save ax", data, data.length);
 		var stream = FS.open("start.ax", 'w');
 		FS.write(stream, data, 0, data.length, 0);

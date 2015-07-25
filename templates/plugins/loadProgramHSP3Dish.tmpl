@@ -31,6 +31,12 @@ console.log("Waiting...");
 Module["preRun"].push(function() {
 	Module["addRunDependency"]("hsp");
 });
+Module["preRun"].push(function() {
+	FS.mkdir("/saves");
+});
+Module["postRun"].push(function() {
+	FS.symlink("/saves/"+pid, "/save");
+});
 
 </script>
 
@@ -54,7 +60,7 @@ function runWithFS(log) {
 	ENV.HSP_AUTOSCALE = "0";//スケーリングモード
 	ENV.HSP_FPS = "0";//フレームレート
 	ENV.HSP_LIMIT_STEP = steps === "0" ? "5000" : steps;//ブラウザに処理を返すまでの実行ステップ数
-	ENV.HSP_SYNC_DIR = "/save";
+	ENV.HSP_SYNC_DIR = "/saves/"+pid;
 
 	console.log("Start to download file list...");
 
