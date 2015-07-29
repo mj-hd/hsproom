@@ -29,6 +29,7 @@ func Init() {
 	Router.RegisterPage("/program/edit/", programEditHandler)
 	Router.RegisterPage("/program/create/", programCreateHandler)
 	Router.RegisterPage("/program/search/", programSearchHandler)
+	Router.Register("/program/remote_view/", programRemoteViewHandler)
 	Router.RegisterPage("/program/ranking/daily/", programRankingDailyHandler)
 	Router.RegisterPage("/program/ranking/weekly/", programRankingWeeklyHandler)
 	Router.RegisterPage("/program/ranking/monthly/", programRankingMonthlyHandler)

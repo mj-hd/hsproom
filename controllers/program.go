@@ -182,6 +182,63 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) (er
 	})
 }
 
+type programRemoteViewMember struct {
+	*templates.DefaultMember
+	Program models.Program
+}
+
+func programRemoteViewHandler(document http.ResponseWriter, request *http.Request) {
+	var tmpl templates.Template
+	tmpl.Layout = "empty.tmpl"
+	tmpl.Template = "programRemoteView.tmpl"
+
+	rawProgramId := request.URL.Query().Get("p")
+	programId, err := strconv.Atoi(rawProgramId)
+
+	if err != nil {
+
+		log.Info(err)
+
+		document.WriteHeader(403)
+		document.Write([]byte("リクエストが不正です"))
+
+		return
+	}
+
+	var program models.Program
+
+	err = program.Load(programId)
+	if err != nil {
+
+		log.Info(err)
+
+		document.WriteHeader(404)
+		document.Write([]byte("プログラムが見つかりません"))
+
+		return
+	}
+
+	if !program.Published {
+		document.WriteHeader(503)
+		document.Write([]byte("プログラムが非公開です"))
+		return
+	}
+
+	err = tmpl.Render(document, programViewMember{
+		DefaultMember: &templates.DefaultMember{
+			Title:  program.Title,
+			UserID: getSessionUser(request),
+		},
+		Program: program,
+	})
+	if err != nil {
+		document.WriteHeader(503)
+		document.Write([]byte("サーバでエラーが発生しています"))
+	}
+
+	return
+}
+
 type programPostMember struct {
 	*templates.DefaultMember
 }
