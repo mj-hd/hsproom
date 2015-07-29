@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"unicode/utf8"
 
+	"github.com/gholt/blackfridaytext"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 
@@ -38,6 +39,7 @@ func (this *Template) Render(w io.Writer, member interface{}) error {
 		"plugin":       plugin,
 		"markdown":     markdown,
 		"markdownFile": markdownFile,
+		"normalize":    normalize,
 		"subString":    subString,
 	}).ParseFiles(config.LayoutsPath+this.Layout, config.TemplatesPath+this.Template)).Execute(w, member)
 }
@@ -69,6 +71,11 @@ func markdownFile(file string) template.HTML {
 	md := blackfriday.MarkdownCommon(raw)
 
 	return template.HTML(md)
+}
+func normalize(markdown string) string {
+	_, res := blackfridaytext.MarkdownToText([]byte(markdown), &blackfridaytext.Options{Color: false})
+
+	return string(res)
 }
 func subString(source string, from int, number int) string {
 

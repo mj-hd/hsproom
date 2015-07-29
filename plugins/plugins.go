@@ -5,6 +5,7 @@ var Plugins = map[string]func([]interface{}) interface{}{
 	"byteFormat":       byteFormat,
 	"replaceSourceTag": replaceSourceTag,
 	"showMarkdownHelp": showMarkdownHelp,
+	"shorten":          shorten,
 }
 
 func Init() {

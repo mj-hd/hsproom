@@ -1,5 +1,12 @@
 {{ define "Header" }}
 
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@hsproom">
+<!--<meta name="twitter:creator" content="@ToDO">-->
+<meta name="twitter:title" content="{{ .Program.Title }}">
+<meta name="twitter:description" content="{{ plugin "shorten" (plugin "replaceSourceTag" (subString .Program.Description 0 150) "" | normalize) }}">
+<meta name="twitter:image" content="http://hsproom.me/api/program/thumbnail/?p={{ .Program.ID }}">
+
 {{ linkJS "twitter-entities.js" }}
 {{ linkJS "flickity.pkgd.js" }}
 {{ linkCSS "flickity.css" }}

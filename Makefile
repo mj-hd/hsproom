@@ -1,4 +1,4 @@
-DEPENDENCIES = "github.com/go-sql-driver/mysql" "github.com/gorilla/context" "github.com/gorilla/sessions" "github.com/lestrrat/go-ngram" "github.com/microcosm-cc/bluemonday" "github.com/mrjones/oauth" "github.com/russross/blackfriday" "golang.org/x/oauth2" "golang.org/x/oauth2/google" "github.com/jinzhu/gorm"
+DEPENDENCIES = "github.com/go-sql-driver/mysql" "github.com/gorilla/context" "github.com/gorilla/sessions" "github.com/lestrrat/go-ngram" "github.com/microcosm-cc/bluemonday" "github.com/mrjones/oauth" "github.com/russross/blackfriday" "golang.org/x/oauth2" "golang.org/x/oauth2/google" "github.com/jinzhu/gorm" "github.com/gholt/blackfridaytext"
 
 all: hsproom hsp3dishjs
 
