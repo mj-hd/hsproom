@@ -281,7 +281,7 @@ HSP部屋では、公開されているプログラムをブログパーツと�
 埋め込むには以下のHTMLタグを目的のブログ、Webサイトに記述してください。
 
 ```
-<iframe src="http://hsproom.me/program/remote_view/?=<プログラムID>" width=640 height=480 frameborder=0 scrolling="no"></iframe>
+<iframe src="http://hsproom.me/program/remote_view/?p=<プログラムID>" width=640 height=480 frameborder=0 scrolling="no"></iframe>
 ```
 
 `<プログラムID>`には、埋め込みたいプログラムのURL(http://hsproom.me/program/view/?p=<プログラムID>)のものを使用してください。
