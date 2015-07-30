@@ -10,6 +10,8 @@
 	color: #999999;
 }
 .program_item_accessory {
+	overflow: hidden;
+
 	background: #eeeeee;
 
 	font-size: 1.1em;
