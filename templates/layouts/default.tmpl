@@ -4,6 +4,16 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 	<title>{{ .Title }}</title>
+	<link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+	<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png" />
+	<link rel="apple-touch-icon" sizes="57x57" href="/static/img/apple-touch-icon-57x57.png" />
+	<link rel="apple-touch-icon" sizes="72x72" href="/static/img/apple-touch-icon-72x72.png" />
+	<link rel="apple-touch-icon" sizes="76x76" href="/static/img/apple-touch-icon-76x76.png" />
+	<link rel="apple-touch-icon" sizes="114x114" href="/static/img/apple-touch-icon-114x114.png" />
+	<link rel="apple-touch-icon" sizes="120x120" href="/static/img/apple-touch-icon-120x120.png" />
+	<link rel="apple-touch-icon" sizes="144x144" href="/static/img/apple-touch-icon-144x144.png" />
+	<link rel="apple-touch-icon" sizes="152x152" href="/static/img/apple-touch-icon-152x152.png" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon-180x180.png" />
 	{{ linkCSS "main.css" }}
 	{{ linkCSS "bootstrap.min.css" }}
 	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.2.2/css/material-wfont.min.css" />
@@ -24,6 +34,24 @@
 
 		.dropdown-menu .glyphicon {
 			font-size: 1.7em;
+		}
+
+		.navbar-brand-big {
+			background: url("/static/img/logo.png") no-repeat left center;
+			background-size: contain;
+			width: 184px;
+			height: 30px;
+
+			margin: 0 20px 0 10px;
+		}
+
+		.navbar-brand-small {
+			background: url("/static/img/logo_small.png") no-repeat left center;
+			background-size: contain;
+			width: 30px;
+			height: 18px;
+
+			margin: 0 20px 0 10px;
 		}
 
 		#header_user_icon {
@@ -62,17 +90,20 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="/">HSP部屋(β)</a>
+			<a class="navbar-brand navbar-brand-big hidden-xs" href="/"></a>
+			<a class="navbar-brand navbar-brand-small visible-xs" href="/"></a>
 		</div>
 		<div class="navbar-collapse collapse navbar-responsive-collapse">
 			<ul class="nav navbar-nav">
 				<li id="header_top"><a href="/">トップ</a></li>
 				<li id="header_find"><a href="/program/">プログラムを探す</a></li>
-				<li id="header_post"><a href="/program/create/">プログラムを投稿する</a></li>
 				<li id="header_source"><a href="/source/create/">プログラムを作成する</a></li>
 				<li class="dropdown">
 					<a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">その他... <b class="caret"></b></a>
 					<ul class="dropdown-menu">
+						<li><a href="/program/create/"><i class="glyphicon mdi-file-cloud-upload"></i> プログラムを投稿する</a></li>
+						<li class="divider"></li>
+
 						<li><a href="/help/#ブログパーツ"><i class="glyphicon mdi-editor-insert-photo"></i> ブログパーツについて</a></li>
 						<li><a href="/help/"><i class="glyphicon mdi-action-help"></i> ヘルプ</a></li>
 						<li><a href="/about/"><i class="glyphicon mdi-action-info-outline"></i> このサイトについて</a></li>
@@ -184,9 +215,6 @@
 
 		if (location.pathname == "/program/") {
 			$("#header_find").addClass("active");
-		}
-		if (location.pathname.indexOf("/program/create/") == 0) {
-			$("#header_post").addClass("active");
 		}
 		if (location.pathname.indexOf("/source/create") == 0) {
 			$("#header_source").addClass("active");
