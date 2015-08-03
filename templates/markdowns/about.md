@@ -10,6 +10,12 @@
 <a href="http://maruchu.nobody.jp/"><img src="/static/img/banners/maruchu_iroiro.gif" alt="丸中の色々研究所" style="margin: 3px;" /></a>
 [Twitter(@Maruchu)](https://twitter.com/Maruchu) 
 
+## このサイトへのリンクについて
+このサイトへのリンクに特に制限はありません．  
+バナー画像を使用したい場合は，以下の画像をお使いください．(直接リンクもOKです)  
+<img src="/static/img/banners/hsproom.png" alt="HSP部屋バナー" style="margin: 3px;" />
+
+
 ## 謝辞
 このWebサイトは，以下の著作物を使用しています．使用の許可を下さった作者の皆様に深く感謝申し上げます． 
 
