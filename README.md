@@ -17,7 +17,7 @@ Google+API、TwitterAPI、TwitterBot用のアクセストークンを用意し�
 
 HSP部屋を起動する。
 ```
-gom run hsproom.go --nodaemonize
+gom run hsproom.go
 ```
 
 # [cbe0e851445a7a772fa6cfc9ee954253fa379c35](https://github.com/mjhd-devlion/hsproom/commit/cbe0e851445a7a772fa6cfc9ee954253fa379c35)以前のデータベースから移行するには
