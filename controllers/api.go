@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"../bot"
 	"../config"
@@ -1137,6 +1139,270 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) (
 			Status:  "success",
 			Message: "削除に成功しました。",
 		},
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
+}
+
+func apiProgramSharedDataReadHandler(document http.ResponseWriter, request *http.Request) {
+
+	if request.Method != "GET" {
+		log.DebugStr("GET以外のSharedDataReadリクエスト")
+		document.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	document.Header().Set("Content-Type", "application/octet-stream")
+
+	rawProgramId := request.URL.Query().Get("p")
+	programId, err := strconv.Atoi(rawProgramId)
+
+	if err != nil {
+		log.Debug(err)
+		log.DebugStr("プログラムIDが不正")
+		document.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !models.ExistsProgram(programId) {
+		log.DebugStr("プログラムが見つからない")
+		document.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+
+	if err != nil {
+		log.Debug(err)
+		log.DebugStr("プログラムの読み込みに失敗")
+		document.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fileName := request.URL.Query().Get("f")
+	if fileName == "" {
+		log.DebugStr("空のSharedDataReadリクエスト")
+		document.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = program.LoadShares()
+	if err != nil {
+		log.Debug(err)
+		log.DebugStr("共有ファイルの読み込みに失敗")
+		document.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	share, err := program.FindShare(fileName)
+	if err != nil {
+		log.Debug(err)
+		document.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	document.WriteHeader(http.StatusOK)
+	document.Write(share.Data)
+}
+
+type apiProgramSharedDataWriteMember struct {
+	*apiMember
+}
+
+func apiProgramSharedDataWriteHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
+
+	if request.Method != "POST" {
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです")
+	}
+
+	fileName := request.FormValue("name")
+	rawShare := request.FormValue("data")
+	rawCreated := request.FormValue("created")
+	rawUpdated := request.FormValue("updated")
+	rawMode := request.FormValue("mode")
+
+	if fileName == "" {
+		return http.StatusBadRequest, errors.New("ファイル名が無効です")
+	}
+
+	created, err := strconv.ParseInt(rawCreated, 10, 64)
+	if err != nil {
+		return http.StatusBadRequest, errors.New("作成日が無効です")
+	}
+
+	updated, err := strconv.ParseInt(rawUpdated, 10, 64)
+	if err != nil {
+		return http.StatusBadRequest, errors.New("更新日が無効です")
+	}
+
+	var share models.Share
+	share.Name = fileName
+	share.CreatedAt = time.Unix(created, 0)
+	share.UpdatedAt = time.Unix(updated, 0)
+
+	share.Mode, err = strconv.Atoi(rawMode)
+	if err != nil {
+		return http.StatusBadRequest, errors.New("モードが無効です")
+	}
+
+	share.Data, err = base64.StdEncoding.DecodeString(rawShare)
+	if err != nil {
+		return http.StatusBadRequest, errors.New("データが不正です")
+	}
+
+	rawProgramId := request.FormValue("p")
+	programId, err := strconv.Atoi(rawProgramId)
+
+	if err != nil {
+		return http.StatusBadRequest, errors.New("プログラムIDが不正です")
+	}
+
+	if !models.ExistsProgram(programId) {
+		return http.StatusNotFound, errors.New("プログラムが見つかりません")
+	}
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("プログラムの読み込みに失敗しました")
+	}
+
+	err = program.LoadShares()
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("共有ファイルの読み込みに失敗しました")
+	}
+
+	share.ProgramID = programId
+
+	oldShare, err := program.FindShare(fileName)
+	if err == nil {
+		share.CreatedAt = oldShare.CreatedAt
+		share.ID = oldShare.ID
+
+		err = share.Update()
+	} else {
+		log.Debug(err)
+		err = share.Create()
+	}
+
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("共有ファイルの作成に失敗しました")
+	}
+
+	return http.StatusOK, nil
+}
+
+type apiProgramSharedDataDeleteMember struct {
+	*apiMember
+}
+
+func apiProgramSharedDataDeleteHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
+
+	if request.Method != "POST" {
+		return http.StatusBadRequest, errors.New("POST以外のメソッドです")
+	}
+
+	rawProgramId := request.FormValue("p")
+	programId, err := strconv.Atoi(rawProgramId)
+
+	if err != nil {
+		return http.StatusBadRequest, errors.New("プログラムIDが不正です")
+	}
+
+	if !models.ExistsProgram(programId) {
+		return http.StatusInternalServerError, errors.New("プログラムの読み込みに失敗しました")
+	}
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("プログラムの読み込みに失敗しました")
+	}
+
+	err = program.LoadShares()
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("共有ファイルの読み込みに失敗しました")
+	}
+
+	fileName := request.FormValue("f")
+	if fileName == "" {
+		return http.StatusBadRequest, errors.New("ファイル名が無効です")
+	}
+
+	share, err := program.FindShare(fileName)
+	if err != nil {
+		return http.StatusNotFound, errors.New("ファイルが存在しません")
+	}
+
+	err = share.Remove()
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("ファイルの削除に失敗しました")
+	}
+
+	return http.StatusOK, nil
+}
+
+type sharedDataStatus struct {
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Mode      int
+}
+
+type apiProgramSharedDataListMember struct {
+	*apiMember
+	DataList []sharedDataStatus
+}
+
+func apiProgramSharedDataListHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
+
+	if request.Method != "GET" {
+		return http.StatusBadRequest, errors.New("GET以外のメソッドです")
+	}
+
+	rawProgramId := request.URL.Query().Get("p")
+	programId, err := strconv.Atoi(rawProgramId)
+
+	if err != nil {
+		return http.StatusBadRequest, errors.New("プログラムIDが不正です")
+	}
+
+	if !models.ExistsProgram(programId) {
+		return http.StatusInternalServerError, errors.New("プログラムの読み込みに失敗しました")
+	}
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("プログラムの読み込みに失敗しました")
+	}
+
+	err = program.LoadShares()
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("共有ファイルの読み込みに失敗しました")
+	}
+
+	var shares []sharedDataStatus
+
+	for _, share := range program.Shares {
+		shares = append(shares, sharedDataStatus{
+			Name:      share.Name,
+			CreatedAt: share.CreatedAt,
+			UpdatedAt: share.UpdatedAt,
+			Mode:      share.Mode,
+		})
+	}
+
+	writeStruct(document, apiProgramSharedDataListMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "共有データ一覧の取得に成功しました",
+		},
+		DataList: shares,
 	}, http.StatusOK)
 
 	return http.StatusOK, nil

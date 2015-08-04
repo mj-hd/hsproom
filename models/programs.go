@@ -17,6 +17,7 @@ import (
 func initPrograms() {
 	DB.AutoMigrate(&Program{})
 	DB.AutoMigrate(&Attachment{})
+	DB.AutoMigrate(&Share{})
 	DB.AutoMigrate(&Thumbnail{})
 	DB.AutoMigrate(&Startax{})
 }
@@ -38,6 +39,7 @@ type Program struct {
 
 	Startax     Startax      ``
 	Attachments []Attachment ``
+	Shares      []Share      ``
 	Thumbnail   Thumbnail    ``
 	Sourcecode  string       `sql:"type:text"`
 	Goods       []Good
@@ -75,6 +77,18 @@ type Attachment struct {
 	Data []byte `sql:"type:longblob;not null"`
 }
 
+type Share struct {
+	ID        int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+	ProgramID int `sql:"index"`
+
+	Name string `sql:"size:100;not null"`
+	Data []byte `sql:"type:longblob;not null"`
+	Mode int
+}
+
 func (this *Attachment) ToBase64() string {
 	return base64.StdEncoding.EncodeToString(this.Data)
 }
@@ -92,6 +106,22 @@ func (this *Attachment) Create() error {
 }
 
 func (this *Attachment) Remove() error {
+	return DB.Delete(this).Error
+}
+
+func (this *Share) Load(id int) error {
+	return DB.First(this, id).Error
+}
+
+func (this *Share) Update() error {
+	return DB.Save(this).Error
+}
+
+func (this *Share) Create() error {
+	return DB.Create(this).Error
+}
+
+func (this *Share) Remove() error {
 	return DB.Delete(this).Error
 }
 
@@ -132,6 +162,10 @@ func (this *Program) LoadAttachments() error {
 	return DB.Model(this).Related(&this.Attachments).Error
 }
 
+func (this *Program) LoadShares() error {
+	return DB.Model(this).Related(&this.Shares).Error
+}
+
 func (this *Program) LoadThumbnail() error {
 	return DB.Model(this).Related(&this.Thumbnail).Error
 }
@@ -164,6 +198,12 @@ func (this *Program) Remove() error {
 	tx := DB.Begin()
 
 	err = tx.Where("program_id = ?", this.ID).Delete(&this.Attachments).Error
+	if err != nil && (err != gorm.RecordNotFound) {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Where("program_id = ?", this.ID).Delete(&this.Shares).Error
 	if err != nil && (err != gorm.RecordNotFound) {
 		tx.Rollback()
 		return err
@@ -203,6 +243,16 @@ func (this *Program) FindAttachment(name string) (*Attachment, error) {
 	}
 
 	return nil, errors.New("ファイル" + name + "が見つかりませんでした。")
+}
+
+func (this *Program) FindShare(name string) (*Share, error) {
+	for i, share := range this.Shares {
+		if share.Name == name {
+			return &this.Shares[i], nil
+		}
+	}
+
+	return nil, errors.New("共有ファイル" + name + "が見つかりませんでした")
 }
 
 func (this *Program) GetUser() (*User, error) {

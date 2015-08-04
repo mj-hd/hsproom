@@ -29,10 +29,9 @@ var Module = {
 console.log("Waiting...");
 
 Module["preRun"].push(function() {
-	Module["addRunDependency"]("hsp");
-});
-Module["preRun"].push(function() {
 	FS.mkdir("/saves");
+
+	Module["addRunDependency"]("hsp");
 });
 Module["postRun"].push(function() {
 	FS.symlink("/saves/"+pid, "/save");
@@ -40,9 +39,24 @@ Module["postRun"].push(function() {
 
 </script>
 
-<script async type="text/javascript" src="/static/js/hsp3dish.js"></script>
+<script type="text/javascript" src="/static/js/hsp3dish.js"></script>
+<script type="text/javascript" src="/static/js/ntwfs.js"></script>
 
 <script type="text/javascript">
+
+NTWFS.pid = pid;
+
+Module["preRun"].push(function() {
+	FS.mkdir("/share");
+	FS.mount(NTWFS, {}, "/share");
+});
+
+Module["postRun"].push(function() {
+	Module["addRunDependency"]("shares");
+	FS.syncfs(function(err) {
+		Module["removeRunDependency"]("shares");
+	});
+});
 
 // ダウンロードするリスト
 var fileNames = ["start.ax"];
