@@ -114,7 +114,7 @@
 			
 				</div>
 
-				<label for="description" class="form-label">3. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span> <a href="javascript:showMarkdownHelp();"><i class="mdi-communication-live-help"></i></a></label>
+				<label for="description" class="form-label">5. 説明文<span id="description_count" class="small text-muted">0 / 500 文字</span> <a href="javascript:showMarkdownHelp();"><i class="mdi-communication-live-help"></i></a></label>
 				<div class="row">
 					<div class="col-md-6">
 						<textarea id="description" name="description" rows="12" class="form-control floating-label" placeholder="プログラムの説明文を入力しましょう">{{ .Program.Description }}</textarea>
@@ -128,6 +128,29 @@
 					</div>
 				</div>
 
+			</div>
+		</div>
+
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<b>高度な設定</b><span class="small text-warning"> プログラムがうまく動作しない際に設定してください。</span>
+			</div>
+			<div class="panel-body">
+				<fieldset>
+		
+					<div class="form-group row">
+						<label for="steps" class="col-md-3 form-label text-right">6. ステップ数の上限</label>
+						<div class="col-md-6">
+							<input type="text" id="steps" class="form-control floating-label" placeholder="デフォルト:5000" data-hint="最大値は30000です" name="steps" />
+						</div>
+						<div class="help_cap col-md-3">
+							<p>
+								描画した部分がしばらくすると消えてしまう、画面がちらつく、動作が重たい、などの問題が現れた場合に値を増やしてください。<strong>ただし、値の増加に伴いCPU使用率も上昇します。</strong>
+							</p>
+						</div>
+					</div>
+		
+				</fieldset>
 
 			</div>
 		</div>
@@ -194,6 +217,7 @@
 
 {{ plugin "showMarkdownHelp" }}
 
+
 <script type="text/javascript">
 
 var Module = {
@@ -221,6 +245,19 @@ var Module = {
 	},
 	filePackagePrefixURL: "/static/data/",
 };
+
+Module["preRun"].push(function () {
+	$.ajax({
+		method: "GET",
+		url: "/static/data/hsproom.as",
+	}).success(function (data) {
+		console.log("loaded hsproom.as");
+
+		FS.writeFile("/common/hsproom.as", data);
+	}).error(function (data) {
+		console.log("failed to load hsproom.as");
+	});
+});
 
 </script>
 
@@ -324,8 +361,11 @@ var Module = {
 
 		var frame = $("#preview_frame")[0];
 
+		steps = Number($("#steps").val());
+		steps = steps < 5000 ? 5000 : steps;
+
 		frame.onload = function() {
-			frame.contentWindow["runAX"](data, "5000", attachments);
+			frame.contentWindow["runAX"](data, String(steps), attachments);
 		};
 		frame.contentWindow.location.href = "/static/preview"+runtime+".html";
 	}
