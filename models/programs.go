@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -672,23 +673,32 @@ func GetProgramListRelatedTo(out *[]Program, title string, number int) error {
 
 	token := ngram.NewTokenize(3, title)
 
-	var condition string
-	for i, t := range token.Tokens() {
-		if i != 0 {
-			condition += " OR "
-		}
-
-		condition += "title LIKE `%" + t.String() + "%`"
+	repl := strings.NewReplacer("_", "", "[", "", "]", "", "%", "", "'", "", "`", "", "\"", "")
+	querys := make([]string, 0)
+	for _, t := range token.Tokens() {
+		querys = append(querys, "%"+repl.Replace(t.String())+"%")
 	}
 
+	statement := DB.Model(Program{}).Scopes(Published)
+	cond := "`programs`.title <> '" + repl.Replace(title) + "' AND ("
+	for i, query := range querys {
+		if i != 0 {
+			cond += " OR "
+		}
+		cond += "`programs`.title LIKE '%" + query + "%'"
+	}
+	cond += ")"
+
+	statement = statement.Where(cond)
+
 	var rowCount int
-	err = DB.Model(Program{}).Scopes(Published).Where("("+condition+") AND title <> ?", title).Count(&rowCount).Error
+	err = statement.Count(&rowCount).Error
 
 	if (err != nil) || (rowCount == 0) {
 		return errors.New("関連プログラムが見つかりませんでした。")
 	}
 
-	err = DB.Model(Program{}).Scopes(Published).Where("("+condition+") AND title <> ?", title).Find(out).Error
+	err = statement.Find(out).Error
 	return err
 }
 
