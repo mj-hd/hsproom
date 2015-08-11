@@ -353,7 +353,7 @@ Module["preRun"].push(function () {
 
 		var option = 4;
 		var stat = Module.ccall('hsc_comp', 'number', ['number', 'number', 'number', 'number'],
-													[0, option, 0, 0]);
+													[compileOnly ? 0 : 1, option, 0, 0]);
 		console.log("Compiled with " + option);
 		console.log("Compile result: " + stat);
 
