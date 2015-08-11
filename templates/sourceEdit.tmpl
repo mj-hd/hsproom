@@ -582,20 +582,7 @@ Module["preRun"].push(function () {
 		$("#preview_dialog").on("hidden.bs.modal", function() {
 			var iframe = $("#preview_frame")[0];
 
-			var iframedoc = null;
-			if(iframe.contentDocument){
-				iframedoc = iframe.contentDocument; 
-			} else if(iframe.contentWindow){ 
-				iframedoc = iframe.contentWindow.document;
-			} else if(iframe.document){
-				iframedoc = iframe.document;
-			}
-			
-			if(iframedoc!=null){
-				iframedoc.open();
-				iframedoc.write("");
-				iframedoc.close();
-			}	
+			iframe.contentWindow["Module"].abort();
 		});
 
 		$("#edit_source").on("submit", function (e) {
