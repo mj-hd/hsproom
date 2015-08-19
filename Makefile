@@ -3,10 +3,10 @@ DEPENDENCIES = "github.com/go-sql-driver/mysql" "github.com/gorilla/context" "gi
 all: hsproom hsp3dishjs
 
 hsproom: go_packages
-	go build hsproom.go
+	gom build hsproom.go
 
 go_packages:
-	go get $(DEPENDENCIES)
+	gom install $(DEPENDENCIES)
 
 hsp3dishjs: submodules
 	cd openhsp/hsp3dish/; \
