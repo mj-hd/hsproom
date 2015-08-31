@@ -1,1 +1,1 @@
-../../ace-builds/src-min-noconflict/theme-monokai.js
+../../ace/build/src-min-noconflict/theme-monokai.js
