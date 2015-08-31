@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -44,24 +45,24 @@ func Init() {
 	Router.RegisterPage("/user/programs/", userProgramsHandler)
 	Router.RegisterPage("/user/settings/", userSettingsHandler)
 	Router.RegisterApi("/api/", apiHandler)
-	Router.RegisterApi("/api/markdown/", apiMarkdownHandler)
-	Router.RegisterApi("/api/twitter/search/", apiTwitterSearchHandler)
-	Router.RegisterApi("/api/program/good/", apiProgramGoodHandler)
-	Router.RegisterApi("/api/program/good/count/", apiProgramGoodCountHandler)
-	Router.RegisterApi("/api/program/update/", apiProgramUpdateHandler)
-	Router.RegisterApi("/api/program/create/", apiProgramCreateHandler)
-	Router.RegisterApi("/api/program/remove/", apiProgramRemoveHandler)
+	Router.RegisterGetApi("/api/markdown/", apiMarkdownHandler)
+	Router.RegisterGetApi("/api/twitter/search/", apiTwitterSearchHandler)
+	Router.RegisterPostApi("/api/program/good/", apiProgramGoodHandler)
+	Router.RegisterGetApi("/api/program/good/count/", apiProgramGoodCountHandler)
+	Router.RegisterPostApi("/api/program/update/", apiProgramUpdateHandler)
+	Router.RegisterPostApi("/api/program/create/", apiProgramCreateHandler)
+	Router.RegisterPostApi("/api/program/remove/", apiProgramRemoveHandler)
 	Router.Register("/api/program/data/", apiProgramDataHandler)
-	Router.RegisterApi("/api/program/data_list/", apiProgramDataListHandler)
+	Router.RegisterGetApi("/api/program/data_list/", apiProgramDataListHandler)
 	Router.Register("/api/program/thumbnail/", apiProgramThumbnailHandler)
-	Router.RegisterApi("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
+	Router.RegisterGetApi("/api/twitter/request_token/", apiTwitterRequestTokenHandler)
 	Router.Register("/api/twitter/access_token/", apiTwitterAccessTokenHandler)
-	Router.RegisterApi("/api/google/request_token/", apiGoogleRequestTokenHandler)
+	Router.RegisterGetApi("/api/google/request_token/", apiGoogleRequestTokenHandler)
 	Router.Register("/api/google/access_token/", apiGoogleAccessTokenHandler)
-	Router.RegisterApi("/api/user/info/", apiUserInfoHandler)
-	Router.RegisterApi("/api/user/programs/", apiUserProgramsHandler)
-	Router.RegisterApi("/api/user/goods/", apiUserGoodsHandler)
-	Router.RegisterApi("/api/good/remove/", apiGoodRemoveHandler)
+	Router.RegisterGetApi("/api/user/info/", apiUserInfoHandler)
+	Router.RegisterGetApi("/api/user/programs/", apiUserProgramsHandler)
+	Router.RegisterGetApi("/api/user/goods/", apiUserGoodsHandler)
+	Router.RegisterPostApi("/api/good/remove/", apiGoodRemoveHandler)
 
 }
 func Del() {
@@ -179,6 +180,30 @@ func (this *Routes) RegisterApi(path string, fn func(http.ResponseWriter, *http.
 			return
 		}
 	})
+}
+
+func (this *Routes) RegisterPostApi(path string, fn func(http.ResponseWriter, *http.Request) (int, error)) {
+	wrapper := func(document http.ResponseWriter, request *http.Request) (int, error) {
+		if request.Method != "POST" {
+			return http.StatusBadRequest, errors.New("POST以外のメソッド")
+		}
+
+		return fn(document, request)
+	}
+
+	this.RegisterApi(path, wrapper)
+}
+
+func (this *Routes) RegisterGetApi(path string, fn func(http.ResponseWriter, *http.Request) (int, error)) {
+	wrapper := func(document http.ResponseWriter, request *http.Request) (int, error) {
+		if request.Method != "GET" {
+			return http.StatusBadRequest, errors.New("GET以外のメソッド")
+		}
+
+		return fn(document, request)
+	}
+
+	this.RegisterApi(path, wrapper)
 }
 
 func (this *Routes) Register(path string, fn func(http.ResponseWriter, *http.Request)) {

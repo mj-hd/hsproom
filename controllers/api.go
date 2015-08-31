@@ -70,10 +70,6 @@ type apiProgramGoodMember struct {
 
 func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
-	if request.Method != "POST" {
-		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
-	}
-
 	// プログラムIDの取得
 	rawProgramId := request.FormValue("p")
 	programId, err := strconv.Atoi(rawProgramId)
@@ -120,11 +116,6 @@ type apiProgramUpdateMember struct {
 }
 
 func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-
-	// メソッドの確認
-	if request.Method != "POST" {
-		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
-	}
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
@@ -244,12 +235,6 @@ type apiNameValuePair struct {
 
 func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
-	// メソッドの確認
-	if request.Method != "POST" {
-		log.DebugStr("POST以外のCreateリクエスト")
-		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
-	}
-
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
 	targetFlags := models.ProgramPublished | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
@@ -319,11 +304,6 @@ type apiProgramDataListMember struct {
 }
 
 func apiProgramDataListHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のDataListリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
 
 	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
 
@@ -568,10 +548,6 @@ type apiOAuthRequestTokenMember struct {
 }
 
 func apiTwitterRequestTokenHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のRequestTokenリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
 
 	if !enabledOAuth {
 		log.FatalStr("Twitterログイン機能がオフです．")
@@ -697,10 +673,6 @@ func apiTwitterAccessTokenHandler(document http.ResponseWriter, request *http.Re
 }
 
 func apiGoogleRequestTokenHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のGoogleRequestTokenリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
 
 	if !enabledOAuth2 {
 		log.FatalStr("Googleログイン機能がオフです．")
@@ -839,10 +811,6 @@ type apiUserInfoMember struct {
 }
 
 func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のUserInfoリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
 
 	rawUserId := request.URL.Query().Get("u")
 	userId, err := strconv.Atoi(rawUserId)
@@ -871,11 +839,6 @@ type apiUserProgramListMember struct {
 }
 
 func apiUserProgramsHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のUserProgramListリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
 
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 	if err != nil {
@@ -937,11 +900,6 @@ type apiUserGoodsMember struct {
 }
 
 func apiUserGoodsHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のUserGoodリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
 
 	userId, err := strconv.Atoi(request.URL.Query().Get("u"))
 
@@ -1009,11 +967,6 @@ type apiProgramGoodCountMember struct {
 
 func apiProgramGoodCountHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
 
-	if request.Method != "GET" {
-		log.DebugStr("GET以外のProgramGoodCountリクエスト")
-		return http.StatusBadRequest, errors.New("GET以外のメソッドです。")
-	}
-
 	programId, err := strconv.Atoi(request.URL.Query().Get("p"))
 
 	if err != nil {
@@ -1044,11 +997,6 @@ type apiProgramRemoveMember struct {
 }
 
 func apiProgramRemoveHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-
-	if request.Method != "POST" {
-		log.DebugStr("POST以外のProgramRemoveリクエスト")
-		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
-	}
 
 	programId, err := strconv.Atoi(request.FormValue("p"))
 
@@ -1098,11 +1046,6 @@ type apiGoodRemoveMember struct {
 }
 
 func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
-
-	if request.Method != "POST" {
-		log.DebugStr("POST以外のGoodRemoveリクエスト")
-		return http.StatusBadRequest, errors.New("POST以外のメソッドです。")
-	}
 
 	programId, err := strconv.Atoi(request.FormValue("p"))
 
