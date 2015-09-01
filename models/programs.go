@@ -182,6 +182,12 @@ func (this *Program) Remove() error {
 		return err
 	}
 
+	err = tx.Where("program_id = ?", this.ID).Delete(Comment{}).Error
+	if err != nil && (err != gorm.RecordNotFound) {
+		tx.Rollback()
+		return err
+	}
+
 	err = tx.Where("program_id = ?", this.ID).Delete(&this.Goods).Error
 	if err != nil && (err != gorm.RecordNotFound) {
 		tx.Rollback()
