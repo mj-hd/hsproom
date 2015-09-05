@@ -9,6 +9,7 @@ import (
 	"../bot"
 	"../config"
 	"../models"
+	"../utils"
 	"../utils/google"
 	"../utils/log"
 	"../utils/twitter"
@@ -122,7 +123,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	targetFlags := models.ProgramPublished | models.ProgramID | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
 	rawProgram.ID = request.FormValue("id")
-	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
+	rawProgram.Title = bluemonday.StrictPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
 	rawProgram.Description = request.FormValue("description")
 	rawProgram.Startax = request.FormValue("startax")
@@ -239,7 +240,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	var rawProgram models.RawProgram
 	targetFlags := models.ProgramPublished | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime
 
-	rawProgram.Title = bluemonday.UGCPolicy().Sanitize(request.FormValue("title"))
+	rawProgram.Title = bluemonday.StrictPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
 	rawProgram.Description = request.FormValue("description")
 	rawProgram.Startax = request.FormValue("startax")
@@ -1088,6 +1089,8 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) (
 type apiCommentListMember struct {
 	*apiMember
 	Comments []models.Comment
+	Count    int
+	MaxID    int
 }
 
 func apiCommentListHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
@@ -1116,9 +1119,49 @@ func apiCommentListHandler(document http.ResponseWriter, request *http.Request) 
 		return http.StatusBadRequest, errors.New("oの値が不正です。")
 	}
 
-	comments, err := models.GetComments(programId, number, offset)
+	since, err := strconv.Atoi(request.URL.Query().Get("s"))
+	if err != nil {
+		since = 0
+	}
+
+	containsReply, err := strconv.Atoi(request.URL.Query().Get("c"))
+	if err != nil {
+		containsReply = 0
+	}
+
+	var comments []models.Comment
+	if containsReply == 0 {
+		comments, err = models.GetComments(programId, number, offset, since)
+	} else {
+		comments, err = models.GetCommentsAndReplies(programId, number, offset, since)
+	}
 	if err != nil {
 		log.Debug(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
+	}
+
+	count := 0
+	for i, _ := range comments {
+		count++
+		f := func(comment *models.Comment, me interface{}) {
+			comment.LoadReplies()
+			comment.LoadUser()
+
+			if len(comment.Replies) <= 0 {
+				return
+			}
+
+			for j, _ := range comment.Replies {
+				(me.(func(*models.Comment, interface{})))(&comment.Replies[j], me)
+			}
+
+		}
+		f(&comments[i], f)
+
+	}
+
+	maxId, err := models.GetCommentsAndRepliesMaxID(programId)
+	if err != nil {
 		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
 	}
 
@@ -1128,6 +1171,8 @@ func apiCommentListHandler(document http.ResponseWriter, request *http.Request) 
 			Message: "取得に成功しました。",
 		},
 		Comments: comments,
+		Count:    count,
+		MaxID:    maxId,
 	}, http.StatusOK)
 
 	return http.StatusOK, nil
@@ -1152,7 +1197,7 @@ func apiCommentPostHandler(document http.ResponseWriter, request *http.Request) 
 		replyTo = -1
 	}
 
-	message := request.FormValue("c")
+	message := request.FormValue("m")
 	if message == "" {
 		log.DebugStr("空のコメント")
 		return http.StatusBadRequest, errors.New("コメントが空です。")
@@ -1161,9 +1206,32 @@ func apiCommentPostHandler(document http.ResponseWriter, request *http.Request) 
 	userId := getSessionUser(request)
 
 	var comment models.Comment
-	comment.Message = message
+	comment.Message = utils.StandardPolicy().Sanitize(message)
 	comment.ProgramID = programId
 	comment.UserID = userId
+
+	if len(comment.Message) > 200 || len(comment.Message) == 0 {
+		log.DebugStr("コメントの文字数が範囲外")
+		return http.StatusBadRequest, errors.New("コメントの文字数が範囲外です。")
+	}
+
+	if userId != 0 {
+		comment.UserName, err = models.GetUserName(userId)
+		if err != nil {
+			log.Fatal(err)
+			return http.StatusInternalServerError, errors.New("コメントの取得に失敗しました。")
+		}
+
+	} else {
+		userName := request.FormValue("n")
+
+		if userName == "" {
+			userName = "名無し"
+		}
+
+		comment.UserName = userName
+	}
+
 	comment.ReplyTo = replyTo
 
 	err = comment.Create()
@@ -1197,7 +1265,7 @@ func apiCommentDeleteHandler(document http.ResponseWriter, request *http.Request
 
 	userId := getSessionUser(request)
 
-	if userId != comment.UserID {
+	if userId != comment.UserID || userId == 0 {
 		log.DebugStr("権限のないコメント削除リクエスト")
 		return http.StatusBadRequest, errors.New("削除する権限がありません。")
 	}

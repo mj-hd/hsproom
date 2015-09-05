@@ -42,6 +42,16 @@
 .share_good_number a:hover {
 	text-decoration: none;
 }
+
+ul.share-buttons{
+  list-style: none;
+  padding: 0;
+}
+
+ul.share-buttons li{
+  display: inline;
+}
+
 .good_button_animate {
 	transition: all 1s ease;
 	-webkit-transition: all 1s ease;
@@ -58,6 +68,11 @@
 	width: 640px;
 	height: 500px;
 }
+
+#comment {
+    background: #ffffff;
+}
+
 .comments {
 	position: relative;
 
@@ -65,8 +80,50 @@
 	height: 480px;
 
 	margin-left: 5px;
+    padding: 5px;
+
+    overflow: hidden;
 
 	font-size: 1.2em;
+}
+
+#reply_target {
+    background: #eeeeee;
+}
+
+.reply_list_item {
+    margin-left: 10px;
+}
+.reply_list_item img {
+    margin-right: 5px;
+}
+.reply_list_item .name {
+    margin-right: 5px;
+}
+.reply_list_item .message {
+    font-size: 65%;
+    margin-right: 5px;
+}
+
+.circle {
+    border-radius: 100%;
+}
+
+.comments .tool {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.comment_leftbox {
+    height: 48px;
+
+    line-height: 48px;
+}
+
+.comment_rightbox {
+    height: 48px;
+
+    line-height: 48px;
 }
 
 .description {
@@ -104,28 +161,24 @@
 #tweets .name {
 	font-size: 0.7em;
 }
+.tweet.list-group-item {
+    border-top: 1px solid #dddddd;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+.tweet .reply_list_item {
+    border-top: 1px dashed #dddddd;
+}
+
 .share_box {
-	position: absolute;
-
-	bottom: 0;
-	left: 0;
-	right: 0;
-
-	margin-bottom: -30px !important;
-
-	background: #ffffff;
+	background: #eeeeee;
+    
+    padding-bottom: 10px;
 }
-.share_box a {
-	margin: 0;
+.comment_box {
+    height: 380px;
 
-	border-bottom: 3px solid #dddddd;
-
-	background: #ffffff;
-
-	cursor: text;
-}
-.share_box a:hover {
-	border-bottom: 3px solid #00a194;
+    overflow: hidden;
 }
 .gallery_box {
 	width: 100%;
@@ -238,6 +291,12 @@
 						<span class="cap"> by <a href="/user/view/?u={{ .Program.UserID }}">{{ .Program.UserName }}</a>, at {{ .Program.CreatedAt.Format "2006年1月_2日 15:04:05" }}</span>
 					</div>
 					<div class="share_buttons col-md-6">
+                        <span><ul class="share-buttons">
+  <li><a href="javascript:share('facebook');" title="Share on Facebook" target="_blank"><img src="/static/img/Facebook.png"></a></li>
+  <li><a href="javascript:share('twitter');" target="_blank" title="Tweet"><img src="/static/img/Twitter.png"></a></li>
+  <li><a href="javascript:share('google');" target="_blank" title="Share on Google+"><img src="/static/img/Google+.png"></a></li>
+  <li><a href="javascript:share('tumblr');" target="_blank" title="Post to Tumblr"><img src="/static/img/Tumblr.png"></a></li>
+</ul></span>
 						<span class="share_played_number"><i class="mdi-av-play-circle-outline"></i>{{ .Program.Play }}</span> 
 						<span class="share_good_number">
 							<a href="javascript:good();" class="good_button" ><i class="mdi-social-mood"></i></a>
@@ -260,12 +319,32 @@
 				</div>
 				<div class="comments pull-right">
 					<i class="mdi-communication-comment"></i>コメント<br />
-					<div id="tweets" class="list-group">
-
-					</div>
 					<div class="share_box">
-						<a class="btn btn-default btn-block" href="javascript:openTwitter();">Twitterを使ってコメントする…</a>
+						<form id="comment" class="form-inline shadow-z-1">
+                            <div class="form-group" style="width:100%;">
+                                <input type="hidden" name="p" value="{{ .Program.ID }}">
+						        <textarea id="comment_input" type="text" class="form-control" name="m" rows="1" placeholder="このプログラムはどうでしたか？" style="width: 100%;"></textarea>
+                                <div class="pull-left comment_leftbox">
+                                    <img class="comment_user_icon circle" width="20px" />
+                                    {{ if eq .UserID 0 }}
+                                        <input type="text" class="form-control input-sm" name="n" value="" placeholder="名無し">
+                                    {{ else }}
+                                        <span class="comment_user_name small text-muted"></span>
+                                    {{ end }}
+                                </div>
+                                <div class="pull-right comment_rightbox">
+                                    <span class="text-muted"><small id="comment_count">200</small></span>
+							        <button type="submit" class="btn btn-primary btn-sm">送信</button>
+                                </div>
+                                <br clear=both />
+                            </div>
+						</form>
 					</div>
+                    <div class="comment_box">
+					    <div id="tweets" class="list-group">
+
+					    </div>
+                    </div>
 				</div>
 			</div>
 		</div>
@@ -344,6 +423,43 @@
 
 </div>
 
+<div id="reply_dialog" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">返信</h4>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <div id="reply_target" class="list-group-item">
+                    </div>
+                </div>
+                <form id="reply" class="form-inline">
+                    <div class="form-group" style="width: 100%;">
+                        <input type="hidden" name="p" value="{{ .Program.ID }}">
+                        <input id="reply_to" type="hidden" name="r" value="-1">
+                        <textarea id="reply_input" type="text" class="form-control" name="m" rows="3" placeholder="返信..." style="width: 100%;"></textarea>
+                        <div>
+                            <img class="comment_user_icon circle" width="20px" />
+                            {{ if eq .UserID 0 }}
+                                <input type="text" class="form-control input-sm" name="n" value="" placeholder="名無し">
+                            {{ else }}
+                                <span class="comment_user_name small text-muted"></span>
+                            {{ end }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <span class="text-muted"><small id="reply_count">200</small></span>
+                <button class="btn btn-default" data-dismiss="modal">キャンセル</button>
+                <button class="btn btn-primary" onclick="submitReply();">返信</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
 	function good() {
 		$(".good_button").addClass("good_button_animate");
@@ -374,17 +490,17 @@
 			system_date = Date.parse(tdate.replace(/( \+)/, ' UTC$1'))
 		}
 		var diff = Math.floor((user_date - system_date) / 1000);
-		if (diff <= 1) {return "just now";}
-		if (diff < 20) {return diff + " seconds ago";}
-		if (diff < 40) {return "half a minute ago";}
-		if (diff < 60) {return "less than a minute ago";}
-		if (diff <= 90) {return "one minute ago";}
-		if (diff <= 3540) {return Math.round(diff / 60) + " minutes ago";}
-		if (diff <= 5400) {return "1 hour ago";}
-		if (diff <= 86400) {return Math.round(diff / 3600) + " hours ago";}
-		if (diff <= 129600) {return "1 day ago";}
-		if (diff < 604800) {return Math.round(diff / 86400) + " days ago";}
-		if (diff <= 777600) {return "1 week ago";}
+		if (diff <= 1) {return "さっき";}
+		if (diff < 20) {return diff + " 秒";}
+		if (diff < 40) {return "30 秒";}
+		if (diff < 60) {return "1 分ほど";}
+		if (diff <= 90) {return "1 分";}
+		if (diff <= 3540) {return Math.round(diff / 60) + " 分";}
+		if (diff <= 5400) {return "1 時間";}
+		if (diff <= 86400) {return Math.round(diff / 3600) + " 時間";}
+		if (diff <= 129600) {return "1 日";}
+		if (diff < 604800) {return Math.round(diff / 86400) + " 日";}
+		if (diff <= 777600) {return "1 週間";}
 		return "on " + system_date;
 	}
 	
@@ -396,41 +512,146 @@
 		}
 	}();	
 
-	var max_id = "1";
+	var count = 0;
+    var maxId = 0;
 
-	function reloadComments() {
+    function makeComments(comments) {
+        var result = $("<div />");
+
+        $.each(comments, function (i, com) {
+            if (com.ReplyTo != -1) {
+                var target = $("#comment_"+com.ReplyTo);
+                if (target[0]) {
+                    // WORKAROUND
+                    var c = {
+                        Replies: {com}
+                    };
+
+                    appendReplies(target, c);
+                }
+                
+                return;
+            }
+
+	    	// TODO: tweetクラスをcommentへ変更
+	    	var comment = $("<div />").addClass("tweet").addClass("list-group-item").attr("id", "comment_"+com.ID);
+	    	var iconbox = $("<div />").addClass("row-picture");
+	    	var icon = $("<img />").attr("src", com.User.IconURL).attr("alt", com.User.Name).addClass("circle");
+	    	var contents = $("<div />").addClass("row-content");
+	    	var least = $("<div />").addClass("least-content").text(parseTwitterDate(com.CreatedAt));
+
+            var userlink;
+            if (com.UserID == 0) {
+                userlink = $("<p />").text(com.UserName).addClass("name");
+            } else {
+                userlink = $("<a />").attr("href", "/user/view/?u="+com.UserID).text(com.UserName).addClass("name");
+            }
+
+	    	var name = $("<h4 />").addClass("list-group-item-heading").append(userlink);
+	    	var text = $("<p />").addClass("text list-group-item-text").html(com.Message);
+            var reply_btn = $("<a />").attr({"href": "javascript:replyTo("+com.ID+");", "title": "返信"}).append($("<i />").addClass("mdi-content-reply"));
+            var tool = $("<p />").addClass("tool").append(reply_btn);
+
+            if (com.UserID == {{ .UserID }} && 0 != {{ .UserID }}) {
+                tool.append($("<a />").attr({ "href": "javascript:removeComment("+com.ID+");", "title": "削除"}).append($("<i />").addClass("mdi-content-clear")).addClass("text-danger"));
+            }
+
+	    	iconbox.append(icon);
+	    	comment.append(iconbox);
+	    	contents.append(name).append(text).append(least).append(tool);
+	    	comment.append(contents);
+
+            appendReplies(comment, com);
+
+	    	result.append(comment);
+	    });
+
+        return result;
+
+        function appendReplies(elem, com) {
+            if (!com || !com.Replies) {
+                return;
+            }
+
+            $.each(com.Replies, function () {
+                var reply = $("<div />").addClass("reply_list_item").attr("id", "comment_"+this.ID);
+
+                var icon = $("<img />").attr({
+                    "src": this.User.IconURL,
+                    "width": 20
+                }).addClass("circle");
+
+                var name;
+                if (this.UserID != 0) {
+                    name = $("<a />").attr("href", "/user/view/?u="+this.UserID).text(this.UserName).addClass("small name");
+                } else {
+                    name = $("<span />").text(this.UserName).addClass("small name");
+                }
+
+                var message = $("<span />").html(this.Message).addClass("reply_message").addClass("small message");
+
+                if (this.UserID == {{ .UserID }} && 0 != {{ .UserID }}) {
+                    message.append($("<a />").attr({ "href": "javascript:removeComment("+this.ID+");", "title": "削除"}).append($("<i />").addClass("mdi-content-clear text-small")).addClass("text-danger"));
+                }
+
+                reply.append(icon).append(name).append(message);
+                appendReplies(reply, this.Replies);
+                elem.append(reply);
+            });
+        }
+    }
+
+    function reloadComments() {
+        $.ajax({
+            url:  "/api/comment/list/",
+            type: "GET",
+            dataType: "json",
+            cache:    false,
+            data: {
+                "p": {{ .Program.ID }},
+                "n": 10,
+                "o": 0,
+                "s": maxId,
+                "c": 1
+            }
+        }).success(function (data, status) {
+            if (!data.Comments) {
+                return;
+            }
+
+            $("#tweets").prepend(makeComments(data.Comments));
+
+            count += data.Count;
+            maxId  = data.MaxID;
+        }).error(function (data) {
+        });
+    }
+
+	function loadComments(callback) {
 		$.ajax({
-			url: "/api/twitter/search/",
+			url: "/api/comment/list/",
 			type: "GET",
 			dataType: "json",
 			cache: false,
 			data: {
 				"p": {{ .Program.ID }},
 				"n": 10,
-				"o": max_id
+				"o": count
 			}
 		}).success(function (data, status) {
-			var tweets = $("<div />");
+            if (!data.Comments) {
+                return;
+            }
 
-			$.each(data.Tweets.statuses, function (i, stat) {
-				var tweet = $("<div />").addClass("tweet").addClass("list-group-item");
-				var iconbox = $("<div />").addClass("row-picture");
-				var icon = $("<img />").attr("src", stat.user.profile_image_url).attr("alt", stat.user.name).addClass("circle");
-				var contents = $("<div />").addClass("row-content");
-				var least = $("<div />").addClass("least-content").text(parseTwitterDate(stat.created_at));
-				var name = $("<h4 />").addClass("list-group-item-heading").append($("<a />").attr("href", "https://twitter.com/"+stat.user.name).text(stat.user.screen_name).addClass("name"));
-				var text = $("<p />").addClass("text list-group-item-text").html(linkify_entities(stat));
-				iconbox.append(icon);
-				tweet.append(iconbox);
-				contents.append(name).append(text).append(least);
-				tweet.append(contents);
-				tweets.append(tweet).append($("<div />").addClass("list-group-separator"));
-			});
+			$("#tweets").append(makeComments(data.Comments));
 
-			$("#tweets").prepend(tweets.html());
+			count += data.Count;
+            maxId  = data.MaxID;
 
-			max_id = data.Tweets.search_metadata.max_id_str;
+            return callback();
 		}).error( function (data, status, error) {
+
+            return callback();
 		});
 
 	}
@@ -451,6 +672,24 @@
 		});
 	}
 
+    function setUserProfile() {
+        if ({{ .UserID }} == 0) {
+            return;
+        }
+        $.ajax({
+            url: "/api/user/info/",
+            type: "GET",
+            dataType: "json",
+            cache: false,
+            data: {
+               "u": "{{ .UserID }}"
+            }
+        }).success(function (data, status) {
+           $(".comment_user_icon").attr("src", data.IconURL);
+           $(".comment_user_name").text(data.Name);
+        });
+    }
+
 	function setThumbnail() {
 		$("#screen").css({
 			"background-image": "url(/api/program/thumbnail/?p={{ .Program.ID }})",
@@ -458,11 +697,10 @@
 			});
 	}
 
-	function openTwitter() {
-
+    function share(sns) {
 		var title = encodeURIComponent("{{ .Program.Title }}");
-		var hashtags = encodeURIComponent("hsproom #program{{ .Program.ID }}");
 		var url   = encodeURIComponent(location.href);
+        var user  = "";
 
 		// ユーザ名の取得は後で統一も要検討
 		$.ajax({
@@ -473,15 +711,112 @@
 				"u": "{{ .Program.UserID }}"
 			}
 		}).success(function (data, status) {
-			var user = data.ScreenName;
 
+            if ((sns == "twitter" && data.Website.indexOf("https://twitter.com/") == 0) ||
+                (sns == "facebook" && data.Website.indexOf("https://www.facebook.com/") == 0) ||
+                (sns == "google" && data.Website.indexOf("https://plus.google.com/") == 0) ||
+                (sns == "tumblr" && data.Website.indexOf("https://www.tumblr.com/") == 0)) {
+                user = data.ScreenName;
+            }
+
+            openSNS();
+
+        }).error(function (data) {
+
+            openSNS();
+
+        });
+
+        function openSNS() {
+            switch(sns) {
+            case "facebook":
+                openFacebook(title, url, user);
+                break;
+            case "twitter":
+                openTwitter(title, url, user);
+                break;
+            case "google":
+                openGoogle(title, url, user);
+                break;
+            case "tumblr":
+                openTumblr(title, url, user);
+                break;
+            }
+        }
+    }
+
+    function openFacebook(title, url, user) {
+		open("https://www.facebook.com/sharer/sharer.php?t="+title+"&amp;amp;u="+url, "プログラムにコメントする", "width=600,height=331");
+    }
+
+	function openTwitter(title, url, user) {
+
+		var hashtags = encodeURIComponent("hsproom");
+
+        if (user != "") {
 			open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags+"&amp;amp;via="+user, "プログラムにコメントする", "width=600,height=331");
-		}).error(function (data, status, error) {
+        } else {
 			open("https://twitter.com/intent/tweet?text="+title+"&amp;amp;url="+url+"&amp;amp;hashtags="+hashtags, "プログラムにコメントする", "width=600,height=331");
-		});
-
-
+		}
 	}
+
+    function openGoogle(title, url, user) {
+        open("https://plus.google.com/share?url="+url, "プログラムにコメントする", "width=600,height=331");
+    }
+
+    function openTumblr(title, url, user) {
+        open("https://www.tumblr.com/share?v=3&amp;&amp;u="+url+"&amp;&amp;t="+title+"&amp;&amp;s=", "プログラムにコメントする", "width=600,height=331");
+    }
+
+    function replyTo(id) {
+        $("#reply_input").text("").val("");
+        $("#reply_dialog").modal();
+        $("#reply_target").html($("#comment_"+id).html());
+        $("#reply_to").val(id);
+    }
+
+    function removeComment(id) {
+        $.ajax({
+            type: "POST",
+            url:  "/api/comment/delete/",
+            dataType: "json",
+            data: {
+                "c": id
+            }
+        }).success(function (data, status) {
+            assertBottom("success", "削除に成功しました。");
+
+            $("#comment_"+id).remove();
+        }).error(function (data) {
+            if (data.Message) {
+                assertBottom("error", data.Message);
+            } else {
+                assertBottom("error", "削除に失敗しました。");
+            }
+        });
+    }
+
+    function submitReply() {
+        $("#reply_dialog").modal("hide");
+
+        var form = $("#reply").serializeArray();
+        $.ajax({
+            type: "POST",
+            url: "/api/comment/post/",
+            dataType: "json",
+            data: form
+        }).success(function (response) {
+            assertBottom("success", response.Message);
+
+            setTimeout(reloadComments, 1000);
+        }).error(function (response) {
+            if (response.Message) {
+                assertBottom("error", response.Message);
+            } else {
+                assertBottom("error", "投稿に失敗しました。");
+            }
+        });
+    }
 
 	function updateGoodCount() {
 	
@@ -509,10 +844,22 @@
 		$("#screen_overlay").hide();
 	}
 
+    function updateTextCount(input, count) {
+       var len = 200 - $(input).val().length;
+       count.text(len);
+       count.attr("class", "");
+       if (len <= 0) {
+           count.addClass("text-danger");
+       } else if (len <= 20) {
+           count.addClass("text-warning");
+       }
+    }
+
 	$(document).ready(function() {
-		reloadComments();
+		loadComments(function(){});
 		setProfile();
 		setThumbnail();
+        setUserProfile();
 
 		setInterval(reloadComments, 15000);
 
@@ -523,6 +870,68 @@
 		});
 
 		updateGoodCount();
+
+        $("#comment_input").focus(function () {
+            $(this).animate({
+                height: 80
+            }, "normal");
+        }).blur(function () {
+            $(this).animate({
+                height: 20
+            }, "normal");
+        });
+
+        $("#comment_input").keydown(function () {
+            updateTextCount(this, $("#comment_count"));
+        });
+
+        $("#reply_input").keydown(function () {
+            updateTextCount(this, $("#reply_count"));
+        });
+
+        var is_loading = false;
+        $("#tweets").on("scroll", function () {
+            var top    = $(this).scrollTop();
+            var height = $(this).height();
+            var tweets_height = this.scrollHeight;
+
+            if (top + height > tweets_height - 20) {
+                if (is_loading) {
+                    return;
+                }
+                // TODO: Something
+                console.log("load more..");
+                is_loading = true;
+
+                loadComments(function() {
+                    is_loading = false;
+                });
+            }
+        });
+
+        $("#comment").on("submit", function (e) {
+            e.preventDefault();
+
+            var form = $(this).serializeArray();
+            $.ajax({
+                type: "POST",
+                url: "/api/comment/post/",
+                dataType: "json",
+                data: form
+            }).success(function (response) {
+                assertBottom("success", response.Message);
+
+                $("#comment_input").text("").val("");
+
+                setTimeout(reloadComments, 1000);
+            }).error(function (response) {
+                if (response.Message) {
+                    assertBottom("error", response.Message);
+                } else {
+                    assertBottom("error", "投稿に失敗しました。");
+                }
+            });
+        });
 
 		$("#errors").hide();
 	});
