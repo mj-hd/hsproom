@@ -72,5 +72,8 @@ func GetCommentsCount(programId int) (tot int, err error) {
 func GetCommentsAndRepliesMaxID(programId int) (max int, err error) {
 	var maxes []int
 	err = DB.Model(Comment{}).Where("program_id = ?", programId).Order("created_at desc").Limit(1).Pluck("id", &maxes).Error
+	if len(maxes) == 0 {
+		return 0, err
+	}
 	return maxes[0], err
 }
