@@ -21,6 +21,6 @@ func replaceSourceTag(params []interface{}) interface{} {
 	if source == "" {
 		return strings.Replace(input, "[sourcecode]", "", 1)
 	} else {
-		return strings.Replace(input, "[sourcecode]", "<pre id='sourcecode'>\n"+bluemonday.UGCPolicy().Sanitize(source)+"\n</pre>", 1)
+		return strings.Replace(input, "[sourcecode]", "<pre id='sourcecode'>\n"+bluemonday.StrictPolicy().Sanitize(source)+"\n</pre>", 1)
 	}
 }

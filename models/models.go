@@ -30,6 +30,7 @@ func Init() {
 	initPrograms()
 	initUsers()
 	initGoods()
+	initComments()
 }
 
 func Del() {

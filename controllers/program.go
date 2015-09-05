@@ -408,7 +408,7 @@ func programSearchHandler(document http.ResponseWriter, request *http.Request) (
 	var programs []models.Program
 	var sortKey models.ProgramColumn
 
-	queryWord := bluemonday.UGCPolicy().Sanitize(request.URL.Query().Get("q"))
+	queryWord := bluemonday.StrictPolicy().Sanitize(request.URL.Query().Get("q"))
 	rawSortKey := request.URL.Query().Get("s")
 	page, err := strconv.Atoi(request.URL.Query().Get("p"))
 
