@@ -2,7 +2,7 @@ package models
 
 import (
 	"time"
-	
+
 	"../config"
 )
 
@@ -127,11 +127,15 @@ func GetUserName(id int) (string, error) {
 
 func GetUserScreenName(id int) (string, error) {
 
-	var name string
+	result := struct {
+		Name string
+	}{
+		Name: "",
+	}
 
-	err := DB.Model(User{}).Where("id = ?", id).Select("screen_name").Scan(&name).Error
+	err := DB.Model(User{}).Where("id = ?", id).Select("screen_name").Scan(&result).Error
 
-	return name, err
+	return result.Name, err
 }
 
 func GetUserIdFromScreenName(screenname string) (int, error) {
