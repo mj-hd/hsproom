@@ -277,7 +277,7 @@ $(document).ready(function() {
 		});
 
 		updateAttachmentsProgress({{ .AttachmentsLimitSize }});
-	}).on("ondelete", function(e) {
+	}).on("ondelete", function(e, fname) {
 		updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 		var index = -1;
