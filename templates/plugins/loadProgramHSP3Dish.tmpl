@@ -142,19 +142,24 @@ function importDataArrays(log) {
 	var defer = $.Deferred();
 	var processingNum = fileNames.length;
 
-	$.each(fileNames, function (i, name) {
+	var i = 0;
+	(function foreach() {
 
 		log.append("ファイルを読み込んでいます...("+i+"/"+processingNum+")<br/>");
 
-		importDataArray(name).then(function () {
+		importDataArray(fileNames[i]).then(function () {
 			processingNum--;
 			if (processingNum == 0) {
 				defer.resolve();
 			}
-		}, function () {
-			defer.reject();
-		});
-	});
+
+			i++;
+			if (i < fileNames.length) {
+				foreach();
+			}
+	}, function () {
+		defer.reject();
+	})})();
 
 	return defer.promise();
 }
