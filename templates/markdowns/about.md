@@ -22,6 +22,7 @@
 * [try-hsp](http://peppermint.jp/products/hsp/) - zakkiさん 
 * [Hot Soup Processor](http://hsp.tv) - Onion Softwareさん 
 * [Online-HSP-Document-Library](https://github.com/fujidig/online-hsp-document-library) - fujidigさん 
+* [HSP Syntax Highlight](http://cats.genin.jp/download/tool.html) - catsさん
 
 ## ライセンス表記
 * try-hsp

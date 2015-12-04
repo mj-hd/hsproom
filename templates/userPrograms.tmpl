@@ -78,7 +78,7 @@
 								<div class="date text-right">{{ .CreatedAt.Format "Jan _2 3:04:05 PM (Mon)" }}</div>
 
 							</div>
-							<p class="program_item_text markdown">{{ plugin "replaceSourceTag" (subString .Description 0 300) "" | markdown }}</p>
+							<p class="program_item_text markdown">{{ plugin "replaceSourceTag" (subString .Description 0 300) "" | showMarkdown }}</p>
 						</div>
 					</div>
 					<div class="program_separator"></div>

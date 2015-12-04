@@ -1,3 +1,8 @@
+* 2015年12月4日
+
+	[HSP Syntax Hilighter](http://cats.genin.jp/download/tool.html)を使用しました。
+	説明文に[sourcecode]と記入することで色分けされたソースコードが挿入されます。
+
 * 2015年11月13日
 
 	添付ファイルが多いプログラムが正常に動かない不具合を修正しました。

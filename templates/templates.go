@@ -38,9 +38,11 @@ func (this *Template) Render(w io.Writer, member interface{}) error {
 		"linkJS":       linkJS,
 		"plugin":       plugin,
 		"markdown":     markdown,
+		"showMarkdown": showMarkdown,
 		"markdownFile": markdownFile,
 		"normalize":    normalize,
 		"subString":    subString,
+		"show":         show,
 	}).ParseFiles(config.LayoutsPath+this.Layout, config.TemplatesPath+this.Template)).Execute(w, member)
 }
 
@@ -56,8 +58,11 @@ func linkJS(jsFile string) template.HTML {
 func plugin(name string, params ...interface{}) interface{} {
 	return plugins.Plugins[name](params)
 }
-func markdown(markdown string) template.HTML {
-	return template.HTML(bluemonday.UGCPolicy().SanitizeBytes(blackfriday.MarkdownCommon([]byte(markdown))))
+func markdown(mkd string) string {
+	return string(bluemonday.UGCPolicy().SanitizeBytes(blackfriday.MarkdownCommon([]byte(mkd))))
+}
+func showMarkdown(mkd string) template.HTML {
+	return template.HTML(markdown(mkd))
 }
 func markdownFile(file string) template.HTML {
 
@@ -112,4 +117,7 @@ func subString(source string, from int, number int) string {
 	}
 
 	return source[:total_size]
+}
+func show(data string) template.HTML {
+	return template.HTML(data)
 }

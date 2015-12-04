@@ -9,7 +9,10 @@
 
 {{ linkJS "twitter-entities.js" }}
 {{ linkJS "flickity.pkgd.js" }}
+{{ linkJS "shCore.js" }}
+{{ linkJS "shBrushHSP.js" }}
 {{ linkCSS "flickity.css" }}
+{{ linkCSS "shCoreHSP.css" }}
 
 <style type="text/css">
 
@@ -357,7 +360,7 @@ ul.share-buttons li{
 			</div>
 			<div class="panel-body">
 				<div class="description pull-left markdown">
-					{{ plugin "replaceSourceTag" .Program.Description .Program.Sourcecode | markdown }}
+					{{ plugin "replaceSourceTag" (markdown .Program.Description) .Program.Sourcecode | show}}
 				</div>
 				<div class="user_box pull-right">
 					<span class="user_title"><i class="mdi-action-face-unlock"></i>作成者</span>
@@ -934,6 +937,12 @@ ul.share-buttons li{
         });
 
 		$("#errors").hide();
+
+        SyntaxHighlighter.defaults.wordlist1 = "meslog prompt";
+        SyntaxHighlighter.defaults.wordlist2 = "dummy";
+        SyntaxHighlighter.defaults.wordlist3 = "dummy";
+        SyntaxHighlighter.defaults.title = "ソースコード";
+        SyntaxHighlighter.all();
 	});
 
 	var pid   = {{ .Program.ID }};
