@@ -437,12 +437,12 @@ Module["preRun"].push(function () {
 	function detect_runtime() {
 		var text = editor.getValue();
 
-		if (text.match(/^\s*\#include\s+"hsp3dish.as"/g)) {
+		if (text.match(/^\s*\#\s*include\s*"hsp3dish\.as"/gm)) {
 			console.log("HSP3Dish runtime detected");
 
 			return "HSP3Dish";
 		}
-		if (text.match(/^\s*\#include\s+"hgimg4.as"/g)) {
+		if (text.match(/^\s*\#\s*include\s*"hgimg4\.as"/gm)) {
 			console.log("HGIMG4 runtime detected");
 
 			return "HGIMG4";
