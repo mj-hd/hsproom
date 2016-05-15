@@ -36,6 +36,8 @@ type Program struct {
 	Steps       int        `sql:"default:5000"`
 	Runtime     string     `sql:"size:10;default:'HSP3Dish'"`
 	Published   bool       `sql:"not null"`
+	ResolutionW int        `sql:"default:640"`
+	ResolutionH int        `sql:"default:480"`
 
 	Startax     Startax      ``
 	Attachments []Attachment ``
@@ -244,6 +246,8 @@ type RawProgram struct {
 	Sourcecode  string
 	Runtime     string
 	Published   string
+	ResolutionW string
+	ResolutionH string
 }
 
 const (
@@ -258,6 +262,7 @@ const (
 	ProgramSourcecode
 	ProgramRuntime
 	ProgramPublished
+	ProgramResolution
 )
 
 func (this *RawProgram) Validate(flag uint) error {
@@ -350,6 +355,10 @@ func (this *RawProgram) Validate(flag uint) error {
 
 	}
 
+	if (flag & ProgramResolution) != 0 {
+
+	}
+
 	if (flag & ProgramRuntime) != 0 {
 		switch this.Runtime {
 		case "HSP3Dish":
@@ -417,6 +426,22 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 		}
 
 		program.Steps = steps
+	}
+
+	if (flag & ProgramResolution) != 0 {
+
+		resolutionW, err := strconv.Atoi(this.ResolutionW)
+		if err != nil {
+			return program, err
+		}
+
+		resolutionH, err := strconv.Atoi(this.ResolutionH)
+		if err != nil {
+			return program, err
+		}
+
+		program.ResolutionW = resolutionW
+		program.ResolutionH = resolutionH
 	}
 
 	if (flag & ProgramRuntime) != 0 {
@@ -520,6 +545,8 @@ const (
 	ProgramColThumbnail
 	ProgramColSteps
 	ProgramColSourcecode
+	ProgramColResolutionW
+	ProgramColResolutionH
 	ProgramColRuntime
 )
 
@@ -551,6 +578,10 @@ func (this *ProgramColumn) String() string {
 		return "steps"
 	case ProgramColSourcecode:
 		return "sourcecode"
+	case ProgramColResolutionW:
+		return "resolution_w"
+	case ProgramColResolutionH:
+		return "resolution_h"
 	case ProgramColRuntime:
 		return "runtime"
 	}

@@ -520,6 +520,10 @@
 
 	var pid = {{ .Program.ID }};
 	var steps = "{{ .Program.Steps }}";
+	var resolution = {
+		w: "{{ .Program.ResolutionW }}",
+		h: "{{ .Program.ResolutionH }}"
+	};
 
 	{{ plugin "loadProgram" .Program.Runtime }}
 

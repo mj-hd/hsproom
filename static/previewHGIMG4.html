@@ -78,13 +78,13 @@ Module["postRun"].push(function() {
 <script async type="text/javascript" src="/static/js/hsp3dish-gp.js"></script>
 
 <script type="text/javascript">
-	function runAX(data, steps, attachments) {
+	function runAX(data, steps, resolution, attachments) {
 		if (!data) {
 			console.log("Empty!!");
 		}
 
-		ENV.HSP_WX = "640";//スクリプトの動作解像度
-		ENV.HSP_WY = "480";
+		ENV.HSP_WX = resolution.w;//スクリプトの動作解像度
+		ENV.HSP_WY = resolution.h;
 		ENV.HSP_SX = "640";//表示解像度
 		ENV.HSP_SY = "480";
 		ENV.HSP_FPS = "0";
