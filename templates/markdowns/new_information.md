@@ -1,3 +1,8 @@
+* 2016年5月15日
+
+	スケーリングの設定に対応しました．  
+	内部解像度を指定することで，自動で拡大・縮小されます．
+
 * 2015年12月4日
 
 	[HSP Syntax Hilighter](http://cats.genin.jp/download/tool.html)を使用しました。
