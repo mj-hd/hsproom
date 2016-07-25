@@ -8,5 +8,5 @@ gom "github.com/russross/blackfriday", :commit => "386ef80f18233ea97960e855a5438
 gom "golang.org/x/oauth2"
 gom "golang.org/x/oauth2/google"
 gom "github.com/jinzhu/gorm", :commit => "d35a44c5b123c3a44c95beeff5d0f1f8bce6ed3b"
-gom "github.com/gholt/blackfridaytext", :commit => "291d21f0fb462eb1caa99fd126a5aa4c496b6e6d"
+gom "github.com/gholt/blackfridaytext"
 
