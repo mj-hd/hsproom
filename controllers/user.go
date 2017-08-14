@@ -9,6 +9,8 @@ import (
 	"../models"
 	"../templates"
 	"../utils/log"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type userViewMember struct {
@@ -208,7 +210,7 @@ func userSettingsHandler(document http.ResponseWriter, request *http.Request) (e
 		return errors.New("ユーザの読み込みに失敗: \r\n" + err.Error())
 	}
 
-	section := request.URL.Query().Get("s")
+	section := bluemonday.StrictPolicy().Sanitize(request.URL.Query().Get("s"))
 
 	return tmpl.Render(document, userSettingsMember{
 		DefaultMember: &templates.DefaultMember{
