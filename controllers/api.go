@@ -1345,7 +1345,7 @@ func apiCommentPostHandler(document http.ResponseWriter, request *http.Request) 
 	comment.ProgramID = programId
 	comment.UserID = userId
 
-	if len(comment.Message) > 200 || len(comment.Message) == 0 {
+	if len(comment.Message) > 400 || len(comment.Message) == 0 {
 		log.DebugStr("コメントの文字数が範囲外")
 		return http.StatusBadRequest, errors.New("コメントの文字数が範囲外です。")
 	}

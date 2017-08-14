@@ -25,7 +25,9 @@ func Init() {
 
 	client, err = twitter.NewOAuthClient(config.TwitterBotKey, config.TwitterBotSecret)
 	if err != nil {
-		panic(err)
+		log.FatalStr("TwitterBotの起動に失敗")
+		log.Fatal(err)
+		return
 	}
 
 	token = new(oauth.AccessToken)
