@@ -1,9 +1,6 @@
 [submodule "try-hsp"]
 	path = try-hsp
 	url = https://github.com/zakki/try-hsp
-[submodule "openhsp"]
-	path = openhsp
-	url = https://github.com/zakki/openhsp.git
 [submodule "ace"]
 	path = ace
 	url = https://github.com/ajaxorg/ace
