@@ -316,11 +316,11 @@ func (this *RawProgram) Validate(flag uint) error {
 	if (flag & ProgramDescription) != 0 {
 
 		if published {
-			if len(this.Description) <= 0 || len(this.Description) > 500 {
+			if len(this.Description) <= 0 || len(this.Description) > 1000 {
 				return errors.New("説明文の文字数が範囲外です。")
 			}
 		} else {
-			if len(this.Description) > 500 {
+			if len(this.Description) > 1000 {
 				return errors.New("説明文の文字数が範囲外です。")
 			}
 		}
