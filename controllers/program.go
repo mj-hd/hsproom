@@ -156,6 +156,19 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) (er
 		if err != nil {
 			log.FatalStr("プレイ回数を加算できませんでした。ProgramID:" + string(program.ID))
 		}
+
+		if (program.Play + 1) % 10 == 0 {
+			var notification models.Notification
+			notification.UserID = program.UserID
+			notification.Message = "「" + program.Title + "」の再生回数が" + strconv.Itoa(program.Play + 1) + "回になりました！"
+			notification.URL = config.SiteURL + "/program/view/?p=" + strconv.Itoa(program.ID)
+
+			err = notification.Create()
+			if err != nil {
+				log.Fatal(err)
+				log.FatalStr("再生回数の通知に失敗")
+			}
+		}
 	} else {
 		if program.UserID != userId {
 			log.DebugStr("非公開のプログラムへのアクセス。ProgramID:" + string(program.ID))

@@ -10,7 +10,7 @@ import (
 	"../utils/log"
 )
 
-var DB gorm.DB
+var DB *gorm.DB
 
 func Init() {
 	var err error
@@ -31,6 +31,7 @@ func Init() {
 	initUsers()
 	initGoods()
 	initComments()
+	initNotifications()
 }
 
 func Del() {

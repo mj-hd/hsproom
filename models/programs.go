@@ -167,31 +167,31 @@ func (this *Program) Remove() error {
 	tx := DB.Begin()
 
 	err = tx.Where("program_id = ?", this.ID).Delete(&this.Attachments).Error
-	if err != nil && (err != gorm.RecordNotFound) {
+	if err != nil && (err != gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		return err
 	}
 
 	err = tx.Model(this).Related(&this.Thumbnail).Delete(&this.Thumbnail).Error
-	if err != nil && (err != gorm.RecordNotFound) {
+	if err != nil && (err != gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		return err
 	}
 
 	err = tx.Model(this).Related(&this.Startax).Delete(&this.Startax).Error
-	if err != nil && (err != gorm.RecordNotFound) {
+	if err != nil && (err != gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		return err
 	}
 
 	err = tx.Where("program_id = ?", this.ID).Delete(Comment{}).Error
-	if err != nil && (err != gorm.RecordNotFound) {
+	if err != nil && (err != gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		return err
 	}
 
 	err = tx.Where("program_id = ?", this.ID).Delete(&this.Goods).Error
-	if err != nil && (err != gorm.RecordNotFound) {
+	if err != nil && (err != gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		return err
 	}

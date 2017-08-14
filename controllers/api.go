@@ -102,6 +102,23 @@ func apiProgramGoodHandler(document http.ResponseWriter, request *http.Request) 
 		return http.StatusInternalServerError, errors.New("いいね!に失敗しました。")
 	}
 
+	program := models.NewProgram()
+	err = program.Load(programId)
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("プログラム情報の取得に失敗しました")
+	}
+
+	var notification models.Notification
+	notification.UserID = user
+	notification.Message = "「" + program.Title + "」がいいねされました！"
+	notification.URL = config.SiteURL + "/program/view/?p=" + strconv.Itoa(program.ID)
+
+	err = notification.Create()
+	if err != nil {
+		log.Fatal(err)
+		log.FatalStr("いいねの通知に失敗")
+	}
+
 	writeStruct(document, apiProgramGoodMember{
 		apiMember: &apiMember{
 			Status:  "success",
@@ -843,6 +860,61 @@ func apiUserInfoHandler(document http.ResponseWriter, request *http.Request) (st
 	return http.StatusOK, nil
 }
 
+type apiUserNotificationsMember struct {
+	*apiMember
+	Notifications []models.Notification
+	NotificationCount int
+}
+
+func apiUserNotificationsHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
+
+	rawUserId := request.URL.Query().Get("u")
+	userId, err := strconv.Atoi(rawUserId)
+
+	if err != nil {
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("uの値が不正です。")
+	}
+
+	var user models.User
+	err = user.Load(userId)
+
+	if err != nil {
+		log.DebugStr("存在しないユーザのリクエスト")
+		return http.StatusBadRequest, errors.New("存在しないユーザです。")
+	}
+
+	offset, err := strconv.Atoi(request.URL.Query().Get("o"))
+	if err != nil {
+		offset = 0
+	}
+
+	number, err := strconv.Atoi(request.URL.Query().Get("n"))
+	if err != nil {
+		number = 0
+	}
+
+	var notifications []models.Notification
+
+	count, err := models.GetNotificationListByUser(models.NotificationColCreatedAt, &notifications, userId, true, offset, number)
+
+	if err != nil {
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("通知の取得に失敗しました")
+	}
+
+	writeStruct(document, apiUserNotificationsMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "一覧の取得に成功しました。",
+		},
+		Notifications:     notifications,
+		NotificationCount: count,
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
+}
+
 type apiUserProgramListMember struct {
 	*apiMember
 	Programs     []models.Program
@@ -1096,6 +1168,51 @@ func apiGoodRemoveHandler(document http.ResponseWriter, request *http.Request) (
 	return http.StatusOK, nil
 }
 
+type apiNotificationRemoveMember struct {
+	*apiMember
+}
+
+func apiNotificationRemoveHandler(document http.ResponseWriter, request *http.Request) (status int, err error) {
+
+	notificationId, err := strconv.Atoi(request.FormValue("n"))
+
+	if err != nil {
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("nの値が不正です。")
+	}
+
+	userId := getSessionUser(request)
+	if userId == 0 {
+		log.DebugStr("匿名のNotificationRemoveリクエスト")
+		return http.StatusBadRequest, errors.New("削除する権限がありません。")
+	}
+
+	var notification models.Notification
+	err = notification.Load(notificationId)
+
+	if err != nil || notification.UserID != userId {
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
+	}
+
+	err = notification.Remove()
+
+	if err != nil {
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
+	}
+
+	writeStruct(document, apiNotificationRemoveMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "既読に成功しました。",
+		},
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
+}
+
+
 type apiCommentListMember struct {
 	*apiMember
 	Comments []models.Comment
@@ -1248,6 +1365,31 @@ func apiCommentPostHandler(document http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		log.Fatal(err)
 		return http.StatusInternalServerError, errors.New("内部エラーが発生しました。")
+	}
+
+	var notification models.Notification
+
+	program := models.NewProgram()
+	err = program.Load(programId)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+
+		if replyTo != -1 {
+			notification.UserID = replyTo
+			notification.Message = "あなたのコメントに返信が付きました！"
+			notification.URL = config.SiteURL + "/program/view/?p=" + strconv.Itoa(programId)
+		} else {
+			notification.UserID = program.UserID
+			notification.Message = "「" + program.Title + "」にコメントが付きました！"
+			notification.URL = config.SiteURL + "/program/view/?p=" + strconv.Itoa(programId)
+		}
+	}
+
+	err = notification.Create()
+	if err != nil {
+		log.Fatal(err)
+		log.FatalStr("コメントの通知に失敗")
 	}
 
 	writeStruct(document, apiMember{

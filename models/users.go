@@ -24,6 +24,7 @@ type User struct {
 
 	Programs []Program
 	Goods    []Good
+	Notifications []Notification
 }
 
 func (this *User) AfterFind() (err error) {
@@ -58,6 +59,11 @@ func (this *User) LoadPrograms() error {
 func (this *User) LoadGoods() error {
 	return DB.Model(this).Related(&this.Goods).Error
 }
+
+func (this *User) LoadNotifications() error {
+	return DB.Model(this).Related(&this.Notifications).Error
+}
+
 
 func (this *User) Update() error {
 

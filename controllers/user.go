@@ -185,6 +185,7 @@ func userProgramsHandler(document http.ResponseWriter, request *http.Request) (e
 type userSettingsMember struct {
 	*templates.DefaultMember
 	UserInfo models.User
+	Section string
 }
 
 func userSettingsHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -207,11 +208,15 @@ func userSettingsHandler(document http.ResponseWriter, request *http.Request) (e
 		return errors.New("ユーザの読み込みに失敗: \r\n" + err.Error())
 	}
 
+	section := request.URL.Query().Get("s")
+
 	return tmpl.Render(document, userSettingsMember{
 		DefaultMember: &templates.DefaultMember{
 			Title:  "管理画面 - " + config.SiteTitle,
 			UserID: userId,
 		},
 		UserInfo: user,
+		Section: section,
 	})
 }
+

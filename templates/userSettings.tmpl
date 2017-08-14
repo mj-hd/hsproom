@@ -19,6 +19,7 @@
 			<a id="home_button" href="javascript:home();" class="btn btn-default">トップ <i class="mdi-image-navigate-next"></i></a>
 			<a id="edit_button" href="javascript:edit();" class="btn btn-default">プログラムの編集 <i class="mdi-image-navigate-next"></i></a>
 			<a id="good_button" href="javascript:good();" class="btn btn-default">いいね!一覧 <i class="mdi-image-navigate-next"></i></a>
+			<a id="notification_button" href="javascript:notification();" class="btn btn-default">通知一覧 <i class="mdi-image-navigate-next"></i></a>
 		</div>
 	</div>
 	
@@ -56,6 +57,20 @@
 
 				</div>
 				<ul id="good_pagination" class="pagination pagination-sm">
+				</ul>
+
+			</div>
+		</div>
+
+		<div id="notification" class="panel panel-default">
+			<div class="panel-heading">
+				通知一覧
+			</div>
+			<div class="panel-body">
+				<div class="list-group">
+
+				</div>
+				<ul id="notification_pagination" class="pagination pagination-sm">
 				</ul>
 
 			</div>
@@ -142,6 +157,28 @@ function userGoodListItem(programInfo) {
 
 }
 
+function userNotificationListItem(notificationInfo) {
+	return $('<div class="list-group-item" />').append(
+		$('<div class="row-content" />').append(
+			$('<div class="least-content" />').append(
+				$('<a href="javascript:removeNotification('+notificationInfo.ID+');" class="text-success"><i class="mdi-action-done"></i>既読にする</a>')
+			)
+		).append(
+			$('<p class="list-group-item-heading text-small" />').append(
+				$('<a href="' + notificationInfo.URL + '" />').text(notificationInfo.Message)
+			)
+		).append(
+			$('<p class="list-group-item-text" />').append(
+				$('<div class="text-muted" />').html(notificationInfo.CreatedAt)
+			)
+		)
+	).append(
+		$('<div class="list-group-separator"></div>')
+	);
+
+}
+
+
 function home() {
 	hideAll();
 
@@ -165,6 +202,15 @@ function good() {
 	$("#good").show();
 
 	changeGoodProgramsPage(0);
+}
+
+function notification() {
+	hideAll();
+
+	$("#notification_button").addClass("disabled");
+	$("#notification").show();
+
+	changeNotificationsPage(0);
 }
 
 function hideAll() {
@@ -293,6 +339,48 @@ function updateGoodPrograms(page) {
 	return defer.promise();
 }
 
+function changeNotificationsPage(page) {
+	updateNotifications(page).then(function(rowCount) {
+		var maxPage = Math.floor(rowCount / 5);
+		if (rowCount % 5 == 0) {
+			maxPage--;
+		}
+		updatePagination($("#notification_pagination"), changeNotificationsPage, page, maxPage);
+
+		currentNotificationPage = page;
+	});
+}
+
+function updateNotifications(page) {
+	var defer = $.Deferred();
+
+	$.ajax({
+		type: "GET",
+		url: "/api/user/notifications/",
+		dataType: "json",
+		data: {
+			"u": {{ .UserInfo.ID }},
+			"n": 15,
+			"o": page*15
+		}
+	}).success(function (data) {
+		$("#notification .list-group").html("");
+		$.each(data.Notifications, function () {
+
+			$("#notification .list-group").append(userNotificationListItem(this));
+		});
+
+		defer.resolve(data.NotificationCount);
+
+	}).error(function (data) {
+		assertBottom("error", "データの取得に失敗しました。");
+
+		defer.reject();
+	});
+
+	return defer.promise();
+}
+
 function removeProgram(programId) {
 	$("#modal .modal-title").text("確認");
 	$("#modal .modal-body p").text("本当にプログラムを削除しますか？");
@@ -336,11 +424,43 @@ function removeGood(programId) {
 
 }
 
+function removeNotification(notificationId) {
+
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "/api/notification/remove/",
+		data: {
+			"n": notificationId
+		}
+	}).success(function(data) {
+		changeNotificationsPage(currentNotificationPage);
+
+		assertBottom("success", "通知の既読に成功しました。");
+	}).error(function(data) {
+		assertBottom("error", "通知の既読に失敗しました。");
+	});
+
+}
+
+
 $(document).ready(function() {
 	home();
 
 	if ({{ .UserID }} == 0) {
 		document.location.href = "/user/login/";
+	}
+
+	switch("{{ .Section }}") {
+	case "program":
+		edit();
+		break;
+	case "good":
+		good();
+		break;
+	case "notification":
+		notification();
+		break;
 	}
 });
 

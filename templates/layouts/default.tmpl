@@ -124,6 +124,7 @@
 					<li id="login"><a href="/user/login/">ログイン</a></li>
 				{{ else }}
 				<li><img id="header_user_icon" class="img-circle" width=60 alt="{{ .UserID }}" /></li>
+				<li id="user_notifications"><a href="/user/settings/?s=notification"><span class="label label-danger" id="user_notifications_count"></span></a></li>
 				<li id="header_user" class="dropdown">
 					<a id="header_username" href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">ユーザ名 <b class="caret"></b></a>
 					<ul class="dropdown-menu">
@@ -146,7 +147,7 @@
 </section>
 
 <footer class="navbar-fixed-bottom">
-	HSP部屋 2015
+	HSP部屋 2017
 	<div id="footer_status">
 	</div>
 </footer>
@@ -241,6 +242,21 @@
 				$("#header_user_icon").attr("src", data.IconURL);
 			}).error(function(xhr, data, status) {
 			}).complete(function (data, status) {
+			});
+
+			$.ajax({
+				type: "GET",
+				url:  "/api/user/notifications/",
+				dataType: "json",
+				data: {
+					"u": "{{ .UserID }}"
+				}
+			}).success(function(data, status) {
+				if (data.NotificationCount == 0) {
+					$("#user_notifications").remove();
+				} else {
+					$("#user_notifications_count").text(data.NotificationCount);
+				}
 			});
 		}
 	});
