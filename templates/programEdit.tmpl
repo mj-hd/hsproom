@@ -209,6 +209,18 @@
 							</p>
 						</div>
 					</div>
+
+					<div class="form-group row">
+						<label for="runtime_version" class="col-md-3 form-label text-right">9. ランタイムバージョン</label>
+						<div class="col-md-6">
+
+							<select id="runtime_version" class="form-control" name="runtime_version" value="{{ .Program.RuntimeVersion }}">
+								{{ range $key, $value := .RuntimeVersions }}
+									<option value="{{ $key }}">{{ $value }}</option>
+								{{ end }}
+							</select>
+						</div>
+					</div>
 	
 				</fieldset>
 
@@ -417,6 +429,8 @@ $(document).ready(function() {
 	updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 	$("#description").trigger("propertychange");
+
+	$("#runtime_version").val("{{ .Program.RuntimeVersion }}");
 
 	if ({{ .UserID }} == 0) {
 		document.location.href = "/user/login/";

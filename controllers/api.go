@@ -137,7 +137,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramPublished | models.ProgramID | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime | models.ProgramResolution
+	targetFlags := models.ProgramPublished | models.ProgramID | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime | models.ProgramRuntimeVersion | models.ProgramResolution
 
 	rawProgram.ID = request.FormValue("id")
 	rawProgram.Title = bluemonday.StrictPolicy().Sanitize(request.FormValue("title"))
@@ -150,6 +150,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.ResolutionW = request.FormValue("resolution_w")
 	rawProgram.ResolutionH = request.FormValue("resolution_h")
 	rawProgram.Runtime = request.FormValue("runtime")
+	rawProgram.RuntimeVersion = request.FormValue("runtime_version")
 	rawProgram.Published = request.FormValue("published")
 
 	if rawProgram.Steps == "" {
@@ -166,6 +167,9 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	}
 	if rawProgram.Startax == "" {
 		targetFlags -= models.ProgramStartax
+	}
+	if rawProgram.RuntimeVersion == "" {
+		targetFlags -= models.ProgramRuntimeVersion
 	}
 
 	err = rawProgram.Validate(targetFlags)
@@ -260,7 +264,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 
 	// 入力値のバリデート
 	var rawProgram models.RawProgram
-	targetFlags := models.ProgramPublished | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime | models.ProgramResolution
+	targetFlags := models.ProgramPublished | models.ProgramTitle | models.ProgramThumbnail | models.ProgramDescription | models.ProgramStartax | models.ProgramAttachments | models.ProgramSteps | models.ProgramSourcecode | models.ProgramRuntime | models.ProgramRuntimeVersion | models.ProgramResolution
 
 	rawProgram.Title = bluemonday.StrictPolicy().Sanitize(request.FormValue("title"))
 	rawProgram.Thumbnail = request.FormValue("thumbnail")
@@ -272,6 +276,7 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	rawProgram.ResolutionW = request.FormValue("resolution_w")
 	rawProgram.ResolutionH = request.FormValue("resolution_h")
 	rawProgram.Runtime = request.FormValue("runtime")
+	rawProgram.RuntimeVersion = request.FormValue("runtime_version")
 	rawProgram.Published = request.FormValue("published")
 
 	if rawProgram.Steps == "" {
@@ -282,6 +287,9 @@ func apiProgramCreateHandler(document http.ResponseWriter, request *http.Request
 	}
 	if rawProgram.Sourcecode == "" {
 		targetFlags -= models.ProgramSourcecode
+	}
+	if rawProgram.RuntimeVersion == "" {
+		targetFlags -= models.ProgramRuntimeVersion
 	}
 
 	userId := getSessionUser(request)

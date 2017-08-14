@@ -23,7 +23,16 @@ func loadProgram(params []interface{}) interface{} {
 		return "See Other..."
 	}
 
-	fp, err := os.Open(config.TemplatesPath + "plugins/loadProgram" + runtime + ".tmpl")
+	version, ok := params[1].(string)
+	if !ok {
+		return "See Other..."
+	}
+
+	if !config.IsValidRuntimeVersion(version) {
+		return "See Other..."
+	}
+
+	fp, err := os.Open(config.TemplatesPath + "plugins/loadProgram" + runtime + "/" + version + ".tmpl")
 	if err != nil {
 		return ""
 	}

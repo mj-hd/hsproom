@@ -1,1 +1,0 @@
-../../openhsp/hsp3dish/emscripten/hsp3dish-gp.js

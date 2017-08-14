@@ -16,6 +16,7 @@ type sourceCreateMember struct {
 	ThumbnailLimitSize   int
 	StartaxLimitSize     int
 	AttachmentsLimitSize int
+	RuntimeVersions      map[string]string
 }
 
 func sourceCreateHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -32,6 +33,7 @@ func sourceCreateHandler(document http.ResponseWriter, request *http.Request) (e
 		ThumbnailLimitSize:   config.ThumbnailLimitSize,
 		StartaxLimitSize:     config.StartaxLimitSize,
 		AttachmentsLimitSize: config.AttachmentsLimitSize,
+		RuntimeVersions:      config.RuntimeVersions,
 	})
 }
 
@@ -41,6 +43,7 @@ type sourceEditMember struct {
 	ThumbnailLimitSize   int
 	StartaxLimitSize     int
 	AttachmentsLimitSize int
+	RuntimeVersions      map[string]string
 }
 
 func sourceEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -104,5 +107,6 @@ func sourceEditHandler(document http.ResponseWriter, request *http.Request) (err
 		ThumbnailLimitSize:   config.ThumbnailLimitSize,
 		StartaxLimitSize:     config.StartaxLimitSize,
 		AttachmentsLimitSize: config.AttachmentsLimitSize,
+		RuntimeVersions:      config.RuntimeVersions,
 	})
 }

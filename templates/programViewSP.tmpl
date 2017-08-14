@@ -525,7 +525,7 @@
 		h: "{{ .Program.ResolutionH }}"
 	};
 
-	{{ plugin "loadProgram" .Program.Runtime }}
+	{{ plugin "loadProgram" .Program.Runtime .Program.RuntimeVersion }}
 
 </script>
 

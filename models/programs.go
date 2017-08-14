@@ -35,6 +35,7 @@ type Program struct {
 	Description string     `sql:"size:500"`
 	Steps       int        `sql:"default:5000"`
 	Runtime     string     `sql:"size:10;default:'HSP3Dish'"`
+	RuntimeVersion string  `sql:"size:20;default:'hsp3.5b2mod'"`
 	Published   bool       `sql:"not null"`
 	ResolutionW int        `sql:"default:640"`
 	ResolutionH int        `sql:"default:480"`
@@ -245,6 +246,7 @@ type RawProgram struct {
 	Steps       string
 	Sourcecode  string
 	Runtime     string
+	RuntimeVersion string
 	Published   string
 	ResolutionW string
 	ResolutionH string
@@ -261,6 +263,7 @@ const (
 	ProgramSteps
 	ProgramSourcecode
 	ProgramRuntime
+	ProgramRuntimeVersion
 	ProgramPublished
 	ProgramResolution
 )
@@ -368,6 +371,12 @@ func (this *RawProgram) Validate(flag uint) error {
 		}
 	}
 
+	if (flag & ProgramRuntimeVersion) != 0 {
+		if !config.IsValidRuntimeVersion(this.RuntimeVersion) {
+			return errors.New("ランタイムバージョンが不正です。")
+		}
+	}
+
 	return nil
 }
 
@@ -446,6 +455,10 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 	if (flag & ProgramRuntime) != 0 {
 		program.Runtime = this.Runtime
+	}
+
+	if (flag & ProgramRuntimeVersion) != 0 {
+		program.RuntimeVersion = this.RuntimeVersion
 	}
 
 	if (flag & ProgramStartax) != 0 {
@@ -548,6 +561,7 @@ const (
 	ProgramColResolutionW
 	ProgramColResolutionH
 	ProgramColRuntime
+	ProgramColRuntimeVersion
 )
 
 func (this *ProgramColumn) String() string {
@@ -584,6 +598,8 @@ func (this *ProgramColumn) String() string {
 		return "resolution_h"
 	case ProgramColRuntime:
 		return "runtime"
+	case ProgramColRuntimeVersion:
+		return "runtime_version"
 	}
 
 	return ""

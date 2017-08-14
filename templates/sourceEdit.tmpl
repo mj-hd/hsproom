@@ -162,7 +162,18 @@
 							</p>
 						</div>
 					</div>
-		
+
+					<div class="form-group row">
+						<label for="runtime_version" class="col-md-3 form-label text-right">9. ランタイムバージョン</label>
+						<div class="col-md-6">
+							<select id="runtime_version" class="form-control" name="runtime_version" value="{{ .Program.RuntimeVersion }}">
+								{{ range $key, $value := .RuntimeVersions }}
+									<option value="{{ $key }}">{{ $value }}</option>
+								{{ end }}
+							</select>
+						</div>
+					</div>
+
 				</fieldset>
 
 			</div>
@@ -385,10 +396,13 @@ Module["preRun"].push(function () {
 		if (resolution.w == "") resolution.w = "640";
 		if (resolution.h == "") resolution.h = "480";
 
+		var ver = $("#runtime_version").val();
+		if (ver == "") ver = "latest";
+
 		frame.onload = function() {
 			frame.contentWindow["runAX"](data, String(steps), resolution, attachments);
 		};
-		frame.contentWindow.location.href = "/static/preview"+runtime+".html";
+		frame.contentWindow.location.href = "/static/preview"+runtime+"/"+ver+".html";
 	}
 
 	function dismiss_error() {
@@ -696,6 +710,8 @@ Module["preRun"].push(function () {
 		updateAttachmentsProgress({{ .AttachmentsLimitSize }});
 
 		$("#description").trigger("propertychange");
+
+		$("#runtime_version").val("{{ .Program.RuntimeVersion }}");
 
 		if ({{ .UserID }} == 0) {
 			document.location.href = "/user/login/";

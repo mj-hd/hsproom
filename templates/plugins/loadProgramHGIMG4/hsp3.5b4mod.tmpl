@@ -1,0 +1,167 @@
+var critical = false;
+
+// emscripten Module
+var Module = {
+	TOTAL_MEMORY: 1024*1024*30,
+	preRun: [],
+	postRun: [postProgramRun],
+	print:  (function() {
+		return function(text) {
+			text = Array.prototype.slice.call(arguments).join(' ');
+			console.log(text);
+
+			if ((text.indexOf("#Error") == 0) || (critical)) {
+				$("#errors").show().append(text+'<br />')
+
+				critical = true;
+			}
+		};
+	})(),
+	printErr: function(text) {
+		text = Array.prototype.slice.call(arguments).join(' ');
+		console.error(text);
+		//assertBottom("error", "HSPエラー:"+text)
+	},
+	canvas: document.getElementById('screen'),
+	arguments: ["start.ax"],
+	filePackagePrefixURL: "/static/data/"
+};
+console.log("Waiting...");
+
+Module["preRun"].push(function() {
+	Module["addRunDependency"]("hsp");
+});
+Module["preRun"].push(function() {
+	FS.mkdir("/saves");
+});
+Module["postRun"].push(function() {
+	FS.symlink("/saves/"+pid, "/save");
+});
+
+</script>
+
+<script async type="text/javascript" src="/static/js/hgimg4res.js"></script>
+<script async type="text/javascript" src="/static/js/hsp3dish-gp/hsp3.5b4mod.js"></script>
+
+<script type="text/javascript">
+
+// ダウンロードするリスト
+var fileNames = ["start.ax"];
+
+// 初期化後の読み込み
+function runWithFS(log) {
+
+	log.append("読み込み中です... <br/>");
+
+	// HSPの設定
+	ENV.HSP_WX = resolution.w;//スクリプトの動作解像度
+	ENV.HSP_WY = resolution.h;
+	ENV.HSP_SX = "640";//表示解像度
+	ENV.HSP_SY = "480";
+	ENV.HSP_AUTOSCALE = "0";//スケーリングモード
+	ENV.HSP_FPS = "0";//フレームレート
+	ENV.HSP_LIMIT_STEP = steps === "0" ? "5000" : steps;//ブラウザに処理を返すまでの実行ステップ数
+	ENV.HSP_SYNC_DIR = "/saves/"+pid;
+
+	console.log("Start to download file list...");
+
+	importDataList(log).then(function() {
+
+		console.log("Start to download files...");
+		importDataArrays(log).then(function () {
+
+			console.log("Initialized");
+
+			log.append("プログラムを起動中です...<br />");
+
+			Module["removeRunDependency"]("hsp");
+
+		});
+	});
+
+}
+
+function importDataList(log) {
+	var defer = $.Deferred();
+
+	$.ajax({
+		type: "GET",
+		url:  "/api/program/data_list/",
+		data: {
+			"p": pid
+		},
+		dataType: "json"
+	}).success(function(data) {
+
+		if (data.Names != null) {
+			fileNames = fileNames.concat(data.Names);
+		}
+
+		log.append("ファイル一覧を取得しました<br/>");
+		console.log("Downloaded file list.");
+
+		defer.resolve();
+	}).error(function(data) {
+		console.log("Failed to download file list.")
+
+		defer.reject();
+	});
+
+	return defer.promise();
+}
+
+function importDataArray(name) {
+	var defer = $.Deferred();
+
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', '/api/program/data/?p='+pid+'&f=' + name, true);
+	xhr.responseType = 'arraybuffer';
+	
+	xhr.onload = function(e) {
+		if (this.status == 200) {
+			var stream = FS.open(name, "w");
+			var data = new Uint8Array(this.response);
+			FS.write(stream, data, 0, data.length, 0);
+			FS.close(stream);
+
+			console.log("Downloaded " + name);
+
+			defer.resolve();
+		} else {
+			console.log("Failed to download " + name);
+			defer.reject();
+		}
+
+	};
+	
+	xhr.send();
+
+	return defer.promise();
+}
+
+function importDataArrays(log) {
+	var defer = $.Deferred();
+	var processingNum = fileNames.length;
+
+	var i = 0;
+	(function foreach() {
+
+		log.append("ファイルを読み込んでいます...("+i+"/"+processingNum+")<br/>");
+
+		importDataArray(fileNames[i]).then(function () {
+			processingNum--;
+			if (processingNum == 0) {
+				defer.resolve();
+			}
+
+			i++;
+			if (i < fileNames.length) {
+				foreach();
+			}
+	}, function () {
+		defer.reject();
+	})})();
+
+	return defer.promise();
+}
+

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"math"
 
 	"github.com/microcosm-cc/bluemonday"
 
@@ -157,7 +158,8 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) (er
 			log.FatalStr("プレイ回数を加算できませんでした。ProgramID:" + string(program.ID))
 		}
 
-		if (program.Play + 1) % 10 == 0 {
+		nextPlay := program.Play + 1
+		if nextPlay %  int(math.Pow10(int(math.Log10(math.Max(1.0, float64(program.Play)))) + 1)) == 0 {
 			var notification models.Notification
 			notification.UserID = program.UserID
 			notification.Message = "「" + program.Title + "」の再生回数が" + strconv.Itoa(program.Play + 1) + "回になりました！"
@@ -284,6 +286,7 @@ type programEditMember struct {
 	ThumbnailLimitSize   int
 	StartaxLimitSize     int
 	AttachmentsLimitSize int
+	RuntimeVersions      map[string]string
 }
 
 func programEditHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -374,6 +377,7 @@ func programEditHandler(document http.ResponseWriter, request *http.Request) (er
 		ThumbnailLimitSize:   config.ThumbnailLimitSize,
 		StartaxLimitSize:     config.StartaxLimitSize,
 		AttachmentsLimitSize: config.AttachmentsLimitSize,
+		RuntimeVersions:      config.RuntimeVersions,
 	})
 
 }
@@ -383,6 +387,7 @@ type programCreateMember struct {
 	ThumbnailLimitSize   int
 	StartaxLimitSize     int
 	AttachmentsLimitSize int
+	RuntimeVersions      map[string]string
 }
 
 func programCreateHandler(document http.ResponseWriter, request *http.Request) (err error) {
@@ -399,6 +404,7 @@ func programCreateHandler(document http.ResponseWriter, request *http.Request) (
 		ThumbnailLimitSize:   config.ThumbnailLimitSize,
 		StartaxLimitSize:     config.StartaxLimitSize,
 		AttachmentsLimitSize: config.AttachmentsLimitSize,
+		RuntimeVersions:      config.RuntimeVersions,
 	})
 }
 

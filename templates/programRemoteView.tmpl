@@ -121,12 +121,12 @@ $(document).ready(function () {
 
 var pid = {{ .Program.ID }};
 var steps = "{{ .Program.Steps }}";
-	var resolution = {
-		w: "{{ .Program.ResolutionW }}",
-		h: "{{ .Program.ResolutionH }}"
-	};
+var resolution = {
+	w: "{{ .Program.ResolutionW }}",
+	h: "{{ .Program.ResolutionH }}"
+};
 
-{{ plugin "loadProgram" .Program.Runtime }}
+{{ plugin "loadProgram" .Program.Runtime .Program.RuntimeVersion }}
 
 </script>
 

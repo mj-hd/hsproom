@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+	<style type="text/css">
+		* {
+			margin:  0;
+			padding: 0;
+		}
+		canvas {
+			position: absolute;
+			top:    0;
+			bottom: 0;
+			left:   0;
+			right:  0;
+		}
+		#message {
+			position: absolute;
+			top:    0;
+			bottom: 0;
+			left:   0;
+			right:  0;
+			overflow: scroll;
+		}
+
+		.error {
+			color: #ff0000;
+		}
+		.debug {
+			color: #000000;
+		}
+	</style>
+</head>
+<body>
+
+	<div id="message"></div>
+	<canvas id="canvas" width=640 height=480 oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+
+<script type="text/javascript">
+var Module = {
+	TOTAL_MEMORY: 1024*1024*30,
+	preRun: [],
+	postRun: [],
+	print: (function() {
+		return function(text) {
+			console.log(text);
+			$("#message").append($("<span class='debug' />").text(text).append("<br />"));
+		};
+	})(),
+	printErr: function(text) {
+		text = Array.prototype.slice.call(arguments).join(' ');
+		if (0) { // XXX disabled for safety typeof dump == 'function') {
+			dump(text + '\n'); // fast, straight to the real console
+		} else {
+			console.error(text);
+			$("#message").append($("<span class='error' />").text(text).append("<br />"));
+		}
+	},
+	canvas: document.getElementById('canvas'),
+	arguments: ["start.ax"],
+	filePackagePrefixURL: "/static/data/",
+//	noInitialRun: true
+};
+Module["preRun"].push(function() {
+  Module['addRunDependency']('hsp start.ax');
+});
+Module["preRun"].push(function() {
+	FS.mkdir("/saves");
+});
+Module["postRun"].push(function() {
+	FS.symlink("/saves/tmp", "/save");
+});
+
+</script>
+
+<script async type="text/javascript" src="/static/js/hgimg4res.js"></script>
+<script async type="text/javascript" src="/static/js/hsp3dish-gp/hsp3.5b5mod.js"></script>
+
+<script type="text/javascript">
+	function runAX(data, steps, resolution, attachments) {
+		if (!data) {
+			console.log("Empty!!");
+		}
+
+		ENV.HSP_WX = resolution.w;//スクリプトの動作解像度
+		ENV.HSP_WY = resolution.h;
+		ENV.HSP_SX = "640";//表示解像度
+		ENV.HSP_SY = "480";
+		ENV.HSP_FPS = "0";
+		ENV.HSP_LIMIT_STEP = steps;
+		ENV.HSP_AUTOSCALE = "0";//スケーリングモード
+		ENV.HSP_SYNC_DIR = "/saves/tmp";
+
+		console.log("save ax", data, data.length);
+		var stream = FS.open("start.ax", 'w');
+		FS.write(stream, data, 0, data.length, 0);
+		FS.close(stream);
+
+		$.each(attachments, function(i, file) {
+			console.log("save " + file.name);
+			var attachment = FS.open(file.name, 'w');
+			var buffer = convertBase64ToArrayBuffer(file.value);
+			FS.write(attachment, buffer, 0, buffer.length, 0);
+			FS.close(attachment);
+		});
+	//	Module.callMain(["start.ax"]);
+		Module['canvas'].focus();
+		Module['removeRunDependency']('hsp start.ax');
+
+		function convertBase64ToArrayBuffer(base64) {
+			var data = window.atob(base64);
+			var buff = new ArrayBuffer(data.length);
+			var arr = new Uint8Array(buff);
+			for(var i = 0; i < data.length; i++) {
+				arr[i] = data.charCodeAt(i);
+			}
+			return arr;
+		}
+	}
+</script>
+
+</body>
+</html>
