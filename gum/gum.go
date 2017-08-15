@@ -10,6 +10,7 @@ import (
 	"../plugins"
 	"../templates"
 	"../utils/log"
+	"../pprof"
 
 	"github.com/gorilla/context"
 )
@@ -23,6 +24,7 @@ func init() {
 }
 
 func Del() {
+	pprof.Del()
 	models.Del()
 	controllers.Del()
 	templates.Del()
@@ -36,6 +38,7 @@ func Start() {
 	models.Init()
 	plugins.Init()
 	templates.Init()
+	pprof.Init()
 
 	for route := range controllers.Router.Iterator() {
 		http.HandleFunc(route.Path, route.Function)
