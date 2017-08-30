@@ -181,7 +181,7 @@ func programViewHandler(document http.ResponseWriter, request *http.Request) (er
 	}
 
 	var related []models.Program
-	err = models.GetProgramListRelatedTo(&related, program.Title, 10)
+	err = models.GetProgramListRelatedTo(&related, program.ID, 10)
 
 	if err != nil {
 		related = make([]models.Program, 0)

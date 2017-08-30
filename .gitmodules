@@ -4,3 +4,6 @@
 [submodule "ace"]
 	path = ace
 	url = https://github.com/ajaxorg/ace
+[submodule "simbase"]
+	path = simbase
+	url = https://github.com/guokr/simbase

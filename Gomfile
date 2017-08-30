@@ -1,7 +1,6 @@
 gom "github.com/go-sql-driver/mysql", :commit => "fb7299726d2e68745a8805b14f2ff44b5c2cfa84"
 gom "github.com/gorilla/context", :commit => "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 gom "github.com/gorilla/sessions", :commit => "f61c3ec2cf65d69e7efedfd4d060fe128882c951"
-gom "github.com/lestrrat/go-ngram", :commit => "4489dcc2a454dc1ab07f5951132b75a1fb6d5126"
 gom "github.com/microcosm-cc/bluemonday", :commit => "cb3660f44463dfacda51a0bfdd6b7524c22e2ecb"
 gom "github.com/mrjones/oauth", :commit => "a234b7b4476b5b5089f31e197f3786cdab0d0adf"
 gom "github.com/shurcooL/sanitized_anchor_name", :commit => "541ff5ee47f1dddf6a5281af78307d921524bcb5"
@@ -11,4 +10,4 @@ gom "golang.org/x/oauth2/google"
 gom "github.com/jinzhu/inflection", :commit => "1c35d901db3da928c72a72d8458480cc9ade058f"
 gom "github.com/jinzhu/gorm", :commit => "c3bb6aaa828867eec72dd8571d111e442688f85f"
 gom "github.com/gholt/blackfridaytext"
-
+gom "github.com/garyburd/redigo"

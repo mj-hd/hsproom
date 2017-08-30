@@ -1,4 +1,4 @@
-all: hsproom ace
+all: hsproom ace simbase
 
 hsproom: go_packages
 	gom build hsproom.go
@@ -10,6 +10,12 @@ ace: submodules
 	cd ace/; \
 	npm install; \
 	node Makefile.dryice.js -m -nc; \
+	cd ../
+
+simbase: submodules
+	cd simbase/; \
+	lein uberjar; \
+	./bin/start; \
 	cd ../
 
 submodules: .git

@@ -32,8 +32,10 @@ func Init() {
 	initGoods()
 	initComments()
 	initNotifications()
+	initRelevances()
 }
 
 func Del() {
+	delRelevances()
 	DB.Close()
 }

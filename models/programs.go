@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"github.com/lestrrat/go-ngram"
 
 	"../config"
 )
@@ -37,6 +35,7 @@ type Program struct {
 	Runtime     string     `sql:"size:10;default:'HSP3Dish'"`
 	RuntimeVersion string  `sql:"size:20;default:'hsp3.5b2mod'"`
 	Published   bool       `sql:"not null"`
+	Processed   bool       `sql:"default:0;not null"`
 	ResolutionW int        `sql:"default:640"`
 	ResolutionH int        `sql:"default:480"`
 
@@ -107,7 +106,11 @@ func Published(db *gorm.DB) *gorm.DB {
 	return db.Where("published = ?", 1)
 }
 
-func (this *Program) AfterFind() (err error) {
+func Unprocessed(db *gorm.DB) *gorm.DB {
+	return db.Where("processed = ?", 0)
+}
+
+func (this *Program) AfterFind() error {
 	this.LoadUserName()
 	this.CreatedAt = this.CreatedAt.In(config.JST())
 	this.UpdatedAt = this.UpdatedAt.In(config.JST())
@@ -148,8 +151,9 @@ func (this *Program) LoadUserName() {
 	this.UserName = this.GetUserName()
 }
 
-func (this *Program) Update() error {
+func (this *Program) Update(processed bool) error {
 
+	this.Processed = processed
 	err := DB.Save(this).Error
 
 	return err
@@ -157,6 +161,7 @@ func (this *Program) Update() error {
 
 func (this *Program) Create() (int, error) {
 
+	this.Processed = false
 	err := DB.Create(this).Error
 
 	return this.ID, err
@@ -248,6 +253,7 @@ type RawProgram struct {
 	Runtime     string
 	RuntimeVersion string
 	Published   string
+	Processed   string
 	ResolutionW string
 	ResolutionH string
 }
@@ -265,6 +271,7 @@ const (
 	ProgramRuntime
 	ProgramRuntimeVersion
 	ProgramPublished
+	ProgramProcessed
 	ProgramResolution
 )
 
@@ -390,6 +397,14 @@ func (this *RawProgram) ToProgram(flag uint) (*Program, error) {
 
 		if this.Published != "true" {
 			program.Published = false
+		}
+
+	}
+
+	if (flag & ProgramProcessed) != 0 {
+
+		if this.Processed != "true" {
+			program.Processed = false
 		}
 
 	}
@@ -698,6 +713,24 @@ func GetProgramListByQuery(out *[]Program, query string, keyColumn ProgramColumn
 
 }
 
+func GetProgramListByRandom(out *[]Program, number int) (int, error) {
+
+	var rowCount int
+	err := DB.Model(Program{}).Count(&rowCount).Error
+	if err != nil {
+		return 0, err
+	}
+
+	if rowCount > number {
+		rowCount = number
+	}
+
+	// クエリを発行
+	err = DB.Model(Program{}).Scopes(Published).Order("RAND()").Limit(number).Find(out).Error
+
+	return int(rowCount), err
+}
+
 func GetProgramListByUser(keyColumn ProgramColumn, out *[]Program, user int, isDesc bool, from int, number int) (int, error) {
 	var err error
 
@@ -721,38 +754,18 @@ func GetProgramListByUser(keyColumn ProgramColumn, out *[]Program, user int, isD
 	return rowCount, err
 }
 
-func GetProgramListRelatedTo(out *[]Program, title string, number int) error {
+func GetProgramListRelatedTo(out *[]Program, id int, number int) error {
 	var err error
 
-	token := ngram.NewTokenize(3, title)
+	*out, err = getRelatedProgramsWithRelevances(id, number)
 
-	repl := strings.NewReplacer("_", "", "[", "", "]", "", "%", "", "'", "", "`", "", "\"", "")
-	querys := make([]string, 0)
-	for _, t := range token.Tokens() {
-		querys = append(querys, "%"+repl.Replace(t.String())+"%")
-	}
-
-	statement := DB.Model(Program{}).Scopes(Published)
-	cond := "`programs`.title <> '" + repl.Replace(title) + "' AND ("
-	for i, query := range querys {
-		if i != 0 {
-			cond += " OR "
-		}
-		cond += "`programs`.title LIKE '%" + query + "%'"
-	}
-	cond += ")"
-
-	statement = statement.Where(cond)
-
-	var rowCount int
-	err = statement.Count(&rowCount).Error
-
-	if (err != nil) || (rowCount == 0) {
-		return errors.New("関連プログラムが見つかりませんでした。")
-	}
-
-	err = statement.Find(out).Error
 	return err
+}
+
+func GetProgramUnprocessed() (Program, error) {
+	var program Program
+	err := DB.Model(Program{}).Scopes(Published).Scopes(Unprocessed).Order("RAND()").First(&program).Error
+	return program, err
 }
 
 func ExistsProgram(id int) bool {

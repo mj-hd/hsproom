@@ -68,6 +68,9 @@ func Init() {
 	Router.RegisterGetApi("/api/comment/list/", apiCommentListHandler)
 	Router.RegisterPostApi("/api/comment/post/", apiCommentPostHandler)
 	Router.RegisterPostApi("/api/comment/delete/", apiCommentDeleteHandler)
+	Router.RegisterGetApi("/api/batch/get/corpus/", apiBatchGetCorpus)
+	Router.RegisterGetApi("/api/batch/get/document/unprocessed/", apiBatchGetUnprocessedDocument)
+	Router.RegisterPostApi("/api/batch/save/vector/", apiBatchSaveVector)
 
 }
 func Del() {

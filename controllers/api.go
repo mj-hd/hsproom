@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"../bot"
 	"../config"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
+	"github.com/jinzhu/gorm"
 )
 
 var twitterClient *twitter.Client
@@ -234,7 +236,7 @@ func apiProgramUpdateHandler(document http.ResponseWriter, request *http.Request
 	Found:
 	}
 
-	err = program.Update()
+	err = program.Update(false)
 	if err != nil {
 		log.Fatal(err)
 		return http.StatusInternalServerError, errors.New("保存に失敗しました。")
@@ -1439,6 +1441,129 @@ func apiCommentDeleteHandler(document http.ResponseWriter, request *http.Request
 	writeStruct(document, apiMember{
 		Status:  "success",
 		Message: "削除に成功しました。",
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
+}
+
+type apiBatchGetCorpusMember struct {
+	*apiMember
+	Corpus []string
+	CorpusCount int
+}
+
+func apiBatchGetCorpus(document http.ResponseWriter, request *http.Request) (status int, err error) {
+	if strings.Split(request.RemoteAddr, ":")[0] != config.LearnerIP {
+		return http.StatusBadRequest, errors.New("不正なアクセスです。")
+	}
+
+	number, err := strconv.Atoi(request.URL.Query().Get("n"))
+	if err != nil {
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("nの値が不正です")
+	}
+
+	if number < 0 {
+		number = 100
+	}
+
+	programs := make([]models.Program, number)
+	count, err := models.GetProgramListByRandom(&programs, number)
+
+	corpus := make([]string, len(programs))
+	for i, p := range programs {
+		corpus[i] = p.Title + " " + p.Description
+	}
+
+	writeStruct(document, apiBatchGetCorpusMember{
+		apiMember: &apiMember{
+			Status: "success",
+			Message: "一覧の取得に成功しました",
+		},
+		Corpus: corpus,
+		CorpusCount: count,
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
+}
+
+type apiBatchGetUnprocessedDocumentMember struct {
+	*apiMember
+	ID       int
+	Document string
+}
+
+func apiBatchGetUnprocessedDocument(document http.ResponseWriter, request *http.Request) (status int, err error) {
+	if strings.Split(request.RemoteAddr, ":")[0] != config.LearnerIP {
+		return http.StatusBadRequest, errors.New("不正なアクセスです。")
+	}
+
+	program, err := models.GetProgramUnprocessed()
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return http.StatusOK, nil
+		}
+
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("プログラムの取得に失敗しました")
+	}
+
+	writeStruct(document, apiBatchGetUnprocessedDocumentMember{
+		apiMember: &apiMember{
+			Status:  "success",
+			Message: "取得に成功しました",
+		},
+		ID: program.ID,
+		Document: program.Title + " " + program.Description,
+	}, http.StatusOK)
+
+	return http.StatusOK, nil
+}
+
+func apiBatchSaveVector(document http.ResponseWriter, request *http.Request) (status int, err error) {
+	if strings.Split(request.RemoteAddr, ":")[0] != config.LearnerIP {
+		return http.StatusBadRequest, errors.New("不正なアクセスです。")
+	}
+
+	programId, err := strconv.Atoi(request.FormValue("p"))
+	if err != nil {
+		log.Debug(err)
+		return http.StatusBadRequest, errors.New("pの値が不正です")
+	}
+
+	var program models.Program
+	err = program.Load(programId)
+	if err != nil {
+		log.Debug(err)
+		return http.StatusNotFound, errors.New("プログラムが見つかりませんでした")
+	}
+
+	rawVector := request.PostFormValue("v")
+	strVector := strings.Split(rawVector, ",")
+	vector := make([]float64, len(strVector))
+	for i, str := range strVector {
+		v, err := strconv.ParseFloat(str, 32)
+		if err != nil {
+			v = 0.0
+		}
+
+		vector[i] = v
+	}
+
+	err = models.AddVector(programId, vector)
+	if err != nil {
+		log.Fatal(err)
+		return http.StatusInternalServerError, errors.New("ベクタの追加に失敗")
+	}
+
+	err = program.Update(true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	writeStruct(document, apiMember{
+		Status: "success",
+		Message: "保存が完了しました",
 	}, http.StatusOK)
 
 	return http.StatusOK, nil
